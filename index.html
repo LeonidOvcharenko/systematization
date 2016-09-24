@@ -4,7 +4,6 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Systematization</title>
-	<link rel="stylesheet" href="./css/jquery.flipster.min.css">
 	<link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
@@ -17,9 +16,22 @@
 	<button>Optimize DB</button>
 	<button>Generate indexes</button>
 	<button>Rename by template</button>
+	
+	<div id="tagger"></div>
+	<script id="tagger-tpl" type='text/ractive'>
+		<div class="" style="float: left;">
+			Ключ:<br>
+			<myselect list='{{keys}}' value='{{key}}' on-add="add_key" /> 
+		</div>
+		<div class="" style="float: left;">
+			Значение:<br>
+			<myselect list='{{values}}' value='{{value}}' on-add="add_value" /> 
+		</div>
+	</script>
 
 	<p class="stats"></p>
 
+	<script src="./js/ractive.min.js"></script>
 	<script src="./js/jquery.min.js"></script>
 	<script src="./js/script.js"></script>
 </body>
