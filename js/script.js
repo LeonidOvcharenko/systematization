@@ -8,7 +8,7 @@ $(function(){
 			var dfrd = $.Deferred();
 			var db_loader = function(){
 				self.files = self.db.getCollection('files') || self.db.addCollection('files', {exact: ['hash', 'path'], unique: ['hash']});
-				self.tags  = self.db.getCollection('tags') || self.db.addCollection('tags', {indices: ['key']});
+				self.tags  = self.db.getCollection('tags') || self.db.addCollection('tags', {indices: ['key'], unique: ['key/value']});
 				dfrd.resolve();
 			};
 			self.db = new Loki('files.json', {
@@ -30,7 +30,7 @@ $(function(){
 					path: filepath,
 					hash: hash
 				});
-				if (inserted) { callback(); }
+				if (inserted && callback) { callback(); }
 			});
 		}
 		,
@@ -38,15 +38,20 @@ $(function(){
 			return self.files.findOne({'path': { '$eq' : filepath }});
 		}
 		,
-		add_tag: function(data, callback){
+		add_tag: function(filepath, tag, callback){
 			var self = this;
-			self.tags.insert({
-				hash:  data.hash,
-				key:   data.key,
-				value: data.value,
-				auto:  !!data.auto
+			self.add_file(filepath, callback);  // just in case
+			FS.readFile(filepath, function(err, data){
+				var hash = self.hash_file(data);
+				var inserted = self.tags.insert({
+					hash:  hash,
+					key:   tag.key,
+					value: tag.value,
+					'key/value': hash+'¹'+tag.key+'²'+tag.value,
+					auto:  !!tag.auto
+				});
+				if (inserted && callback) { callback(); }
 			});
-			if (callback) { callback(); }
 		}
 		,
 		get_untagged: function(){
@@ -67,9 +72,9 @@ $(function(){
 			var files = self.files.data;
 			self.files.data.forEach(function(obj, i){
 				if (
-					!self.tags.findOne({'$and': [{ 'hash': obj.hash }, { 'auto': false }]})
+					self.tags.findOne({'$and': [{ 'hash': obj.hash }, { 'auto': false }]})
 					&&
-					self.tags.findOne({'$and': [{ 'hash': obj.hash }, { 'auto': true }]})
+					!self.tags.findOne({'$and': [{ 'hash': obj.hash }, { 'auto': true }]})
 				) {
 					verified.push(obj);
 				}
@@ -77,29 +82,25 @@ $(function(){
 			return verified;
 		}
 		,
-		/*
 		get_keys: function(){
-			var self = this;
-			var mapper = function(){
-				if (!this.fruits) return;
-				for (var fruit in this.fruits) {
-					emit(fruit, {this.fruits[fruit]: 1});
-				}
-			};
-			var reducer = function(key, values) {
-				var colors = {};
-				values.forEach(function(v) {
-					for (var k in v) { // iterate colors
-						if (!colors[k]) colors[k] = 0;
-						color[k] += v[k];
-					}
+			var mapper = function(obj, i, coll){ return obj.key; };
+			var reducer = function(array, values) {
+				var distinct = [];
+				array.forEach(function(key, i){
+					if (distinct.indexOf(key) == -1) { distinct.push(key); }
 				});
-				return colors;
+				return distinct.sort()
 			}
-			return self.tags.mapReduce(mapper, reducer);
+			return this.tags.mapReduce(mapper, reducer);
 		}
-		,*/
+		,
 		get_values: function(key){
+			var distinct = [];
+			var values = this.tags.find({'key': key});
+			values.forEach(function(obj, i){
+				if (distinct.indexOf(obj.value) == -1) { distinct.push(obj.value); }
+			});
+			return distinct.sort();
 		}
 	}
 	
@@ -126,12 +127,144 @@ $(function(){
 		data: {
 		}
 	});
+	Processing.on({
+		index: function(){ /* TODO */ },
+		rename: function(){ /* TODO */ }
+	});
 
-	Database.init().then(function(){
-		ViewDB.update_stats();
+
+	
+	$('#save_db').on('click', function(){ Database.db.saveDatabase(); });
+	
+	var EditableSelect = Ractive.extend({
+		isolated: true,
+		template:
+			'<div class="es">'+
+				'<input type="text" class="es-input form-control" value="{{value}}" autocomplete="off" on-input-keydown="on_key" on-input-keyup="filter" on-blur="hide_list" on-focus="show_list" />'+
+				'<span class="es-clear {{value ? \'show\' : \'hide\'}} text-danger" on-click="clear">×</span>'+
+				'<ul class="es-list dropdown-menu {{list_visible ? \'show\' : \'hide\'}}">'+
+					'{{#list:i}}<li class="{{visible[i] ? \'show\' : \'hide\' }} {{active==i ? \'active\' : \'\' }}">'+
+						'<a href="#" on-click="select_li">{{.}}</a>'+
+					'</li>{{/list}}'+
+				'</ul>'+
+			'</div>',
+		oninit: function(){
+			var self = this;
+			self.set({
+				visible: [],
+				active: -1,
+				list_visible: false
+			});
+			self.on({
+				'clear': function(e){
+					e.original.preventDefault();
+					self.set('value', '');
+				},
+				'select_li': function(e){
+					e.original.preventDefault();
+					self.set('value', e.context);
+				},
+				'show_list': function(e){
+					var $input = $(e.node);
+					$input.closest('.es').find('.es-list')
+					.css({
+						top:   $input.position().top + $input.outerHeight() - 1,
+						left:  $input.position().left,
+						width: $input.outerWidth()
+					})
+					self.set('list_visible', true);
+					self.fire('filter');
+				},
+				'hide_list': function(e){
+					setTimeout(function(){
+						self.set('list_visible', false);
+						self.set('active', -1);
+					}, 100);
+				},
+				'on_key': function(e){
+					var self = this;
+					switch (e.original.keyCode) {
+						case 37: // Left
+						case 38: // Up
+							e.original.preventDefault();
+							var l = self.get('list.length');
+							if (l==0) break;
+							if (!self.get('list_visible')) { self.fire('show_list',e); };
+							var a = self.get('active') || 0;
+							while (a>0 && !self.get('visible.'+a)) { a--; }
+							self.set('active', (a+l-1)%l);
+							break;
+						case 39: // Right
+						case 40: // Down
+							e.original.preventDefault();
+							var l = self.get('list.length');
+							if (l==0) break;
+							if (!self.get('list_visible')) { self.fire('show_list',e); break; };
+							var a = self.get('active') >= 0 ? self.get('active') : -1;
+							console.log('↓',a);
+							while (a<l && !self.get('visible.'+a)) { a++; console.log(a,'+'); }
+							self.set('active', (a+1)%l); console.log(a+1,'!');
+							break;
+						case 13: // Enter
+							e.original.preventDefault();
+							var a = self.get('active');
+							if (self.get('visible.'+a)) {
+								self.set('value', self.get('list.'+a));
+							}
+							// continue
+						case 9:  // Tab
+						case 27: // Esc
+							self.fire('hide_list');
+							break;
+						default:
+							self.fire('filter');
+							break;
+					}
+				},
+				'filter': function(){
+					var self = this;
+					var list = self.get('list');
+					var search = self.get('value').toLowerCase().trim();
+					var first = self.get('active') >=0 ? self.get('active') : -1;
+					for (var i=0; i<list.length; i++){
+						var found = (list[i] || '').toLowerCase().indexOf(search) >= 0;
+						self.set('visible.'+i, found);
+						if (found && first==-1) { self.set('active', i); first = i; }
+					}
+				}
+			});
+		}
 	});
 	
-	// read file from dropzone
+	var Tagger = new Ractive({
+		el: 'tagger',
+		template: '#tagger-tpl',
+		data: {
+			key: '',
+			keys: [],
+			value: '',
+			values: []
+		},
+		components: {
+			myselect: EditableSelect
+		}
+	});
+	Tagger.update_tags_keys = function(){
+		return this.set('keys', Database.get_keys());
+	};
+	Tagger.update_tags_values = function(){
+		var key = this.get('key');
+		return this.set('values', key ? Database.get_values(key) : []);
+	};
+	Tagger.observe({
+		key: function(){
+			this.set('value', '');
+			this.update_tags_values();
+		}
+	});
+	
+	
+	
 	$(window).on('dragover drop', function(e){ e.preventDefault(); return false; });
 	$('.dropzone')
 	.on('dragover', function(e){
@@ -155,103 +288,24 @@ $(function(){
 		}
 		return false;
 	});
-	
-	$('#save_db').on('click', function(){ Database.db.saveDatabase(); });
-	
-	var EditableSelect = Ractive.extend({
-		isolated: true,
-		template: '<input type="text" class="es-input form-control" value="{{value}}" autocomplete="off" on-input-keydown="on_key" on-input-keyup="filter" on-blur="hide_list" on-focus="show_list">'+
-			'<ul class="es-list dropdown-menu {{list_visible ? \'show\' : \'hide\'}}">'+
-			'{{#list:i}}<li class="{{visible[i] ? \'show\' : \'hide\' }}"><a href="#" on-click="select_li">{{.}}</a></li>{{/list}}'+
-			'</ul>',
-		/* data: {
-			list: ['A', 'B', 'C'],
-			value: 'test',
-			filter: false
-		}, */
-		oninit: function(){
-			var self = this;
-			self.set({
-				visible: [],
-				list_visible: false
-			});
-			self.on({
-				'select_li': function(e){
-					e.original.preventDefault();
-					self.set('value', e.context);
-				},
-				'show_list': function(e){
-					var $input = $(e.node);
-					$input.next()
-					.css({
-						top:   $input.position().top + $input.outerHeight() - 1,
-						left:  $input.position().left,
-						width: $input.outerWidth()
-					})
-					self.set('list_visible', true);
-					self.fire('filter');
-				},
-				'hide_list': function(e){
-					setTimeout(function(){ self.set('list_visible', false); }, 100);
-				},
-				'on_key': function(e){
-					switch (e.original.keyCode) {
-						case 38: // Up
-							// var visibles = that.es.$list.find('li.es-visible');
-							// var selected = visibles.index(visibles.filter('li.selected')) || 0;
-							// that.highlight(selected - 1);
-							break;
-						case 40: // Down
-							// var visibles = that.es.$list.find('li.es-visible');
-							// var selected = visibles.index(visibles.filter('li.selected')) || 0;
-							// that.highlight(selected + 1);
-							break;
-						case 13: // Enter
-							// if (that.es.$list.is(':visible')) {
-							// 	that.es.select(that.es.$list.find('li.selected'));
-							// 	e.original.preventDefault();
-							// }
-						case 9:  // Tab
-						case 27: // Esc
-							self.fire('hide_list');
-							break;
-						default:
-							// that.es.filter();
-							// that.highlight(0);
-							break;
-					}
-				},
-				'filter': function(){
-					var self = this;
-					var list = self.get('list');
-					var search = self.get('value').toLowerCase().trim();
-					for (var i=0; i<list.length; i++){
-						var found = list[i].toLowerCase().indexOf(search) >= 0;
-						self.set('visible.'+i, found);
-					}
-				}
+	$('#dropzone-tags').on('drop', function(e){
+		var files = e.originalEvent.dataTransfer.files;
+		for (var i = 0; i < files.length; ++i){
+			var filepath = files[i].path;
+			Database.add_tag(filepath, {key: Tagger.get('key'), value: Tagger.get('value'), auto: false}, function(){
+				ViewDB.update_stats();
+				Tagger.update_tags_keys().then(function(){
+					Tagger.update_tags_values();
+				});
 			});
 		}
+		return false;
 	});
-
 	
-	var Tagger = new Ractive({
-		el: 'tagger',
-		template: '#tagger-tpl',
-		data: {
-			key: '',
-			key_selected: '',
-			keys: [],
-			value: '',
-			value_selected: '',
-			values: []
-		},
-		components: {
-			myselect: EditableSelect
-		}
+	Database.init().then(function(){
+		ViewDB.update_stats();
+		Tagger.update_tags_keys().then(function(){
+			Tagger.update_tags_values();
+		});
 	});
-	Tagger.set({keys: ['Автор', 'Тип', 'Artist', 'Album', 'BPM']});
-	Tagger.set({values: ['Алексеев', 'Амосов', 'Фурсов']});
-	Tagger.set({value: 'test11'});
 });
-
