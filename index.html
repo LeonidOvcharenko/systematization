@@ -9,36 +9,37 @@
 </head>
 <body>
 	<div class="container">
-		<div class="panel panel-default">
-			<div class="panel-heading">База файлов</div>
-			<div class="panel-body">
-				<div class="row">
-					<div class="col-xs-5">
-						<dl class="dl-horizontal">
-							<dt>Всего файлов:</dt>
-							<dd>150987</dd>
-							<dt>Неразмеченных:</dt>
-							<dd>5497 (7%)</dd>
-							<dt>Проверенных:</dt>
-							<dd>98797 (45%)</dd>
-						</dl>
-						<p class="stats"></p>
-					</div>
-					<div class="col-xs-7">
-						<div id="dropzone-db" class="dropzone center-block alert alert-warning">Перетащите сюда файлы,<br>чтобы добавить в&nbsp;базу</div>
+		<div id="database"></div>
+		<script id="database-tpl" type='text/ractive'>
+			<div class="panel panel-default">
+				<div class="panel-heading">База файлов</div>
+				<div class="panel-body">
+					<div class="row">
+						<div class="col-xs-5">
+							<dl class="dl-horizontal">
+								<dt>Всего файлов:</dt>
+								<dd>{{N_files}}</dd>
+								<dt>Неразмеченных:</dt>
+								<dd>{{untagged.length}}{{#if N_files>0}} ({{Math.round(untagged.length/N_files*100)}}%){{/if}}</dd>
+								<dt>Проверенных:</dt>
+								<dd>{{verified.length}}{{#if N_files>0}} ({{Math.round(verified.length/N_files*100)}}%){{/if}}</dd>
+							</dl>
+							<p class="stats"></p>
+						</div>
+						<div class="col-xs-7">
+							<div id="dropzone-db" class="dropzone center-block alert alert-warning">Перетащите сюда файлы,<br>чтобы добавить в&nbsp;базу</div>
+						</div>
 					</div>
 				</div>
+				<div class="panel-footer">
+					<button class="btn btn-primary btn-sm" id="save_db">Сохранить</button>
+					<button class="btn btn-default btn-sm" title="Удалить записи о несуществующих файлах">Оптимизировать</button>
+				</div>
 			</div>
-			<div class="panel-footer">
-				<button class="btn btn-primary btn-sm" id="save_db">Сохранить</button>
-				<button class="btn btn-default btn-sm" title="Удалить записи о несуществующих файлах">Оптимизировать</button>
-			</div>
-		</div>
+		</script>
 		
-		
-		
-		<button class="btn btn-default">Generate indexes</button>
-		<button class="btn btn-default">Rename by template</button>
+		<button class="btn btn-default">Сгенерировать индексы</button>
+		<button class="btn btn-default">Переименовать файлы</button>
 		
 		<div id="tagger"></div>
 		<script id="tagger-tpl" type='text/ractive'>

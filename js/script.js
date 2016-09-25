@@ -2,31 +2,35 @@ $(function(){
 	var FS     = require('fs');
 	var Crypto = require('crypto');
 	var Loki   = require('lokijs');
-	var FilesDB = {
-		init: function(){
+	var Database = {
+		init: function(callback){
 			var self = this;
+			var dfrd = $.Deferred();
 			var db_loader = function(){
-				self.files = self.db.getCollection('files') || self.db.addCollection('files', {unique: ['hash']});
+				self.files = self.db.getCollection('files') || self.db.addCollection('files', {exact: ['hash', 'path'], unique: ['hash']});
 				self.tags  = self.db.getCollection('tags') || self.db.addCollection('tags', {indices: ['key']});
+				dfrd.resolve();
 			};
 			self.db = new Loki('files.json', {
 				autoload: true, autoloadCallback: db_loader,
 				autosave: true, autosaveInterval: 5000
 			});
+			return dfrd.promise();
 		}
 		,
 		hash_file: function(data){
 			return Crypto.createHash('sha1').update(data).digest('hex');
 		}
 		,
-		add_file: function(filepath){
+		add_file: function(filepath, callback){
 			var self = this;
 			FS.readFile(filepath, function(err, data){
 				var hash = self.hash_file(data);
-				self.files.insert({
+				var inserted = self.files.insert({
 					path: filepath,
 					hash: hash
 				});
+				if (inserted) { callback(); }
 			});
 		}
 		,
@@ -34,14 +38,43 @@ $(function(){
 			return self.files.findOne({'path': { '$eq' : filepath }});
 		}
 		,
-		add_tag: function(key,value,filehash,auto){
+		add_tag: function(data, callback){
 			var self = this;
 			self.tags.insert({
-				hash: filehash,
-				key: key,
-				value: value,
-				auto: !!auto
+				hash:  data.hash,
+				key:   data.key,
+				value: data.value,
+				auto:  !!data.auto
 			});
+			if (callback) { callback(); }
+		}
+		,
+		get_untagged: function(){
+			var self = this;
+			var untagged = [];
+			var files = self.files.data;
+			self.files.data.forEach(function(obj, i){
+				if (!self.tags.findOne({'hash': { '$eq': obj.hash }})) {
+					untagged.push(obj);
+				}
+			});
+			return untagged;
+		}
+		,
+		get_verified_files: function(f){
+			var self = this;
+			var verified = [];
+			var files = self.files.data;
+			self.files.data.forEach(function(obj, i){
+				if (
+					!self.tags.findOne({'$and': [{ 'hash': obj.hash }, { 'auto': false }]})
+					&&
+					self.tags.findOne({'$and': [{ 'hash': obj.hash }, { 'auto': true }]})
+				) {
+					verified.push(obj);
+				}
+			});
+			return verified;
 		}
 		,
 		/*
@@ -70,7 +103,22 @@ $(function(){
 		}
 	}
 	
-	
+
+	var ViewDB = new Ractive({
+		el: 'database',
+		template: '#database-tpl',
+		data: {
+			N_files: [],
+			files: [],
+			untagged: [],
+			verified: []
+		}
+	});
+	ViewDB.update_stats = function(){
+		this.set('N_files', Database.files.count() );
+		this.set('untagged', Database.get_untagged() );
+		this.set('verified', Database.get_verified_files() );
+	};
 
 	// Display some statistic about this computer, using node's os module.
 	var os = require('os');
@@ -81,7 +129,9 @@ $(function(){
 	$('.stats').append('Free memory: <span>' + prettyBytes(os.freemem())+ '</span>');
 
 
-	FilesDB.init();
+	Database.init().then(function(){
+		ViewDB.update_stats();
+	});
 	
 	// read file from dropzone
 	$(window).on('dragover drop', function(e){ e.preventDefault(); return false; });
@@ -101,12 +151,14 @@ $(function(){
 		var files = e.originalEvent.dataTransfer.files;
 		for (var i = 0; i < files.length; ++i){
 			var filepath = files[i].path;
-			FilesDB.add_file(filepath);
+			Database.add_file(filepath, function(){
+				ViewDB.update_stats();
+			});
 		}
 		return false;
 	});
 	
-	$('#save_db').on('click', function(){ FilesDB.db.saveDatabase(); });
+	$('#save_db').on('click', function(){ Database.db.saveDatabase(); });
 	
 	var EditableSelect = Ractive.extend({
 		isolated: true,
@@ -187,7 +239,7 @@ $(function(){
 	
 	var Tagger = new Ractive({
 		el: 'tagger',
-		template: $('#tagger-tpl').html(),
+		template: '#tagger-tpl',
 		data: {
 			key: '',
 			key_selected: '',
