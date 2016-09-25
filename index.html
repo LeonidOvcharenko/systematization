@@ -45,15 +45,24 @@
 					<div class="row">
 						<div class="form-group col-xs-4">
 							<label>Ключ:</label>
-							<myselect list='{{keys}}' value='{{key}}' /> 
+							<myselect list='{{keys}}' value='{{key}}' />
 						</div>
 						<div class="form-group col-xs-4">
 							<label>Значение:</label>
-							<myselect list='{{values}}' value='{{value}}' /> 
+							<myselect list='{{values}}' value='{{value}}' />
 						</div>
 						<div class="form-group col-xs-4 {{ key && value ? 'show' : 'invisible' }}">
 							<label class="text-info">{{key}}: {{value}}</label>
 							<div id="dropzone-tags" class="dropzone alert alert-warning">Перетащите сюда файлы,<br>чтобы присвоить тег</div>
+						</div>
+						<div class="form-group col-xs-4">
+							<label>Файлы:</label>
+							<select multiple value='{{files_to_tag}}' class="form-control" {{!untagged.length ? 'disabled' : '' }}>
+								{{#untagged}}
+									<option value="{{.}}">{{name}}</option>
+								{{/untagged}}
+							</select>
+							<button on-click="apply_to_files" class="btn btn-default btn-sm" {{!files_to_tag.length ? 'disabled' : '' }}>Присвоить тег</button>
 						</div>
 					</div>
 				</div>

@@ -59,7 +59,7 @@ $(function(){
 			var self = this;
 			var untagged = [];
 			var files = self.files.data;
-			self.files.data.forEach(function(obj, i){
+			files.forEach(function(obj, i){
 				if (!self.tags.findOne({'hash': { '$eq': obj.hash }})) {
 					untagged.push(obj);
 				}
@@ -71,7 +71,7 @@ $(function(){
 			var self = this;
 			var verified = [];
 			var files = self.files.data;
-			self.files.data.forEach(function(obj, i){
+			files.forEach(function(obj, i){
 				if (
 					self.tags.findOne({'$and': [{ 'hash': obj.hash }, { 'auto': false }]})
 					&&
@@ -203,9 +203,8 @@ $(function(){
 							if (l==0) break;
 							if (!self.get('list_visible')) { self.fire('show_list',e); break; };
 							var a = self.get('active') >= 0 ? self.get('active') : -1;
-							console.log('↓',a);
-							while (a<l && !self.get('visible.'+a)) { a++; console.log(a,'+'); }
-							self.set('active', (a+1)%l); console.log(a+1,'!');
+							while (a<l && !self.get('visible.'+a)) { a++; }
+							self.set('active', (a+1)%l);
 							break;
 						case 9:  // Tab
 						case 13: // Enter
@@ -248,12 +247,17 @@ $(function(){
 			key: '',
 			keys: [],
 			value: '',
-			values: []
+			values: [],
+			untagged: [],
+			files_to_tag: []
 		},
 		components: {
 			myselect: EditableSelect
 		}
 	});
+	Tagger.update_untagged_files = function(){
+		return this.set('untagged', Database.get_untagged() );
+	};
 	Tagger.update_tags_keys = function(){
 		return this.set('keys', Database.get_keys());
 	};
@@ -265,7 +269,26 @@ $(function(){
 		key: function(){
 			this.set('value', '');
 			this.update_tags_values();
+		},
+		files_to_tag: function(){
+			
 		}
+	});
+	Tagger.on({
+		apply_to_files: function(){
+			var files = this.get('files_to_tag');
+			for (var i=0; i<files.length; i++){
+				Database.add_tag(files[i], {key: Tagger.get('key'), value: Tagger.get('value'), auto: false}, function(){
+					// TODO: refactor this as UpdateAllViews
+					ViewDB.update_stats();
+					Tagger.update_tags_keys().then(function(){
+						Tagger.update_tags_values();
+					});
+					Tagger.update_untagged_files();
+				});
+			}
+			this.set('files_to_tag', [])
+		},
 	});
 	
 	
@@ -353,6 +376,7 @@ $(function(){
 				Tagger.update_tags_keys().then(function(){
 					Tagger.update_tags_values();
 				});
+				Tagger.update_untagged_files();
 			});
 		});
 		/* var files = e.originalEvent.dataTransfer.files;
@@ -373,5 +397,6 @@ $(function(){
 		Tagger.update_tags_keys().then(function(){
 			Tagger.update_tags_values();
 		});
+		Tagger.update_untagged_files();
 	});
 });
