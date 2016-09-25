@@ -119,15 +119,13 @@ $(function(){
 		this.set('untagged', Database.get_untagged() );
 		this.set('verified', Database.get_verified_files() );
 	};
-
-	// Display some statistic about this computer, using node's os module.
-	var os = require('os');
-	var prettyBytes = require('pretty-bytes');
-
-	$('.stats').append('Number of cpu cores: <span>' + os.cpus().length + '</span>');
-	$('.stats').append('<br>');
-	$('.stats').append('Free memory: <span>' + prettyBytes(os.freemem())+ '</span>');
-
+	
+	var Processing = new Ractive({
+		el: 'processing',
+		template: '#processing-tpl',
+		data: {
+		}
+	});
 
 	Database.init().then(function(){
 		ViewDB.update_stats();

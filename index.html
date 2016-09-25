@@ -24,7 +24,6 @@
 								<dt>Проверенных:</dt>
 								<dd>{{verified.length}}{{#if N_files>0}} ({{Math.round(verified.length/N_files*100)}}%){{/if}}</dd>
 							</dl>
-							<p class="stats"></p>
 						</div>
 						<div class="col-xs-7">
 							<div id="dropzone-db" class="dropzone center-block alert alert-warning">Перетащите сюда файлы,<br>чтобы добавить в&nbsp;базу</div>
@@ -38,13 +37,10 @@
 			</div>
 		</script>
 		
-		<button class="btn btn-default">Сгенерировать индексы</button>
-		<button class="btn btn-default">Переименовать файлы</button>
-		
 		<div id="tagger"></div>
 		<script id="tagger-tpl" type='text/ractive'>
 			<div class="panel panel-default">
-				<div class="panel-heading">Тегирование</div>
+				<div class="panel-heading">Теги</div>
 				<div class="panel-body">
 					<div class="row">
 						<div class="form-group col-xs-4">
@@ -65,9 +61,25 @@
 				</div>
 			</div>
 		</script>
+		
+		<div id="processing"></div>
+		<script id="processing-tpl" type='text/ractive'>
+			<div class="panel panel-default">
+				<div class="panel-heading">Коллекция</div>
+				<div class="panel-body">
+					<div class="form-group col-xs-4">
+					Использовать теги:
+						<div class="radio"><label><input type="radio" name='{{tags}}' value='all' checked /> Все теги</label></div>
+						<div class="radio"><label><input type="radio" name='{{tags}}' value='manual' /> Только проверенные</label></div>
+						<button class="btn btn-default">Сгенерировать индексы</button>
+					</div>
+					<button class="btn btn-default">Переименовать файлы</button>
+				</div>
+			</div>
+		</script>
+
+		
 	</div>
-
-
 	<script src="./js/ractive.min.js"></script>
 	<script src="./js/jquery.min.js"></script>
 	<script src="./js/bootstrap.min.js"></script>
