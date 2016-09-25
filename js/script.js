@@ -34,12 +34,13 @@ $(function(){
 			return self.files.findOne({'path': { '$eq' : filepath }});
 		}
 		,
-		add_tag: function(key,value,filehash){
+		add_tag: function(key,value,filehash,auto){
 			var self = this;
 			self.tags.insert({
 				hash: filehash,
 				key: key,
-				value: value
+				value: value,
+				auto: !!auto
 			});
 		}
 		,
@@ -76,6 +77,7 @@ $(function(){
 	var prettyBytes = require('pretty-bytes');
 
 	$('.stats').append('Number of cpu cores: <span>' + os.cpus().length + '</span>');
+	$('.stats').append('<br>');
 	$('.stats').append('Free memory: <span>' + prettyBytes(os.freemem())+ '</span>');
 
 
@@ -85,19 +87,22 @@ $(function(){
 	$(window).on('dragover drop', function(e){ e.preventDefault(); return false; });
 	$('.dropzone')
 	.on('dragover', function(e){
-		$(this).addClass('hover');
+		$(this).removeClass('alert-warning').addClass('alert-success');
 		return false;
 	}).on('dragleave', function(e){
-		$(this).removeClass('hover');
+		$(this).removeClass('alert-success').addClass('alert-warning');
 		return false;
 	}).on('drop', function(e){
 		e.preventDefault();
+		$(this).removeClass('alert-success').addClass('alert-warning');
+		return true;
+	});
+	$('#dropzone-db').on('drop', function(e){
 		var files = e.originalEvent.dataTransfer.files;
 		for (var i = 0; i < files.length; ++i){
 			var filepath = files[i].path;
 			FilesDB.add_file(filepath);
 		}
-		$(this).removeClass('hover');
 		return false;
 	});
 	
@@ -105,9 +110,9 @@ $(function(){
 	
 	var EditableSelect = Ractive.extend({
 		isolated: true,
-		template: '<input type="text" class="es-input" value="{{value}}" autocomplete="off" on-input-keydown="on_key" on-input-keyup="filter" on-blur="hide_list" on-focus="show_list">'+
-			'<ul class="es-list" style="display:{{list_visible ? \'block\' : \'none\'}};">'+
-			'{{#list:i}}<li class="{{visible[i] ? \'visible\' : \'\' }} {{hl[i] ? \'hl\' : \'\' }}" on-click="select_li" on-mouseover="hl:{{true}},{{i}}" on-mouseout="hl:{{false}},{{i}}">{{.}}</li>{{/list}}'+
+		template: '<input type="text" class="es-input form-control" value="{{value}}" autocomplete="off" on-input-keydown="on_key" on-input-keyup="filter" on-blur="hide_list" on-focus="show_list">'+
+			'<ul class="es-list dropdown-menu {{list_visible ? \'show\' : \'hide\'}}">'+
+			'{{#list:i}}<li class="{{visible[i] ? \'show\' : \'hide\' }}"><a href="#" on-click="select_li">{{.}}</a></li>{{/list}}'+
 			'</ul>',
 		/* data: {
 			list: ['A', 'B', 'C'],
@@ -118,15 +123,12 @@ $(function(){
 			var self = this;
 			self.set({
 				visible: [],
-				hl: [],
 				list_visible: false
 			});
 			self.on({
 				'select_li': function(e){
+					e.original.preventDefault();
 					self.set('value', e.context);
-				},
-				'hl': function(e, hl, i){
-					self.set('hl.'+i, hl);
 				},
 				'show_list': function(e){
 					var $input = $(e.node);
@@ -137,6 +139,7 @@ $(function(){
 						width: $input.outerWidth()
 					})
 					self.set('list_visible', true);
+					self.fire('filter');
 				},
 				'hide_list': function(e){
 					setTimeout(function(){ self.set('list_visible', false); }, 100);

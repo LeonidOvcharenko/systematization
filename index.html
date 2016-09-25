@@ -4,35 +4,72 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Systematization</title>
+	<link rel="stylesheet" href="./css/bootstrap.css">
 	<link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
-	<h2>Drop files to add to database:</h2>
-	<div class="dropzone">Drop files here</div>
-	
-	<h2>Database</h2>
-	<div class="db">N files in db</div>
-	<button id="save_db">Save DB</button>
-	<button>Optimize DB</button>
-	<button>Generate indexes</button>
-	<button>Rename by template</button>
-	
-	<div id="tagger"></div>
-	<script id="tagger-tpl" type='text/ractive'>
-		<div class="" style="float: left;">
-			Ключ:<br>
-			<myselect list='{{keys}}' value='{{key}}' on-add="add_key" /> 
+	<div class="container">
+		<div class="panel panel-default">
+			<div class="panel-heading">База файлов</div>
+			<div class="panel-body">
+				<div class="row">
+					<div class="col-xs-5">
+						<dl class="dl-horizontal">
+							<dt>Всего файлов:</dt>
+							<dd>150987</dd>
+							<dt>Неразмеченных:</dt>
+							<dd>5497 (7%)</dd>
+							<dt>Проверенных:</dt>
+							<dd>98797 (45%)</dd>
+						</dl>
+						<p class="stats"></p>
+					</div>
+					<div class="col-xs-7">
+						<div id="dropzone-db" class="dropzone center-block alert alert-warning">Перетащите сюда файлы,<br>чтобы добавить в&nbsp;базу</div>
+					</div>
+				</div>
+			</div>
+			<div class="panel-footer">
+				<button class="btn btn-primary btn-sm" id="save_db">Сохранить</button>
+				<button class="btn btn-default btn-sm" title="Удалить записи о несуществующих файлах">Оптимизировать</button>
+			</div>
 		</div>
-		<div class="" style="float: left;">
-			Значение:<br>
-			<myselect list='{{values}}' value='{{value}}' on-add="add_value" /> 
-		</div>
-	</script>
+		
+		
+		
+		<button class="btn btn-default">Generate indexes</button>
+		<button class="btn btn-default">Rename by template</button>
+		
+		<div id="tagger"></div>
+		<script id="tagger-tpl" type='text/ractive'>
+			<div class="panel panel-default">
+				<div class="panel-heading">Тегирование</div>
+				<div class="panel-body">
+					<div class="row">
+						<div class="form-group col-xs-4">
+							<label>Ключ:</label>
+							<myselect list='{{keys}}' value='{{key}}' on-add="add_key" /> 
+						</div>
+						<div class="form-group col-xs-4">
+							<label>Значение:</label>
+							<myselect list='{{values}}' value='{{value}}' on-add="add_value" /> 
+						</div>
+						<div class="form-group col-xs-4">
+							{{#if key && value}}
+								<label class="text-info">{{key}}: {{value}}</label>
+								<div class="dropzone alert alert-warning">Перетащите сюда файлы,<br>чтобы присвоить тег</div>
+							{{/if}}
+						</div>
+					</div>
+				</div>
+			</div>
+		</script>
+	</div>
 
-	<p class="stats"></p>
 
 	<script src="./js/ractive.min.js"></script>
 	<script src="./js/jquery.min.js"></script>
+	<script src="./js/bootstrap.min.js"></script>
 	<script src="./js/script.js"></script>
 </body>
 </html>
