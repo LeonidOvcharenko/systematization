@@ -22,12 +22,13 @@ $(function(){
 			return Crypto.createHash('sha1').update(data).digest('hex');
 		}
 		,
-		add_file: function(filepath, callback){
+		add_file: function(file, callback){
 			var self = this;
-			FS.readFile(filepath, function(err, data){
+			FS.readFile(file.path, function(err, data){
 				var hash = self.hash_file(data);
 				var inserted = self.files.insert({
-					path: filepath,
+					name: file.name,
+					path: file.path,
 					hash: hash
 				});
 				if (inserted && callback) { callback(); }
@@ -38,10 +39,10 @@ $(function(){
 			return self.files.findOne({'path': { '$eq' : filepath }});
 		}
 		,
-		add_tag: function(filepath, tag, callback){
+		add_tag: function(file, tag, callback){
 			var self = this;
-			self.add_file(filepath, callback);  // just in case
-			FS.readFile(filepath, function(err, data){
+			self.add_file(file, callback);  // just in case
+			FS.readFile(file.path, function(err, data){
 				var hash = self.hash_file(data);
 				var inserted = self.tags.insert({
 					hash:  hash,
@@ -282,19 +283,80 @@ $(function(){
 		$(this).removeClass('alert-success').addClass('alert-warning');
 		return true;
 	});
+	var all_dropped_files = function(items, callback){
+		var files_dropped = [];
+		var push_file = function(file){
+			// TODO: make low priority queue, esp. if total size > 10M
+			callback(file);
+			// files_dropped.push(file);
+		};
+		var readFileTree = function(item) {
+			if (item.isFile) {
+				item.file(push_file);
+			} 
+			else if (item.isDirectory) {
+				var dirReader = item.createReader()
+				dirReader.readEntries(function(entries) {
+					for (var i = 0; i < entries.length; i++){
+						readFileTree(entries[i]);
+					}
+				});
+			}
+		};
+		if (items) {
+			for (var i = 0; i < items.length; i++){
+				var item = items[i];
+				var entry = null;
+				if (item.getAsEntry) {
+					entry = item.getAsEntry();
+				}
+				else if (item.webkitGetAsEntry) {
+					entry = item.webkitGetAsEntry();
+				}
+				if (entry) {
+					if (entry.isFile) {
+						entry.file(push_file);
+					}
+					else if (entry.isDirectory) {
+						readFileTree(entry);
+					}
+				}
+			}
+		}
+		// TODO: make low priority queue, esp. if total size > 10M
+		/* for (var i=0; i<files_dropped.length; i++){
+			// total_size += files_dropped[i].size;
+			callback(files_dropped[i]);
+			console.log(files_dropped[i].name);
+		}
+		*/
+	};
 	$('#dropzone-db').on('drop', function(e){
-		var files = e.originalEvent.dataTransfer.files;
-		for (var i = 0; i < files.length; ++i){
+		all_dropped_files(e.originalEvent.dataTransfer.items, function(file){
+			Database.add_file(file, function(){
+				ViewDB.update_stats();
+			});
+		});
+		/* var files = e.originalEvent.dataTransfer.files;
+		for (var i = 0; i < files.length; i++){
 			var filepath = files[i].path;
 			Database.add_file(filepath, function(){
 				ViewDB.update_stats();
 			});
-		}
+		} */
 		return false;
 	});
 	$('#dropzone-tags').on('drop', function(e){
-		var files = e.originalEvent.dataTransfer.files;
-		for (var i = 0; i < files.length; ++i){
+		all_dropped_files(e.originalEvent.dataTransfer.items, function(file){
+			Database.add_tag(file, {key: Tagger.get('key'), value: Tagger.get('value'), auto: false}, function(){
+				ViewDB.update_stats();
+				Tagger.update_tags_keys().then(function(){
+					Tagger.update_tags_values();
+				});
+			});
+		});
+		/* var files = e.originalEvent.dataTransfer.files;
+		for (var i = 0; i < files.length; i++){
 			var filepath = files[i].path;
 			Database.add_tag(filepath, {key: Tagger.get('key'), value: Tagger.get('value'), auto: false}, function(){
 				ViewDB.update_stats();
@@ -302,7 +364,7 @@ $(function(){
 					Tagger.update_tags_values();
 				});
 			});
-		}
+		} */
 		return false;
 	});
 	
