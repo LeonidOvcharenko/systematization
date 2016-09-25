@@ -5,19 +5,8 @@ body{
 }
 
 
-/* Stats */
-
-.stats{
-	text-align: center;
-	margin-top: 80px;
-	color: #8C91A0;
-	font-size: 13px;
-}
-
-.stats span{
+.panel-heading {
 	font-weight: bold;
-	color: #A2A9BD;
-	margin-right: 10px;
 }
 
 
@@ -43,14 +32,17 @@ body{
 	text-align: center;
 	cursor: pointer;
 }
-input.es-input {
+.es-input {
 	padding-right: 20px !important;
 	background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAICAYAAADJEc7MAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAG2YAABzjgAA4DIAAIM2AAB5CAAAxgwAADT6AAAgbL5TJ5gAAABGSURBVHjaYvz//z8DOYCJgUzA0tnZidPK8vJyRpw24pLEpwnuVHRFhDQxMDAwMPz//x+OOzo6/iPz8WFGuocqAAAA//8DAD/sORHYg7kaAAAAAElFTkSuQmCC) right center no-repeat;
-/*	background-color: white; */
 }
-input.es-input.open {
-	-webkit-border-bottom-left-radius: 0; -moz-border-radius-bottomleft: 0; border-bottom-left-radius: 0;
-	-webkit-border-bottom-right-radius: 0; -moz-border-radius-bottomright: 0; border-bottom-right-radius: 0; }
-.es-list { position: absolute; padding: 0; margin: 0; border: 1px solid #d1d1d1; display: none; z-index: 1000; background: #fff; max-height: 240px; overflow-y: auto;
-	-moz-box-shadow: 0 2px 3px #ccc; -webkit-box-shadow: 0 2px 3px #ccc; box-shadow: 0 2px 3px #ccc; }
-.es-list:empty { display: none; border: none; }
+.es-list {
+	padding: 0;
+	max-height: 240px;
+	overflow-y: auto;
+}
+.es-list:empty {
+	display: none;
+	box-shadow: none;
+	border: none;
+}

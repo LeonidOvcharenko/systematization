@@ -141,10 +141,10 @@ $(function(){
 		template:
 			'<div class="es">'+
 				'<input type="text" class="es-input form-control" value="{{value}}" autocomplete="off" on-input-keydown="on_key" on-input-keyup="filter" on-blur="hide_list" on-focus="show_list" />'+
-				'<span class="es-clear {{value ? \'show\' : \'hide\'}} text-danger" on-click="clear">×</span>'+
-				'<ul class="es-list dropdown-menu {{list_visible ? \'show\' : \'hide\'}}">'+
+				'<span class="es-clear {{value ? \'show\' : \'hide\'}} text-danger" on-click="clear" title="Очистить">×</span>'+
+				'<ul class="es-list dropdown-menu {{(list_visible && !no_matches) ? \'show\' : \'hide\'}}">'+
 					'{{#list:i}}<li class="{{visible[i] ? \'show\' : \'hide\' }} {{active==i ? \'active\' : \'\' }}">'+
-						'<a href="#" on-click="select_li">{{.}}</a>'+
+						'<a href="#" on-click="select_li" tabindex="-1">{{.}}</a>'+
 					'</li>{{/list}}'+
 				'</ul>'+
 			'</div>',
@@ -153,6 +153,7 @@ $(function(){
 			self.set({
 				visible: [],
 				active: -1,
+				no_matches: true,
 				list_visible: false
 			});
 			self.on({
@@ -205,14 +206,14 @@ $(function(){
 							while (a<l && !self.get('visible.'+a)) { a++; console.log(a,'+'); }
 							self.set('active', (a+1)%l); console.log(a+1,'!');
 							break;
+						case 9:  // Tab
 						case 13: // Enter
-							e.original.preventDefault();
+							if (e.original.keyCode == 13) e.original.preventDefault();
 							var a = self.get('active');
 							if (self.get('visible.'+a)) {
 								self.set('value', self.get('list.'+a));
 							}
 							// continue
-						case 9:  // Tab
 						case 27: // Esc
 							self.fire('hide_list');
 							break;
@@ -226,11 +227,14 @@ $(function(){
 					var list = self.get('list');
 					var search = self.get('value').toLowerCase().trim();
 					var first = self.get('active') >=0 ? self.get('active') : -1;
+					var no_matches = true;
 					for (var i=0; i<list.length; i++){
 						var found = (list[i] || '').toLowerCase().indexOf(search) >= 0;
 						self.set('visible.'+i, found);
+						no_matches = no_matches && !found;
 						if (found && first==-1) { self.set('active', i); first = i; }
 					}
+					self.set('no_matches', no_matches);
 				}
 			});
 		}
