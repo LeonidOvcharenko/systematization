@@ -99,6 +99,23 @@
 			</div>
 		</script>
 
+		<script id="tag-index-tpl" type='text/ractive'>
+			<html lang="ru">
+			<head>
+				<meta charset="utf-8">
+				<title>{{tag}} — {{date}}</title>
+			</head>
+			<body>
+				<h1>{{tag}}</h1>
+				<ul>
+				{{#files}}
+					<li><a href="{{path}}">{{name}}</a></li>
+				{{/files}}
+				</ul>
+				<p>Сгенерировано систематизатором {{date}}</p>
+			</body>
+			</html>
+		</script>
 		
 	</div>
 	<script src="./js/ractive.min.js"></script>
