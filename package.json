@@ -10,7 +10,8 @@
   "window": {
     "toolbar": false,
     "width": 800,
-    "height": 600
+    "height": 600,
+    "icon": "favicon-96x96.png"
   },
   "license": "MIT",
   "dependencies": {
