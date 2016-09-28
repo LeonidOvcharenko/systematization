@@ -1,8 +1,43 @@
 $(function(){
+	var Database;
+	var Preprocessor = {
+		auto_tags: function(filepath, hash, data){
+			var self = this;
+			var ext = filepath.match(/\.(\w+)$/);
+			ext = (ext && ext[1]) ? ext[1].toLowerCase() : '';
+			if (ext) {
+				Database.add_tag({hash: hash}, {key: 'FORMAT', value: ext, auto: false});
+			}
+			switch (ext) {
+				case 'pdf':
+					this.from_pdf(hash, data);
+					break;
+				default:
+					console.log('No processor for ',ext);
+					break;
+			}
+		},
+		from_pdf: function(hash, data){
+			var pdf_file = new Uint8Array(data);
+			var filehash = hash;
+			PDFJS.getDocument(pdf_file).promise.then(function(doc){
+				doc.getMetadata().then(function(metadata) {
+					if (metadata.info) {
+						Database.add_tags({hash: filehash}, metadata.info, true);
+					}
+				}).catch(function(err) {
+					// console.log('Error getting metadata');
+				});
+			}).catch(function(err) {
+				// console.log('Error getting PDF');
+			});
+		}
+	};
+
 	var FS     = require('fs');
 	var Crypto = require('crypto');
 	var Loki   = require('lokijs');
-	var Database = {
+	Database = {
 		init: function(callback){
 			var self = this;
 			var dfrd = $.Deferred();
@@ -33,6 +68,7 @@ $(function(){
 					hash: hash
 				});
 				if (inserted && callback) { callback(); }
+				Preprocessor.auto_tags(file.path, hash, data);
 			} catch(e){}
 			return hash;
 		}
@@ -44,6 +80,7 @@ $(function(){
 		add_tag: function(file, tag, callback){
 			var self = this;
 			var hash = file.hash || self.add_file(file, callback);  // just in case
+			if (!tag.value) return;
 			var inserted = self.tags.insert({
 				hash:  hash,
 				key:   tag.key,
@@ -52,6 +89,22 @@ $(function(){
 				auto:  !!tag.auto
 			});
 			if (inserted && callback) { callback(); }
+		}
+		,
+		add_tags: function(file, tags, auto, callback){
+			var self = this;
+			var hash = file.hash || self.add_file(file, callback);  // just in case
+			for (var key in tags){
+				if (!tags[key]) continue;
+				var inserted = self.tags.insert({
+					hash:  hash,
+					key:   key,
+					value: tags[key],
+					'key/value': hash+'¹'+key+'²'+tags[key],
+					auto:  !!auto
+				});
+				if (inserted && callback) { callback(); }
+			}
 		}
 		,
 		remove_tag: function(hash, tag){
@@ -452,7 +505,7 @@ $(function(){
 	$('#dropzone-db').on('drop', function(e){
 		all_dropped_files(e.originalEvent.dataTransfer.items, function(file){
 			Database.add_file(file, function(){
-				ViewDB.update_stats();
+				update_all_views();
 			});
 		});
 		return false;
