@@ -2,6 +2,7 @@ $(function(){
 	var Database;
 	
 	var EXIF = require('exif-reader');
+	var AudioMetaData = require('audio-metadata');
 	
 	var Preprocessor = {
 		auto_tags: function(filepath, hash, data){
@@ -21,6 +22,15 @@ $(function(){
 				case 'jif':
 					this.from_jpeg(hash, data);
 					format = 'JPEG';
+					break;
+				case 'mp3':
+					this.from_mp3(hash, data);
+					format = 'MP3';
+					break;
+				case 'ogg':
+				case 'oga':
+					this.from_ogg(hash, data);
+					format = 'OGG';
 					break;
 				default:
 					console.log('No processor for ',ext);
@@ -45,18 +55,22 @@ $(function(){
 			if (exif_container != -1) {
 				try {
 					var metadata = EXIF(data.slice(exif_container));
-					if (metadata.image) {
-						Database.add_tags({hash: hash}, metadata.image, true);
-					}
-					if (metadata.exif) {
-						Database.add_tags({hash: hash}, metadata.exif, true);
-					}
-					if (metadata.gps) {
-						Database.add_tags({hash: hash}, metadata.gps, true);
-					}
+					Database.add_tags({hash: hash}, metadata.image || {}, true);
+					Database.add_tags({hash: hash}, metadata.exif  || {}, true);
+					Database.add_tags({hash: hash}, metadata.gps   || {}, true);
 				}
 				catch(e){}
 			}
+		},
+		from_mp3: function(hash, data){
+			var metadata = AudioMetaData.id3v2(data);
+			Database.add_tags({hash: hash}, metadata || {}, true);
+			// metadata = AudioMetaData.id3v1(data);
+			// Database.add_tags({hash: hash}, metadata || {}, true);
+		},
+		from_ogg: function(hash, data){
+			var metadata = AudioMetaData.ogg(data);
+			Database.add_tags({hash: hash}, metadata || {}, true);
 		}
 	};
 

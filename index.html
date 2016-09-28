@@ -58,16 +58,6 @@
 							</div>
 						</div>
 						<div class="form-group col-xs-6">
-							<label>Файлы без тегов:</label>
-							<select multiple value='{{files_to_tag}}' class="form-control" {{!untagged.length ? 'disabled' : '' }}>
-								{{#untagged}}
-									<option value="{{hash}}">{{name}}</option>
-								{{/untagged}}
-							</select>
-							<button on-click="apply_to_files" class="btn btn-default btn-sm" {{!files_to_tag.length || !key || !value ? 'disabled' : '' }}>Присвоить тег</button>
-							<button on-click="clear_to_tag" class="btn btn-default btn-sm" {{!files_to_tag.length ? 'disabled' : '' }} title="Очистить">×</button>
-						</div>
-						<div class="form-group col-xs-6">
 							<label>Файлы с этим тегом:</label>
 							<select multiple value='{{files_with_tag}}' class="form-control" {{!tagged.length ? 'disabled' : '' }}>
 								{{#tagged}}
@@ -76,6 +66,16 @@
 							</select>
 							<button on-click="remove_from_files" class="btn btn-default btn-sm" {{!files_with_tag.length ? 'disabled' : '' }}>Удалить тег</button>
 							<button on-click="clear_with_tag" class="btn btn-default btn-sm" {{!files_with_tag.length ? 'disabled' : '' }} title="Очистить">×</button>
+						</div>
+						<div class="form-group col-xs-6">
+							<label>Файлы без тегов:</label>
+							<select multiple value='{{files_to_tag}}' class="form-control" {{!untagged.length ? 'disabled' : '' }}>
+								{{#untagged}}
+									<option value="{{hash}}">{{name}}</option>
+								{{/untagged}}
+							</select>
+							<button on-click="apply_to_files" class="btn btn-default btn-sm" {{!files_to_tag.length || !key || !value ? 'disabled' : '' }}>Присвоить тег</button>
+							<button on-click="clear_to_tag" class="btn btn-default btn-sm" {{!files_to_tag.length ? 'disabled' : '' }} title="Очистить">×</button>
 						</div>
 						<div class="form-group col-xs-6 {{ key && value ? 'show' : 'invisible' }}">
 							<label class="text-info">{{key}}: {{value}}</label>

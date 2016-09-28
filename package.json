@@ -15,6 +15,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "audio-metadata": "^0.3.0",
     "exif-reader": "^1.0.1",
     "lokijs": "^1.4.1",
     "pdfjs-dist": "^1.5.492",
