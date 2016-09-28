@@ -416,6 +416,7 @@ $(function(){
 		Tagger.update_untagged_files();
 		Tagger.update_tagged_files();
 	};
+	setInterval(update_all_views, 10000);
 	
 	Tagger.on({
 		clear_to_tag: function(){ this.set('files_to_tag', []); },
