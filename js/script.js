@@ -24,15 +24,17 @@ $(function(){
 		,
 		add_file: function(file, callback){
 			var self = this;
-			FS.readFile(file.path, function(err, data){
-				var hash = self.hash_file(data);
+			var data = FS.readFileSync(file.path);
+			var hash = self.hash_file(data);
+			try {
 				var inserted = self.files.insert({
 					name: file.name,
 					path: file.path,
 					hash: hash
 				});
 				if (inserted && callback) { callback(); }
-			});
+			} catch(e){}
+			return hash;
 		}
 		,
 		get_hash_from_db: function(filepath){
@@ -41,21 +43,23 @@ $(function(){
 		,
 		add_tag: function(file, tag, callback){
 			var self = this;
-			self.add_file(file, callback);  // just in case
-			FS.readFile(file.path, function(err, data){
-				var hash = self.hash_file(data);
-				var inserted = self.tags.insert({
-					hash:  hash,
-					key:   tag.key,
-					value: tag.value,
-					'key/value': hash+'¹'+tag.key+'²'+tag.value,
-					auto:  !!tag.auto
-				});
-				if (inserted && callback) { callback(); }
+			var hash = file.hash || self.add_file(file, callback);  // just in case
+			var inserted = self.tags.insert({
+				hash:  hash,
+				key:   tag.key,
+				value: tag.value,
+				'key/value': hash+'¹'+tag.key+'²'+tag.value,
+				auto:  !!tag.auto
 			});
+			if (inserted && callback) { callback(); }
 		}
 		,
-		get_untagged: function(){
+		remove_tag: function(hash, tag){
+			var self = this;
+			self.tags.removeWhere({ '$and': [{ 'key': tag.key }, { 'value': tag.value }, { 'hash': hash }] });
+		}
+		,
+		get_untagged_files: function(){
 			var self = this;
 			var untagged = [];
 			var files = self.files.data;
@@ -111,6 +115,7 @@ $(function(){
 		,
 		get_files_by_tag: function(key, value){
 			var self = this;
+			if (!self.tags) return [];
 			var hashes = self.tags.chain()
 				.find({ '$and': [{ 'key': key }, { 'value': value }]})
 				.mapReduce(function(obj){ return obj.hash; }, function(arr){ return arr; });
@@ -134,7 +139,7 @@ $(function(){
 	});
 	ViewDB.update_stats = function(){
 		this.set('N_files', Database.files.count() );
-		this.set('untagged', Database.get_untagged() );
+		this.set('untagged', Database.get_untagged_files() );
 		this.set('verified', Database.get_verified_files() );
 	};
 	
@@ -316,14 +321,19 @@ $(function(){
 			value: '',
 			values: [],
 			untagged: [],
-			files_to_tag: []
+			files_to_tag: [],
+			tagged: [],
+			files_with_tag: []
 		},
 		components: {
 			myselect: EditableSelect
 		}
 	});
 	Tagger.update_untagged_files = function(){
-		return this.set('untagged', Database.get_untagged() );
+		return this.set('untagged', Database.get_untagged_files() );
+	};
+	Tagger.update_tagged_files = function(){
+		return this.set('tagged', Database.get_files_by_tag(this.get('key'), this.get('value')) );
 	};
 	Tagger.update_tags_keys = function(){
 		return this.set('keys', Database.get_keys());
@@ -337,25 +347,43 @@ $(function(){
 			this.set('value', '');
 			this.update_tags_values();
 		},
+		value: function(){
+			this.update_tagged_files();
+		},
 		files_to_tag: function(){
 			
 		}
 	});
+	
+	var update_all_views = function(){
+		ViewDB.update_stats();
+		Tagger.update_tags_keys().then(function(){
+			Tagger.update_tags_values();
+		});
+		Tagger.update_untagged_files();
+		Tagger.update_tagged_files();
+	};
+	
 	Tagger.on({
+		clear_to_tag: function(){ this.set('files_to_tag', []); },
+		clear_with_tag: function(){ this.set('files_with_tag', []); },
 		apply_to_files: function(){
 			var files = this.get('files_to_tag');
 			for (var i=0; i<files.length; i++){
-				Database.add_tag(files[i], {key: Tagger.get('key'), value: Tagger.get('value'), auto: false}, function(){
-					// TODO: refactor this as UpdateAllViews
-					ViewDB.update_stats();
-					Tagger.update_tags_keys().then(function(){
-						Tagger.update_tags_values();
-					});
-					Tagger.update_untagged_files();
+				Database.add_tag({hash: files[i]}, {key: Tagger.get('key'), value: Tagger.get('value'), auto: false}, function(){
+					update_all_views();
 				});
 			}
-			this.set('files_to_tag', [])
+			this.set('files_to_tag', []);
 		},
+		remove_from_files: function(){
+			var files = this.get('files_with_tag');
+			for (var i=0; i<files.length; i++){
+				Database.remove_tag(files[i], {key: Tagger.get('key'), value: Tagger.get('value')});
+				update_all_views();
+			}
+			this.set('files_with_tag', []);
+		}
 	});
 	
 	
@@ -427,43 +455,19 @@ $(function(){
 				ViewDB.update_stats();
 			});
 		});
-		/* var files = e.originalEvent.dataTransfer.files;
-		for (var i = 0; i < files.length; i++){
-			var filepath = files[i].path;
-			Database.add_file(filepath, function(){
-				ViewDB.update_stats();
-			});
-		} */
 		return false;
 	});
 	$('#dropzone-tags').on('drop', function(e){
 		all_dropped_files(e.originalEvent.dataTransfer.items, function(file){
 			Database.add_tag(file, {key: Tagger.get('key'), value: Tagger.get('value'), auto: false}, function(){
-				ViewDB.update_stats();
-				Tagger.update_tags_keys().then(function(){
-					Tagger.update_tags_values();
-				});
-				Tagger.update_untagged_files();
+				update_all_views();
 			});
 		});
-		/* var files = e.originalEvent.dataTransfer.files;
-		for (var i = 0; i < files.length; i++){
-			var filepath = files[i].path;
-			Database.add_tag(filepath, {key: Tagger.get('key'), value: Tagger.get('value'), auto: false}, function(){
-				ViewDB.update_stats();
-				Tagger.update_tags_keys().then(function(){
-					Tagger.update_tags_values();
-				});
-			});
-		} */
+		/* var files = e.originalEvent.dataTransfer.files; */
 		return false;
 	});
 	
 	Database.init().then(function(){
-		ViewDB.update_stats();
-		Tagger.update_tags_keys().then(function(){
-			Tagger.update_tags_values();
-		});
-		Tagger.update_untagged_files();
+		update_all_views();
 	});
 });

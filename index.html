@@ -43,26 +43,39 @@
 				<div class="panel-heading">Теги</div>
 				<div class="panel-body">
 					<div class="row">
-						<div class="form-group col-xs-4">
-							<label>Ключ:</label>
-							<myselect list='{{keys}}' value='{{key}}' />
+						<div class="col-xs-4">
+							<div class="form-group">
+								<label>Ключ:</label>
+								<myselect list='{{keys}}' value='{{key}}' />
+							</div>
+							<div class="form-group">
+								<label>Значение:</label>
+								<myselect list='{{values}}' value='{{value}}' />
+							</div>
 						</div>
 						<div class="form-group col-xs-4">
-							<label>Значение:</label>
-							<myselect list='{{values}}' value='{{value}}' />
+							<label>Файлы без тегов:</label>
+							<select multiple value='{{files_to_tag}}' class="form-control" {{!untagged.length ? 'disabled' : '' }}>
+								{{#untagged}}
+									<option value="{{hash}}">{{name}}</option>
+								{{/untagged}}
+							</select>
+							<button on-click="apply_to_files" class="btn btn-default btn-sm" {{!files_to_tag.length || !key || !value ? 'disabled' : '' }}>Присвоить тег</button>
+							<button on-click="clear_to_tag" class="btn btn-default btn-sm" {{!files_to_tag.length ? 'disabled' : '' }} title="Очистить">×</button>
+						</div>
+						<div class="form-group col-xs-4">
+							<label>Файлы с этим тегом:</label>
+							<select multiple value='{{files_with_tag}}' class="form-control" {{!tagged.length ? 'disabled' : '' }}>
+								{{#tagged}}
+									<option value="{{hash}}">{{name}}</option>
+								{{/tagged}}
+							</select>
+							<button on-click="remove_from_files" class="btn btn-default btn-sm" {{!files_with_tag.length ? 'disabled' : '' }}>Удалить тег</button>
+							<button on-click="clear_with_tag" class="btn btn-default btn-sm" {{!files_with_tag.length ? 'disabled' : '' }} title="Очистить">×</button>
 						</div>
 						<div class="form-group col-xs-4 {{ key && value ? 'show' : 'invisible' }}">
 							<label class="text-info">{{key}}: {{value}}</label>
 							<div id="dropzone-tags" class="dropzone alert alert-warning">Перетащите сюда файлы,<br>чтобы присвоить тег</div>
-						</div>
-						<div class="form-group col-xs-4">
-							<label>Файлы:</label>
-							<select multiple value='{{files_to_tag}}' class="form-control" {{!untagged.length ? 'disabled' : '' }}>
-								{{#untagged}}
-									<option value="{{.}}">{{name}}</option>
-								{{/untagged}}
-							</select>
-							<button on-click="apply_to_files" class="btn btn-default btn-sm" {{!files_to_tag.length ? 'disabled' : '' }}>Присвоить тег</button>
 						</div>
 					</div>
 				</div>
