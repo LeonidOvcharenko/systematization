@@ -1,36 +1,62 @@
 $(function(){
 	var Database;
+	
+	var EXIF = require('exif-reader');
+	
 	var Preprocessor = {
 		auto_tags: function(filepath, hash, data){
 			var self = this;
 			var ext = filepath.match(/\.(\w+)$/);
 			ext = (ext && ext[1]) ? ext[1].toLowerCase() : '';
-			if (ext) {
-				Database.add_tag({hash: hash}, {key: 'FORMAT', value: ext, auto: false});
-			}
+			var format = ext;
 			switch (ext) {
 				case 'pdf':
 					this.from_pdf(hash, data);
+					format = 'PDF';
+					break;
+				case 'jpeg':
+				case 'jpe':
+				case 'jpg':
+				case 'jfif':
+				case 'jif':
+					this.from_jpeg(hash, data);
+					format = 'JPEG';
 					break;
 				default:
 					console.log('No processor for ',ext);
 					break;
 			}
+			if (ext) {
+				Database.add_tag({hash: hash}, {key: 'FORMAT', value: format, auto: false});
+			}
 		},
 		from_pdf: function(hash, data){
 			var pdf_file = new Uint8Array(data);
-			var filehash = hash;
 			PDFJS.getDocument(pdf_file).promise.then(function(doc){
 				doc.getMetadata().then(function(metadata) {
 					if (metadata.info) {
-						Database.add_tags({hash: filehash}, metadata.info, true);
+						Database.add_tags({hash: hash}, metadata.info, true);
 					}
-				}).catch(function(err) {
-					// console.log('Error getting metadata');
-				});
-			}).catch(function(err) {
-				// console.log('Error getting PDF');
-			});
+				}).catch(function(err) { /* Error getting metadata */ });
+			}).catch(function(err) { /* Error getting PDF */ });
+		},
+		from_jpeg: function(hash, data){
+			var exif_container = data.indexOf('Exif');
+			if (exif_container != -1) {
+				try {
+					var metadata = EXIF(data.slice(exif_container));
+					if (metadata.image) {
+						Database.add_tags({hash: hash}, metadata.image, true);
+					}
+					if (metadata.exif) {
+						Database.add_tags({hash: hash}, metadata.exif, true);
+					}
+					if (metadata.gps) {
+						Database.add_tags({hash: hash}, metadata.gps, true);
+					}
+				}
+				catch(e){}
+			}
 		}
 	};
 
@@ -80,6 +106,7 @@ $(function(){
 		add_tag: function(file, tag, callback){
 			var self = this;
 			var hash = file.hash || self.add_file(file, callback);  // just in case
+			tag.value = tag.value.trim();
 			if (!tag.value) return;
 			var inserted = self.tags.insert({
 				hash:  hash,
@@ -95,12 +122,13 @@ $(function(){
 			var self = this;
 			var hash = file.hash || self.add_file(file, callback);  // just in case
 			for (var key in tags){
-				if (!tags[key]) continue;
+				var value = (tags[key]+'').trim();  // convert numbers, objects and arrays to strings
+				if (!value) continue;
 				var inserted = self.tags.insert({
 					hash:  hash,
 					key:   key,
-					value: tags[key],
-					'key/value': hash+'¹'+key+'²'+tags[key],
+					value: value,
+					'key/value': hash+'¹'+key+'²'+value,
 					auto:  !!auto
 				});
 				if (inserted && callback) { callback(); }

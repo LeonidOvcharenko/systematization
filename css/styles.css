@@ -46,3 +46,8 @@ body{
 	box-shadow: none;
 	border: none;
 }
+
+
+.dropdown-menu > li > a:after {
+	content: ' ';
+}
