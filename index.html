@@ -9,6 +9,7 @@
 	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 	<title>Systematization</title>
 	<link rel="stylesheet" href="./css/bootstrap.css">
+	<link rel="stylesheet" href="./css/font-awesome.min.css">
 	<link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
@@ -65,7 +66,7 @@
 								{{/tagged}}
 							</select>
 							<button on-click="remove_from_files" class="btn btn-default btn-sm" {{!files_with_tag.length ? 'disabled' : '' }}>Удалить тег</button>
-							<button on-click="clear_with_tag" class="btn btn-default btn-sm" {{!files_with_tag.length ? 'disabled' : '' }} title="Очистить">×</button>
+							<button on-click="clear_with_tag" class="btn btn-default btn-sm" {{!files_with_tag.length ? 'disabled' : '' }} title="Очистить"><i class="fa fa-times"></i></button>
 						</div>
 						<div class="form-group col-xs-6">
 							<label>Файлы без тегов:</label>
@@ -75,11 +76,64 @@
 								{{/untagged}}
 							</select>
 							<button on-click="apply_to_files" class="btn btn-default btn-sm" {{!files_to_tag.length || !key || !value ? 'disabled' : '' }}>Присвоить тег</button>
-							<button on-click="clear_to_tag" class="btn btn-default btn-sm" {{!files_to_tag.length ? 'disabled' : '' }} title="Очистить">×</button>
+							<button on-click="clear_to_tag" class="btn btn-default btn-sm" {{!files_to_tag.length ? 'disabled' : '' }} title="Очистить"><i class="fa fa-times"></i></button>
 						</div>
-						<div class="form-group col-xs-6 {{ key && value ? 'show' : 'invisible' }}">
-							<label class="text-info">{{key}}: {{value}}</label>
-							<div id="dropzone-tags" class="dropzone alert alert-warning">Перетащите сюда файлы,<br>чтобы присвоить тег</div>
+					</div>
+					<div class="row">
+						<div class="col-xs-8">
+							<fieldset>
+								<legend>Проверка тегов</legend>
+								<div class="form-group">
+									<div class="input-group">
+										<div class="input-group-btn">
+											<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!a_key ? 'disabled' : ''}}><i class="fa fa-bars"></i></button>
+											<ul class="dropdown-menu">
+												<li class="dropdown-header">...</li>
+												<li class="divider"></li>
+												<li><a href="#" on-click="rename_key:{{a_key}}"><i class="fa fa-pencil"></i> Переименовать</a></li>
+												<li class="divider"></li>
+												<li><a href="#" on-click="remove_key:{{a_key}}"><i class="fa fa-times"></i> Удалить ключ</a></li>
+											</ul>
+										</div>
+										<select value='{{a_key}}' class="form-control" {{!keys.length ? 'disabled' : '' }}>
+											{{#keys}}<option value="{{.}}">{{.}}</option>{{/keys}}
+										</select>
+										<div class="input-group-btn">
+											<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!a_key ? 'disabled' : ''}}><span class="fa fa-filter text-danger"></span></button>
+											<ul class="dropdown-menu pull-right">
+												<li><a href="#" on-click="">Все</a></li>
+												<li><a href="#" on-click="">Авто</a></li>
+												<li><a href="#" on-click="">Проверенные</li>
+											</ul>
+										</div>
+									</div>
+								</div>
+								<table class="table table-condensed table-fixedheader">
+									<thead><tr>
+										<th width="70%"><label><input type="checkbox" class="" value="" /> {{a_key}}:</label></th>
+										<th width="30%">
+											<div class="btn-group">
+												<button class="btn btn-success btn-xs" title="Утвердить все"><i class="fa fa-check"></i></button>
+												<button class="btn btn-danger btn-xs" title="Удалить все"><i class="fa fa-times"></i></button>
+											</div>
+										</th>
+									</tr></thead>
+									<tbody style="height:256px;">
+									{{#a_values}}
+										<tr class="on-hover">
+											<td width="70%"><label><input type="checkbox" class="" /> {{.}}</label></td>
+											<td width="30%">
+												<div class="btn-group on-hover-show">
+													<button class="btn btn-default btn-xs" title="Утвердить"><i class="fa fa-check text-success"></i></button>
+													<button class="btn btn-default btn-xs" title="Удалить"><i class="fa fa-times text-danger"></i></button>
+													<button class="btn btn-default btn-xs" title="Редактировать"><i class="fa fa-pencil"></i></button>
+												</div>
+											</td>
+										</tr>
+									{{/a_values}}
+									</tbody>
+								</table>
+							</fieldset>
 						</div>
 					</div>
 				</div>

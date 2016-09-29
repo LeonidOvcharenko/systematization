@@ -154,6 +154,12 @@ $(function(){
 			self.tags.removeWhere({ '$and': [{ 'key': tag.key }, { 'value': tag.value }, { 'hash': hash }] });
 		}
 		,
+		remove_tags: function(tag){
+			var self = this;
+			var query = (tag.key && tag.value) ? { '$and': [{ 'key': tag.key }, { 'value': tag.value }] } : { 'key': tag.key };
+			self.tags.removeWhere(query);
+		}
+		,
 		get_untagged_files: function(){
 			var self = this;
 			var untagged = [];
@@ -418,7 +424,10 @@ $(function(){
 			untagged: [],
 			files_to_tag: [],
 			tagged: [],
-			files_with_tag: []
+			files_with_tag: [],
+			a_key: '',
+			a_value: '',
+			a_values: []
 		},
 		components: {
 			myselect: EditableSelect
@@ -437,6 +446,10 @@ $(function(){
 		var key = this.get('key');
 		return this.set('values', key ? Database.get_values(key) : []);
 	};
+	Tagger.update_tags_values_approving = function(){
+		var key = this.get('a_key');
+		return this.set('a_values', key ? Database.get_values(key) : []);
+	};
 	Tagger.observe({
 		key: function(){
 			this.set('value', '');
@@ -445,8 +458,12 @@ $(function(){
 		value: function(){
 			this.update_tagged_files();
 		},
-		files_to_tag: function(){
-			
+		a_key: function(){
+			this.set('value', '');
+			this.update_tags_values_approving();
+		},
+		a_value: function(){
+			// this.update_tagged_files();
 		}
 	});
 	
@@ -454,6 +471,7 @@ $(function(){
 		ViewDB.update_stats();
 		Tagger.update_tags_keys().then(function(){
 			Tagger.update_tags_values();
+			Tagger.update_tags_values_approving();
 		});
 		Tagger.update_untagged_files();
 		Tagger.update_tagged_files();
@@ -475,11 +493,24 @@ $(function(){
 		remove_from_files: function(){
 			var files = this.get('files_with_tag');
 			for (var i=0; i<files.length; i++){
-				Database.remove_tag(files[i], {key: Tagger.get('key'), value: Tagger.get('value')});
+				Database.remove_tag(files[i], {key: this.get('key'), value: this.get('value')});
 				update_all_views();
 			}
 			this.set('files_with_tag', []);
-		}
+		},
+		rename_key: function(e, key){
+			e.original.preventDefault();
+			// TODO
+			// Database.rename_tags({key: key}, {key: key});
+			update_all_views();
+		},
+		remove_key: function(e, key){
+			e.original.preventDefault();
+			Database.remove_tags({key: key});
+			update_all_views();
+		},
+		remove_tag_value: function(){},
+		approve_tag: function(){},
 	});
 	
 	
