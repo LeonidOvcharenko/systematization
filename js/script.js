@@ -167,6 +167,13 @@ $(function(){
 			);
 		}
 		,
+		rename_tags: function(tag1, tag2){
+			this.tags.findAndUpdate(
+				function(obj){ var value_cond = tag1.value ? (tag1.value == obj.value) : true; return (obj.key == tag1.key) && value_cond; },
+				function(obj){ obj.key = tag2.key || tag1.key; if (tag1.value && tag2.value){ obj.value = tag2.value; }; return obj; }
+			);
+		}
+		,
 		get_untagged_files: function(){
 			var self = this;
 			var untagged = [];
@@ -538,8 +545,11 @@ $(function(){
 		},
 		rename_key: function(e, key){
 			e.original.preventDefault();
-			// TODO
-			// Database.rename_tags({key: key}, {key: key});
+			var new_key = prompt('Новое название ключа «'+key+'»', key);
+			if (new_key) {
+				Database.rename_tags({key: key}, {key: new_key});
+				this.update_tags_values_approving();
+			}
 			update_all_views();
 		},
 		filter_tags: function(e, filter){
@@ -560,9 +570,11 @@ $(function(){
 			this.update_tags_values_approving();
 		},
 		edit_tag_value: function(e, key, value){
-			// TODO
-			console.log('edit',key,value);
-			this.update_tags_values_approving();
+			var new_value = prompt('Новое значение для тега «'+key+'»', value);
+			if (new_value) {
+				Database.rename_tags({key: key, value: value}, {key: key, value: new_value});
+				this.update_tags_values_approving();
+			}
 		},
 		approve_checked_tags: function(){
 			var key = this.get('a_key');
@@ -570,6 +582,7 @@ $(function(){
 			values.forEach(function(value, i){
 				Database.approve_tags({key: key, value: value});
 			});
+			this.set('all_tags_checked', false);
 			this.update_tags_values_approving();
 		},
 		remove_checked_tags: function(){
@@ -578,6 +591,7 @@ $(function(){
 			values.forEach(function(value, i){
 				Database.remove_tags({key: key, value: value});
 			});
+			this.set('all_tags_checked', false);
 			this.update_tags_keys_approving().then(function(){
 				Tagger.update_tags_values_approving();
 			});

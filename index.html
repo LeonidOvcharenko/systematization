@@ -86,10 +86,8 @@
 								<div class="form-group">
 									<div class="input-group">
 										<div class="input-group-btn">
-											<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!a_key ? 'disabled' : ''}}><i class="fa fa-bars"></i></button>
+											<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!a_key || !a_keys.length ? 'disabled' : ''}}><i class="fa fa-bars"></i></button>
 											<ul class="dropdown-menu">
-												<li class="dropdown-header">...</li>
-												<li class="divider"></li>
 												<li><a href="#" on-click="rename_key:{{a_key}}"><i class="fa fa-pencil"></i> Переименовать ключ</a></li>
 												<li class="divider"></li>
 												<li><a href="#" on-click="remove_key:{{a_key}}"><i class="fa fa-times"></i> Удалить ключ</a></li>
@@ -110,7 +108,7 @@
 								</div>
 								<table class="table table-condensed table-fixedheader">
 									<thead><tr>
-										<th width="70%"><label><input type="checkbox" checked="{{all_tags_checked}}" /> {{a_key}}:</label></th>
+										<th width="70%"><label><input type="checkbox" checked="{{all_tags_checked}}"  {{!a_values.length ? 'disabled' : ''}} /> {{#if a_values.length}}{{a_key}}{{/if}}</label></th>
 										<th width="30%">
 											<div class="btn-group">
 												<button {{a_values_checked.length ? '' : 'disabled'}} class="btn btn-success btn-xs" on-click="approve_checked_tags" title="Утвердить все"><i class="fa fa-check"></i></button>
