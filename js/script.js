@@ -160,6 +160,10 @@ $(function(){
 			self.tags.removeWhere(query);
 		}
 		,
+		remove_auto_tags: function(){
+			this.tags.removeWhere({ 'auto': true });
+		}
+		,
 		approve_tags: function(tag){
 			this.tags.findAndUpdate(
 				function(obj){ var value_cond = tag.value ? (tag.value == obj.value) : true; return (obj.key == tag.key) && value_cond; },
@@ -595,6 +599,10 @@ $(function(){
 			this.update_tags_keys_approving().then(function(){
 				Tagger.update_tags_values_approving();
 			});
+		},
+		clear_auto_tags: function(){
+			Database.remove_auto_tags();
+			update_all_views();
 		}
 	});
 	
