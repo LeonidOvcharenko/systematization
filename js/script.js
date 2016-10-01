@@ -37,7 +37,7 @@ $(function(){
 					break;
 			}
 			if (ext) {
-				Database.add_tag({hash: hash}, {key: 'FORMAT', value: format, auto: false});
+				Database.add_tag({hash: hash}, {key: '#Format', value: format, auto: false});
 			}
 		},
 		from_pdf: function(hash, data){
@@ -108,8 +108,8 @@ $(function(){
 					hash: hash
 				});
 				if (inserted && callback) { callback(); }
-				Preprocessor.auto_tags(file.path, hash, data);
 			} catch(e){}
+			Preprocessor.auto_tags(file.path, hash, data);
 			return hash;
 		}
 		,
@@ -140,9 +140,9 @@ $(function(){
 				if (!value) continue;
 				var inserted = self.tags.insert({
 					hash:  hash,
-					key:   key,
+					key:   '@'+key,
 					value: value,
-					'key/value': hash+'¹'+key+'²'+value,
+					'key/value': hash+'¹'+'@'+key+'²'+value,
 					auto:  !!auto
 				});
 				if (inserted && callback) { callback(); }
