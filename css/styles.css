@@ -111,3 +111,8 @@ table label input[type=radio] {
 .on-hover:focus .on-hover-show {
 	opacity: 1;
 }
+
+#files-clipboard {
+	height: 150px;
+	overflow-y: auto;
+}

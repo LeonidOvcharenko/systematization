@@ -17,10 +17,10 @@
 		<div id="database"></div>
 		<script id="database-tpl" type='text/ractive'>
 			<div class="panel panel-default">
-				<div class="panel-heading">База файлов</div>
+				<div class="panel-heading">Статистика</div>
 				<div class="panel-body">
 					<div class="row">
-						<div class="col-xs-5">
+						<div class="col-xs-4">
 							<dl class="dl-horizontal">
 								<dt>Всего файлов:</dt>
 								<dd>{{N_files}}</dd>
@@ -30,9 +30,8 @@
 								<dd>{{verified.length}}{{#if N_files>0}}&nbsp;({{Math.round(verified.length/N_files*100)}}%){{/if}}</dd>
 							</dl>
 						</div>
-						<div class="col-xs-7">
-							<div id="dropzone-db" class="dropzone center-block alert alert-warning">Перетащите сюда файлы,<br>чтобы добавить в&nbsp;базу</div>
-						</div>
+						<div class="col-xs-4"></div>
+						<div class="col-xs-4"></div>
 					</div>
 				</div>
 				<div class="panel-footer">
@@ -48,7 +47,48 @@
 				<div class="panel-heading">Теги</div>
 				<div class="panel-body">
 					<div class="row">
-						<div class="col-xs-6">
+						<div class="col-xs-12">
+							<div id="dropzone-tags" class="dropzone alert alert-warning">Перетащите сюда файлы,<br>чтобы добавить в базу{{#if key && value}}<br>и присвоить тег <b>{{key}}: {{value}}</b>{{/if}}</div>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-xs-8">
+							<fieldset>
+								<legend>Буфер файлов</legend>
+								<div class="list-group" id="files-clipboard">
+									{{#files}}
+									<a href="#" class="list-group-item {{checked ? 'active' : ''}}">
+										<b class="list-group-item-heading">{{name}}</b>
+										<p class="list-group-item-text">{{path}}</p>
+										<!-- TODO: 1) make filelist as table 2) on click  on tag  fill key and value -->
+										<p>{{#each .tags}}<span class="label label-{{auto ? 'default' : 'primary'}}" title="{{key}}">{{value}}</span> {{/each}}</p>
+									</a>
+									{{/files}}
+								</div>
+								<button class="btn btn-default btn-sm">Присвоить тег</button>
+								<button class="btn btn-default btn-sm">Очистить</button>
+								<div class="form-group">
+									<label>Теги из названия:</label>
+									<!-- #title1 #title2 etc.-->
+									<div class="input-group">
+										<div class="input-group-btn">
+											<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!a_key ? 'disabled' : ''}} title="Примеры шаблонов"><i class="fa fa-asterisk"></i></button>
+											<ul class="dropdown-menu">
+												<li><a href="#" on-click="regexp_tags:1" title="(.+)"><b>anything</b>.ext</a></li>
+												<li><a href="#" on-click="regexp_tags:1" title="(\w+)\s\-\s(\w+)"><b>ABCD</b>&nbsp;-&nbsp;<b>EFGL</b>.ext</a></li>
+												<li><a href="#" on-click="regexp_tags:1" title="([^_]+)_([^_]+)"><b>adsr3svz</b>_<b>2feDt</b>.ext</a></li>
+												<li><a href="#" on-click="regexp_tags:1" title="(\w+)(\d{6})"><b>werwrs</b><b>234513</b>.ext</li>
+											</ul>
+										</div>
+										<input type="text" class="form-control" value="{{name_tpl}}" placeholder="RegExp" />
+										<div class="input-group-btn">
+											<button class="btn btn-default" {{!name_tpl ? 'disabled' : ''}}>Взять</button>
+										</div>
+									</div>
+								</div>
+							</fieldset>
+						</div>
+						<div class="col-xs-4">
 							<div class="form-group">
 								<label>Ключ:</label>
 								<myselect list='{{keys}}' value='{{key}}' />
@@ -58,6 +98,8 @@
 								<myselect list='{{values}}' value='{{value}}' />
 							</div>
 						</div>
+					</div>
+					<div class="row">
 						<div class="form-group col-xs-6">
 							<label>Файлы с этим тегом:</label>
 							<select multiple value='{{files_with_tag}}' class="form-control" {{!tagged.length ? 'disabled' : '' }}>

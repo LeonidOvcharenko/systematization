@@ -114,7 +114,11 @@ $(function(){
 		}
 		,
 		get_hash_from_db: function(filepath){
-			return self.files.findOne({'path': { '$eq' : filepath }});
+			return this.files.findOne({'path': filepath });
+		}
+		,
+		get_file: function(hash){
+			return this.files.findOne({'hash': hash});
 		}
 		,
 		add_tag: function(file, tag, callback){
@@ -130,11 +134,12 @@ $(function(){
 				auto:  !!tag.auto
 			});
 			if (inserted && callback) { callback(); }
+			return inserted;
 		}
 		,
 		add_tags: function(file, tags, auto, callback){
 			var self = this;
-			var hash = file.hash || self.add_file(file, callback);  // just in case
+			var hash = file.hash || self.add_file(file, callback);
 			for (var key in tags){
 				var value = (tags[key]+'').trim();  // convert numbers, objects and arrays to strings
 				if (!value) continue;
@@ -229,6 +234,10 @@ $(function(){
 				if (distinct.indexOf(obj.value) == -1) { distinct.push(obj.value); }
 			});
 			return distinct.sort();
+		}
+		,
+		get_file_tags: function(hash){
+			return this.tags.chain().find({ 'hash': hash }).compoundsort(['key','value']).data();
 		}
 		,
 		get_files_by_tag: function(key, value){
@@ -448,7 +457,8 @@ $(function(){
 			a_key: '',
 			a_keys: [],
 			a_values: [],
-			a_values_checked: []
+			a_values_checked: [],
+			files: []
 		},
 		components: {
 			myselect: EditableSelect
@@ -477,6 +487,12 @@ $(function(){
 		var filter = this.get('tags_filter');
 		filter = (filter == 'all') ? undefined : (filter == 'manual');
 		return this.set('a_values', key ? Database.get_values(key, filter) : []);
+	};
+	Tagger.add_file_to_clipboard = function(hash){
+		var file = Database.get_file(hash);
+		file.path = file.path.substring(0, file.path.indexOf(file.name));
+		file.tags = Database.get_file_tags(hash);
+		var files = this.push('files', file);
 	};
 	Tagger.observe({
 		key: function(){
@@ -669,19 +685,16 @@ $(function(){
 		}
 		*/
 	};
-	$('#dropzone-db').on('drop', function(e){
-		all_dropped_files(e.originalEvent.dataTransfer.items, function(file){
-			Database.add_file(file, function(){
-				update_all_views();
-			});
-		});
-		return false;
-	});
 	$('#dropzone-tags').on('drop', function(e){
 		all_dropped_files(e.originalEvent.dataTransfer.items, function(file){
-			Database.add_tag(file, {key: Tagger.get('key'), value: Tagger.get('value'), auto: false}, function(){
-				update_all_views();
-			});
+			var key = Tagger.get('key');
+			var value = Tagger.get('value');
+			if (key && value) {
+				Database.add_tag(file, {key: key, value: value, auto: false}, update_all_views);
+			} else {
+				var hash = Database.add_file(file, update_all_views);
+				Tagger.add_file_to_clipboard(hash);
+			}
 		});
 		/* var files = e.originalEvent.dataTransfer.files; */
 		return false;
