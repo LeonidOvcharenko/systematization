@@ -160,6 +160,13 @@ $(function(){
 			self.tags.removeWhere(query);
 		}
 		,
+		approve_tags: function(tag){
+			this.tags.findAndUpdate(
+				function(obj){ var value_cond = tag.value ? (tag.value == obj.value) : true; return (obj.key == tag.key) && value_cond; },
+				function(obj){ obj.auto = false; return obj; }
+			);
+		}
+		,
 		get_untagged_files: function(){
 			var self = this;
 			var untagged = [];
@@ -190,8 +197,7 @@ $(function(){
 		,
 		get_keys: function(verified_only){
 			var mapper = function(obj, i, coll){
-				var k = obj.key;
-				if (verified_only) { k = !obj.auto ? obj.key : ''; }
+				var k = (typeof(verified_only)=='undefined' || verified_only == !obj.auto) ? obj.key : '';
 				return k;
 			};
 			var reducer = function(array, values) {
@@ -201,12 +207,12 @@ $(function(){
 				});
 				return distinct.sort()
 			}
-			return this.tags.mapReduce(mapper, reducer);
+			return this.tags ? this.tags.mapReduce(mapper, reducer) : [];
 		}
 		,
 		get_values: function(key, verified_only){
 			var distinct = [];
-			var query = verified_only ? {'$and': [{ 'key': key }, { 'auto': false }]} : {'key': key};
+			var query = typeof(verified_only)=='undefined' ? {'key': key} : {'$and': [{ 'key': key }, { 'auto': !verified_only }]};
 			var values = this.tags.find(query);
 			values.forEach(function(obj, i){
 				if (distinct.indexOf(obj.value) == -1) { distinct.push(obj.value); }
@@ -286,7 +292,7 @@ $(function(){
 		index: function(){
 			var base_dir = './_index_';
 			create_folder(base_dir);
-			var f_verified = this.get('tags')=='manual';
+			var f_verified = this.get('tags')=='manual' || undefined;
 			var keys = Database.get_keys(f_verified);
 			keys.forEach(function(key, i){
 				var dirname = Sanitize_Filename(key) || '_k_'+i;
@@ -425,9 +431,13 @@ $(function(){
 			files_to_tag: [],
 			tagged: [],
 			files_with_tag: [],
+			tags_filter: 'all',
+			all_tags_checked: false,
+			tags_checked: [],
 			a_key: '',
-			a_value: '',
-			a_values: []
+			a_keys: [],
+			a_values: [],
+			a_values_checked: []
 		},
 		components: {
 			myselect: EditableSelect
@@ -446,9 +456,16 @@ $(function(){
 		var key = this.get('key');
 		return this.set('values', key ? Database.get_values(key) : []);
 	};
+	Tagger.update_tags_keys_approving = function(){
+		var filter = this.get('tags_filter');
+		filter = (filter == 'all') ? undefined : (filter == 'manual');
+		return this.set('a_keys', Database.get_keys(filter));
+	};
 	Tagger.update_tags_values_approving = function(){
 		var key = this.get('a_key');
-		return this.set('a_values', key ? Database.get_values(key) : []);
+		var filter = this.get('tags_filter');
+		filter = (filter == 'all') ? undefined : (filter == 'manual');
+		return this.set('a_values', key ? Database.get_values(key, filter) : []);
 	};
 	Tagger.observe({
 		key: function(){
@@ -458,12 +475,31 @@ $(function(){
 		value: function(){
 			this.update_tagged_files();
 		},
+		tags_filter: function(){
+			this.update_tags_keys_approving().then(function(){
+				Tagger.update_tags_values_approving();
+			});
+		},
+		all_tags_checked: function(v){
+			var tags_checked = [];
+			if (v){
+				var l = this.get('a_values.length');
+				for (var i=0;i<l;i++){ tags_checked.push(true); }
+			}
+			this.set('tags_checked', tags_checked);
+		},
 		a_key: function(){
-			this.set('value', '');
+			this.set('all_tags_checked', false);
+			this.set('tags_checked', []);
 			this.update_tags_values_approving();
 		},
-		a_value: function(){
-			// this.update_tagged_files();
+		tags_checked: function(checks){
+			var values_checked = [];
+			var values = this.get('a_values');
+			checks.forEach(function(v, i){
+				if (v) values_checked.push(values[i]);
+			});
+			this.set('a_values_checked', values_checked);
 		}
 	});
 	
@@ -471,6 +507,8 @@ $(function(){
 		ViewDB.update_stats();
 		Tagger.update_tags_keys().then(function(){
 			Tagger.update_tags_values();
+		});
+		Tagger.update_tags_keys_approving().then(function(){
 			Tagger.update_tags_values_approving();
 		});
 		Tagger.update_untagged_files();
@@ -504,13 +542,46 @@ $(function(){
 			// Database.rename_tags({key: key}, {key: key});
 			update_all_views();
 		},
+		filter_tags: function(e, filter){
+			e.original.preventDefault();
+			this.set('tags_filter', filter);
+		},
 		remove_key: function(e, key){
 			e.original.preventDefault();
 			Database.remove_tags({key: key});
 			update_all_views();
 		},
-		remove_tag_value: function(){},
-		approve_tag: function(){},
+		approve_tag_value: function(e, key, value){
+			Database.approve_tags({key: key, value: value});
+			this.update_tags_values_approving();
+		},
+		remove_tag_value: function(e, key, value){
+			Database.remove_tags({key: key, value: value});
+			this.update_tags_values_approving();
+		},
+		edit_tag_value: function(e, key, value){
+			// TODO
+			console.log('edit',key,value);
+			this.update_tags_values_approving();
+		},
+		approve_checked_tags: function(){
+			var key = this.get('a_key');
+			var values = this.get('a_values_checked');
+			values.forEach(function(value, i){
+				Database.approve_tags({key: key, value: value});
+			});
+			this.update_tags_values_approving();
+		},
+		remove_checked_tags: function(){
+			var key = this.get('a_key');
+			var values = this.get('a_values_checked');
+			values.forEach(function(value, i){
+				Database.remove_tags({key: key, value: value});
+			});
+			this.update_tags_keys_approving().then(function(){
+				Tagger.update_tags_values_approving();
+			});
+		}
 	});
 	
 	
