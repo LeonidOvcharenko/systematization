@@ -74,6 +74,7 @@ $(function(){
 		}
 	};
 
+	var GUI    = require('nw.gui');
 	var FS     = require('fs');
 	var Crypto = require('crypto');
 	var Loki   = require('lokijs');
@@ -191,7 +192,7 @@ $(function(){
 				function(obj){
 					obj.key = tag2.key || tag1.key;
 					if (tag1.value && tag2.value){ obj.value = tag2.value; }
-					obj['key/value'] = ojb.hash+'¹'+obj.key+'²'+obj.value;
+					obj['key/value'] = obj.hash+'¹'+obj.key+'²'+obj.value;
 					return obj;
 				}
 			);
@@ -478,6 +479,19 @@ $(function(){
 			checked_files_hashes: [],
 			tags: function(file){
 				return Database.get_file_tags(file.hash);
+			},
+			name_tpl: ''
+		},
+		computed: {
+			name_tpl_ok: function(){ 
+				var pattern = this.get('name_tpl');
+				var reg;
+				try {
+					reg = new RegExp(pattern, 'i');
+				} catch (e) {
+					reg = null;
+				}
+				return !!reg;
 			}
 		},
 		components: {
@@ -569,6 +583,9 @@ $(function(){
 				if (v) files_checked.push(files[i].hash);
 			});
 			this.set('checked_files_hashes', files_checked);
+		},
+		files: function(){
+			this.update('tags');
 		}
 	});
 	
@@ -681,6 +698,35 @@ $(function(){
 		clear_auto_tags: function(){
 			Database.remove_auto_tags();
 			update_all_views();
+		},
+		regexp_tags: function(e, pattern){
+			e.original.preventDefault();
+			this.set('name_tpl', pattern);
+		},
+		parse_tags: function(e, pattern){
+			var reg;
+			try {
+				reg = new RegExp(pattern, 'i');
+			} catch(e) {
+				reg = new RegExp('', 'i');
+			}
+			var files = this.get('files');
+			files.forEach(function(file, i){
+				var clearname = file.name.match(/(.+?)(\.[^.]*$|$)/)[1];
+				var match = clearname.match(reg);
+				if (match && match.length > 1){
+					match.forEach(function(m, i){
+						if (i==0) return;
+						Database.add_tag({hash: file.hash}, {key: '#title_'+i, value: m, auto: true}, function(){
+							update_all_views();
+						});
+					});
+				}
+			});
+		},
+		exec_file: function(e, path){
+			e.original.preventDefault();
+			GUI.Shell.openItem(path);
 		}
 	});
 	
