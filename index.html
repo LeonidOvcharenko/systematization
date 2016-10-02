@@ -14,33 +14,6 @@
 </head>
 <body>
 	<div class="container">
-		<div id="database"></div>
-		<script id="database-tpl" type='text/ractive'>
-			<div class="panel panel-default">
-				<div class="panel-heading">Статистика</div>
-				<div class="panel-body">
-					<div class="row">
-						<div class="col-xs-4">
-							<dl class="dl-horizontal">
-								<dt>Всего файлов:</dt>
-								<dd>{{N_files}}</dd>
-								<dt {{!untagged.length ? 'class="text-muted"' : ''}}>Неразмеченных:</dt>
-								<dd>{{untagged.length}}{{#if N_files>0 && untagged.length>0}}&nbsp;({{Math.round(untagged.length/N_files*100)}}%){{/if}}</dd>
-								<dt {{verified.length==N_files ? 'class="text-success"': ''}}>Проверенных:</dt>
-								<dd>{{verified.length}}{{#if N_files>0}}&nbsp;({{Math.round(verified.length/N_files*100)}}%){{/if}}</dd>
-							</dl>
-						</div>
-						<div class="col-xs-4"></div>
-						<div class="col-xs-4"></div>
-					</div>
-				</div>
-				<div class="panel-footer">
-					<button class="btn btn-primary btn-sm" id="save_db">Сохранить</button>
-					<button class="btn btn-default btn-sm" title="Удалить записи о несуществующих файлах">Оптимизировать</button>
-				</div>
-			</div>
-		</script>
-		
 		<div id="tagger"></div>
 		<script id="tagger-tpl" type='text/ractive'>
 			<div class="panel panel-default">
@@ -52,47 +25,13 @@
 						</div>
 					</div>
 					<div class="row">
-						<div class="col-xs-8">
-							<fieldset>
-								<legend>Буфер файлов</legend>
-								<div class="list-group" id="files-clipboard">
-									{{#files}}
-									<a href="#" class="list-group-item {{checked ? 'active' : ''}}">
-										<b class="list-group-item-heading">{{name}}</b>
-										<p class="list-group-item-text">{{path}}</p>
-										<!-- TODO: 1) make filelist as table 2) on click  on tag  fill key and value -->
-										<p>{{#each .tags}}<span class="label label-{{auto ? 'default' : 'primary'}}" title="{{key}}">{{value}}</span> {{/each}}</p>
-									</a>
-									{{/files}}
-								</div>
-								<button class="btn btn-default btn-sm">Присвоить тег</button>
-								<button class="btn btn-default btn-sm">Очистить</button>
-								<div class="form-group">
-									<label>Теги из названия:</label>
-									<!-- #title1 #title2 etc.-->
-									<div class="input-group">
-										<div class="input-group-btn">
-											<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!a_key ? 'disabled' : ''}} title="Примеры шаблонов"><i class="fa fa-asterisk"></i></button>
-											<ul class="dropdown-menu">
-												<li><a href="#" on-click="regexp_tags:1" title="(.+)"><b>anything</b>.ext</a></li>
-												<li><a href="#" on-click="regexp_tags:1" title="(\w+)\s\-\s(\w+)"><b>ABCD</b>&nbsp;-&nbsp;<b>EFGL</b>.ext</a></li>
-												<li><a href="#" on-click="regexp_tags:1" title="([^_]+)_([^_]+)"><b>adsr3svz</b>_<b>2feDt</b>.ext</a></li>
-												<li><a href="#" on-click="regexp_tags:1" title="(\w+)(\d{6})"><b>werwrs</b><b>234513</b>.ext</li>
-											</ul>
-										</div>
-										<input type="text" class="form-control" value="{{name_tpl}}" placeholder="RegExp" />
-										<div class="input-group-btn">
-											<button class="btn btn-default" {{!name_tpl ? 'disabled' : ''}}>Взять</button>
-										</div>
-									</div>
-								</div>
-							</fieldset>
-						</div>
-						<div class="col-xs-4">
+						<div class="col-xs-6">
 							<div class="form-group">
 								<label>Ключ:</label>
 								<myselect list='{{keys}}' value='{{key}}' />
 							</div>
+						</div>
+						<div class="col-xs-6">
 							<div class="form-group">
 								<label>Значение:</label>
 								<myselect list='{{values}}' value='{{value}}' />
@@ -100,24 +39,81 @@
 						</div>
 					</div>
 					<div class="row">
-						<div class="form-group col-xs-6">
-							<label>Файлы с этим тегом:</label>
-							<select multiple value='{{files_with_tag}}' class="form-control" {{!tagged.length ? 'disabled' : '' }}>
-								{{#tagged}}
-									<option value="{{hash}}">{{name}}</option>
-								{{/tagged}}
-							</select>
-							<button on-click="remove_from_files" class="btn btn-default btn-sm" {{!files_with_tag.length ? 'disabled' : '' }}>Удалить тег</button>
-							<button on-click="clear_with_tag" class="btn btn-default btn-sm" {{!files_with_tag.length ? 'disabled' : '' }} title="Очистить"><i class="fa fa-times"></i></button>
+						<div class="col-xs-12">
+							<fieldset>
+								<legend>Буфер файлов</legend>
+								<table class="table table-condensed table-fixedheader">
+									<thead><tr>
+										<th width="40%"><label><input type="checkbox" checked="{{all_files_checked}}" {{!files.length ? 'disabled' : ''}} /> Все файлы</label></th>
+										<th width="55%">
+											<div class="btn-group">
+												<button {{checked_files_hashes.length && key && value ? '' : 'disabled'}} class="btn btn-success btn-xs tag-block" on-click="apply_to_files:{{key}},{{value}},{{checked_files_hashes}}" title="Присвоить тег «{{key}}: {{value}}»"><i class="fa fa-tag fa-flip-horizontal"></i>{{#if key && value}}&nbsp;&nbsp;&nbsp;{{key}}:&nbsp{{value}}{{/if}}</button>
+												<button {{checked_files_hashes.length && key && value ? '' : 'disabled'}} class="btn btn-danger btn-xs tag-block" on-click="remove_from_files:{{key}},{{value}},{{checked_files_hashes}}" title="Удалить тег «{{key}}: {{value}}»"><i class="fa fa-minus fa-flip-horizontal"></i>{{#if key && value}}&nbsp;&nbsp;&nbsp;{{key}}:&nbsp{{value}}{{/if}}</button>
+												<button {{checked_files_hashes.length ? '' : 'disabled'}} class="btn btn-danger btn-xs" on-click="remove_checked_files" title="Убрать отмеченные из буфера"><i class="fa fa-times"></i></button>
+											</div>
+										</th>
+										<th width="5%"></th>
+									</tr></thead>
+									<tbody style="height:256px;">
+									{{#each files:i}}
+										<tr class="on-hover {{files_checked[i] ? 'active' : ''}}">
+											<td width="40%"><label><input type="checkbox" checked="{{files_checked[i]}}" /> {{name}}<br><small class="text-muted">{{dir}}</small></label></td>
+											<td width="55%">
+												{{#each tags(.)}}<span on-click="set_tag:{{key}},{{value}}" class="label label-{{auto ? 'default' : 'success'}} label-link tag-block" title="{{key}}: {{value}}">{{key}}:&nbsp;{{value}}</span>&nbsp;{{/each}}
+											</td>
+											<td width="5%">
+												<a class="on-hover-show" href="{{path}}" target="_blank" title="Открыть файл"><i class="fa fa-eye text-info"></i></a>
+											</td>
+										</tr>
+									{{/each}}
+									</tbody>
+								</table>
+								<button class="btn btn-default btn-sm">Очистить</button>
+							</fieldset>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-xs-6">
+							<div class="form-group">
+								<label>Файлы с тегом{{#if key && value}} <span class="text-info">{{key}}: {{value}}</span>{{/if}}</label>
+								<select multiple value='{{files_with_tag}}' class="form-control" {{!tagged.length ? 'disabled' : '' }}>
+									{{#tagged}}
+										<option value="{{hash}}">{{name}}</option>
+									{{/tagged}}
+								</select>
+								<button on-click="put_to_clipboard:{{tagged}}" class="btn btn-default btn-sm" {{!tagged.length ? 'disabled' : '' }}>Добавить все в буфер</button>
+								<button on-click="remove_from_files:{{key}},{{value}},{{files_with_tag}}" class="btn btn-default btn-sm" {{!files_with_tag.length ? 'disabled' : '' }}>Удалить тег</button>
+								<button on-click="clear_with_tag" class="btn btn-default btn-sm" {{!files_with_tag.length ? 'disabled' : '' }} title="Очистить"><i class="fa fa-times"></i></button>
+							</div>
 						</div>
 						<div class="form-group col-xs-6">
+							<div class="form-group">
+								<label>Теги из названия:</label>
+								<!-- #title1 #title2 etc.-->
+								<div class="input-group">
+									<div class="input-group-btn">
+										<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!a_key ? 'disabled' : ''}} title="Примеры шаблонов"><i class="fa fa-asterisk"></i></button>
+										<ul class="dropdown-menu">
+											<li><a href="#" on-click="regexp_tags:1" title="(.+)"><b>anything</b>.ext</a></li>
+											<li><a href="#" on-click="regexp_tags:1" title="(\w+)\s\-\s(\w+)"><b>ABCD</b>&nbsp;-&nbsp;<b>EFGL</b>.ext</a></li>
+											<li><a href="#" on-click="regexp_tags:1" title="([^_]+)_([^_]+)"><b>adsr3svz</b>_<b>2feDt</b>.ext</a></li>
+											<li><a href="#" on-click="regexp_tags:1" title="(\w+)(\d{6})"><b>werwrs</b><b>234513</b>.ext</li>
+										</ul>
+									</div>
+									<input type="text" class="form-control" value="{{name_tpl}}" placeholder="RegExp" />
+									<div class="input-group-btn">
+										<button class="btn btn-default" {{!name_tpl ? 'disabled' : ''}}>Взять</button>
+									</div>
+								</div>
+							</div>
 							<label>Файлы без тегов:</label>
 							<select multiple value='{{files_to_tag}}' class="form-control" {{!untagged.length ? 'disabled' : '' }}>
 								{{#untagged}}
 									<option value="{{hash}}">{{name}}</option>
 								{{/untagged}}
 							</select>
-							<button on-click="apply_to_files" class="btn btn-default btn-sm" {{!files_to_tag.length || !key || !value ? 'disabled' : '' }}>Присвоить тег</button>
+							<button on-click="put_to_clipboard:{{untagged}}" class="btn btn-default btn-sm" {{!untagged.length ? 'disabled' : '' }}>Добавить все в буфер</button>
+							<button on-click="apply_to_files:{{key}},{{value}},{{files_to_tag}}" class="btn btn-default btn-sm" {{!files_to_tag.length || !key || !value ? 'disabled' : '' }}>Присвоить тег</button>
 							<button on-click="clear_to_tag" class="btn btn-default btn-sm" {{!files_to_tag.length ? 'disabled' : '' }} title="Очистить"><i class="fa fa-times"></i></button>
 						</div>
 					</div>
@@ -160,7 +156,7 @@
 									</tr></thead>
 									<tbody style="height:256px;">
 									{{#a_values:i}}
-										<tr class="on-hover">
+										<tr class="on-hover {{tags_checked[i] ? 'active' : ''}}">
 											<td width="70%"><label><input type="checkbox" checked="{{tags_checked[i]}}" /> {{.}}</label></td>
 											<td width="30%">
 												<div class="btn-group on-hover-show">
@@ -227,6 +223,33 @@
 				<p>Сгенерировано систематизатором {{date}}</p>
 			</body>
 			</html>
+		</script>
+		
+		<div id="database"></div>
+		<script id="database-tpl" type='text/ractive'>
+			<div class="panel panel-default">
+				<div class="panel-heading">Статистика</div>
+				<div class="panel-body">
+					<div class="row">
+						<div class="col-xs-4">
+							<dl class="dl-horizontal">
+								<dt>Всего файлов:</dt>
+								<dd>{{N_files}}</dd>
+								<dt {{!untagged.length ? 'class="text-muted"' : ''}}>Неразмеченных:</dt>
+								<dd>{{untagged.length}}{{#if N_files>0 && untagged.length>0}}&nbsp;({{Math.round(untagged.length/N_files*100)}}%){{/if}}</dd>
+								<dt {{verified.length==N_files ? 'class="text-success"': ''}}>Проверенных:</dt>
+								<dd>{{verified.length}}{{#if N_files>0}}&nbsp;({{Math.round(verified.length/N_files*100)}}%){{/if}}</dd>
+							</dl>
+						</div>
+						<div class="col-xs-4"></div>
+						<div class="col-xs-4"></div>
+					</div>
+				</div>
+				<div class="panel-footer">
+					<button class="btn btn-primary btn-sm" id="save_db">Сохранить</button>
+					<button class="btn btn-default btn-sm" title="Удалить записи о несуществующих файлах">Оптимизировать</button>
+				</div>
+			</div>
 		</script>
 		
 	</div>

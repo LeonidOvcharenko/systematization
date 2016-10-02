@@ -82,8 +82,9 @@ $(function(){
 			var self = this;
 			var dfrd = $.Deferred();
 			var db_loader = function(){
-				self.files = self.db.getCollection('files') || self.db.addCollection('files', {exact: ['hash', 'path'], unique: ['hash']});
-				self.tags  = self.db.getCollection('tags') || self.db.addCollection('tags', {indices: ['key'], unique: ['key/value']});
+				self.files     = self.db.getCollection('files') || self.db.addCollection('files', {exact: ['hash', 'path'], unique: ['hash']});
+				self.tags      = self.db.getCollection('tags') || self.db.addCollection('tags', {indices: ['key'], unique: ['key/value']});
+				self.settings  = self.db.getCollection('settings') || self.db.addCollection('settings', {unique: ['key']});
 				dfrd.resolve();
 			};
 			self.db = new Loki('files.json', {
@@ -126,15 +127,18 @@ $(function(){
 			var hash = file.hash || self.add_file(file, callback);  // just in case
 			tag.value = tag.value.trim();
 			if (!tag.value) return;
-			var inserted = self.tags.insert({
+			var tag_obj = {
 				hash:  hash,
 				key:   tag.key,
 				value: tag.value,
 				'key/value': hash+'¹'+tag.key+'²'+tag.value,
 				auto:  !!tag.auto
-			});
-			if (inserted && callback) { callback(); }
-			return inserted;
+			};
+			try {
+				var inserted = self.tags.insert(tag_obj);
+				if (inserted && callback) { callback(); }
+			} catch(e){}
+			return tag_obj;
 		}
 		,
 		add_tags: function(file, tags, auto, callback){
@@ -143,14 +147,16 @@ $(function(){
 			for (var key in tags){
 				var value = (tags[key]+'').trim();  // convert numbers, objects and arrays to strings
 				if (!value) continue;
-				var inserted = self.tags.insert({
-					hash:  hash,
-					key:   '@'+key,
-					value: value,
-					'key/value': hash+'¹'+'@'+key+'²'+value,
-					auto:  !!auto
-				});
-				if (inserted && callback) { callback(); }
+				try {
+					var inserted = self.tags.insert({
+						hash:  hash,
+						key:   '@'+key,
+						value: value,
+						'key/value': hash+'¹'+'@'+key+'²'+value,
+						auto:  !!auto
+					});
+					if (inserted && callback) { callback(); }
+				} catch(e){}
 			}
 		}
 		,
@@ -178,8 +184,16 @@ $(function(){
 		,
 		rename_tags: function(tag1, tag2){
 			this.tags.findAndUpdate(
-				function(obj){ var value_cond = tag1.value ? (tag1.value == obj.value) : true; return (obj.key == tag1.key) && value_cond; },
-				function(obj){ obj.key = tag2.key || tag1.key; if (tag1.value && tag2.value){ obj.value = tag2.value; }; return obj; }
+				function(obj){
+					var value_cond = tag1.value ? (tag1.value == obj.value) : true;
+					return (obj.key == tag1.key) && value_cond;
+				},
+				function(obj){
+					obj.key = tag2.key || tag1.key;
+					if (tag1.value && tag2.value){ obj.value = tag2.value; }
+					obj['key/value'] = ojb.hash+'¹'+obj.key+'²'+obj.value;
+					return obj;
+				}
 			);
 		}
 		,
@@ -458,7 +472,13 @@ $(function(){
 			a_keys: [],
 			a_values: [],
 			a_values_checked: [],
-			files: []
+			files: [],
+			all_files_checked: false,
+			files_checked: [],
+			checked_files_hashes: [],
+			tags: function(file){
+				return Database.get_file_tags(file.hash);
+			}
 		},
 		components: {
 			myselect: EditableSelect
@@ -488,11 +508,17 @@ $(function(){
 		filter = (filter == 'all') ? undefined : (filter == 'manual');
 		return this.set('a_values', key ? Database.get_values(key, filter) : []);
 	};
-	Tagger.add_file_to_clipboard = function(hash){
+	Tagger.add_file_to_clipboard = function(file){
+		var hashes = this.get('files').map(function(f){ return f.hash; });
+		if (hashes.indexOf(file.hash) == -1){
+			file.dir = file.path.substring(0, file.path.indexOf(file.name));
+			file.path_esc = escape(file.path);
+			this.push('files', file);
+		}
+	};
+	Tagger.add_file_to_clipboard_by_hash = function(hash){
 		var file = Database.get_file(hash);
-		file.path = file.path.substring(0, file.path.indexOf(file.name));
-		file.tags = Database.get_file_tags(hash);
-		var files = this.push('files', file);
+		Tagger.add_file_to_clipboard(file);
 	};
 	Tagger.observe({
 		key: function(){
@@ -527,6 +553,22 @@ $(function(){
 				if (v) values_checked.push(values[i]);
 			});
 			this.set('a_values_checked', values_checked);
+		},
+		all_files_checked: function(v){
+			var files_checked = [];
+			if (v){
+				var l = this.get('files.length');
+				for (var i=0;i<l;i++){ files_checked.push(true); }
+			}
+			this.set('files_checked', files_checked);
+		},
+		files_checked: function(checks){
+			var files_checked = [];
+			var files = this.get('files');
+			checks.forEach(function(v, i){
+				if (v) files_checked.push(files[i].hash);
+			});
+			this.set('checked_files_hashes', files_checked);
 		}
 	});
 	
@@ -540,28 +582,48 @@ $(function(){
 		});
 		Tagger.update_untagged_files();
 		Tagger.update_tagged_files();
+		Tagger.update('tags');
 	};
 	setInterval(update_all_views, 10000);
 	
 	Tagger.on({
 		clear_to_tag: function(){ this.set('files_to_tag', []); },
 		clear_with_tag: function(){ this.set('files_with_tag', []); },
-		apply_to_files: function(){
-			var files = this.get('files_to_tag');
-			for (var i=0; i<files.length; i++){
-				Database.add_tag({hash: files[i]}, {key: Tagger.get('key'), value: Tagger.get('value'), auto: false}, function(){
+		put_to_clipboard: function(e, files){
+			var self = this;
+			files.forEach(function(file, i){
+				Tagger.add_file_to_clipboard(file);
+			});
+		},
+		set_tag: function(e, key, value){
+			var self = this;
+			self.set('key', key).then(function(){  // wait for keys list loading before setting tag value
+				self.set('value', value);
+			});
+		},
+		apply_to_files: function(e, key, value, hashes){
+			hashes.forEach(function(hash){
+				Database.add_tag({hash: hash}, {key: key, value: value, auto: false}, function(){
 					update_all_views();
 				});
-			}
-			this.set('files_to_tag', []);
+			});
 		},
-		remove_from_files: function(){
-			var files = this.get('files_with_tag');
-			for (var i=0; i<files.length; i++){
-				Database.remove_tag(files[i], {key: this.get('key'), value: this.get('value')});
+		remove_from_files: function(e, key, value, hashes){
+			hashes.forEach(function(hash){
+				Database.remove_tag(hash, {key: key, value: value});
 				update_all_views();
-			}
-			this.set('files_with_tag', []);
+			});
+		},
+		remove_checked_files: function(){
+			var checked_files_hashes = this.get('checked_files_hashes');
+			var new_files = [];
+			var files = this.get('files');
+			files.forEach(function(file, i){
+				if (checked_files_hashes.indexOf(file.hash) == -1) new_files.push(file);
+			});
+			this.set('files', new_files);
+			this.set('all_files_checked', false);
+			this.set('files_checked', []);
 		},
 		rename_key: function(e, key){
 			e.original.preventDefault();
@@ -690,10 +752,11 @@ $(function(){
 			var key = Tagger.get('key');
 			var value = Tagger.get('value');
 			if (key && value) {
-				Database.add_tag(file, {key: key, value: value, auto: false}, update_all_views);
+				var tag = Database.add_tag(file, {key: key, value: value, auto: false}, update_all_views);
+				Tagger.add_file_to_clipboard_by_hash(tag.hash);
 			} else {
 				var hash = Database.add_file(file, update_all_views);
-				Tagger.add_file_to_clipboard(hash);
+				Tagger.add_file_to_clipboard_by_hash(hash);
 			}
 		});
 		/* var files = e.originalEvent.dataTransfer.files; */

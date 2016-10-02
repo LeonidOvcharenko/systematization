@@ -84,6 +84,13 @@ table.table-fixedheader>thead tr th, table.table-fixedheader>tbody tr td {
 	float: left;
 	word-wrap:break-word;
 }
+table.table-fixedheader>tbody tr {
+	overflow: hidden;
+}
+table.table-fixedheader>tbody tr td {
+	padding-bottom: 3003px;
+	margin-bottom: -3000px;
+}
 table.table-fixedheader>thead tr th {
 	height: 28px;
 }
@@ -115,4 +122,16 @@ table label input[type=radio] {
 #files-clipboard {
 	height: 150px;
 	overflow-y: auto;
+}
+
+.tag-block {
+	max-width: 160px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.label-link {
+	cursor: pointer;
+	font-size: 11px;
+	display: inline-block;
+	vertical-align: top;
 }
