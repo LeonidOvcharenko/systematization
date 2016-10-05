@@ -255,6 +255,10 @@ $(function(){
 			return this.tags.chain().find({ 'hash': hash }).compoundsort(['key','value']).data();
 		}
 		,
+		has_tag: function(hash, key, value){
+			return !!this.tags.findOne({'$and': [{ 'hash': hash }, { 'key': key }, { 'value': value }]});
+		}
+		,
 		get_files_by_tag: function(key, value){
 			var self = this;
 			if (!self.tags) return [];
@@ -549,10 +553,8 @@ $(function(){
 		},
 		all_tags_checked: function(v){
 			var tags_checked = [];
-			if (v){
-				var l = this.get('a_values.length');
-				for (var i=0;i<l;i++){ tags_checked.push(true); }
-			}
+			var l = this.get('a_values.length');
+			for (var i=0;i<l;i++){ tags_checked.push(!!v); }
 			this.set('tags_checked', tags_checked);
 		},
 		a_key: function(){
@@ -570,10 +572,8 @@ $(function(){
 		},
 		all_files_checked: function(v){
 			var files_checked = [];
-			if (v){
-				var l = this.get('files.length');
-				for (var i=0;i<l;i++){ files_checked.push(true); }
-			}
+			var l = this.get('files.length');
+			for (var i=0;i<l;i++){ files_checked.push(!!v); }
 			this.set('files_checked', files_checked);
 		},
 		files_checked: function(checks){
@@ -609,7 +609,14 @@ $(function(){
 		put_to_clipboard: function(e, files){
 			var self = this;
 			files.forEach(function(file, i){
-				Tagger.add_file_to_clipboard(file);
+				self.add_file_to_clipboard(file);
+			});
+		},
+		put_to_clipboard_tagged: function(e, key, value){
+			var self = this;
+			var files = Database.get_files_by_tag(key, value);
+			files.forEach(function(file, i){
+				self.add_file_to_clipboard(file);
 			});
 		},
 		set_tag: function(e, key, value){
@@ -630,6 +637,14 @@ $(function(){
 				Database.remove_tag(hash, {key: key, value: value});
 				update_all_views();
 			});
+		},
+		checked_files: function(e, key, value){
+			var files_checked = [];
+			var files = this.get('files');
+			files.forEach(function(file, i){
+				if (Database.has_tag(file.hash, key, value)) files_checked[i] = true;
+			});
+			this.set('files_checked', files_checked);
 		},
 		remove_checked_files: function(){
 			var checked_files_hashes = this.get('checked_files_hashes');
@@ -668,6 +683,15 @@ $(function(){
 			Database.remove_tags({key: key, value: value});
 			this.update_tags_values_approving();
 		},
+		edit_tag_key: function(e, key, value){
+			var new_key = prompt('Новый ключ для тега «'+value+'»', key);
+			if (new_key) {
+				Database.rename_tags({key: key, value: value}, {key: new_key, value: value});
+				this.update_tags_keys_approving().then(function(){
+					Tagger.update_tags_values_approving();
+				});
+			}
+		},
 		edit_tag_value: function(e, key, value){
 			var new_value = prompt('Новое значение для тега «'+key+'»', value);
 			if (new_value) {
@@ -695,6 +719,20 @@ $(function(){
 				Tagger.update_tags_values_approving();
 			});
 		},
+		rename_checked_tags_values: function(){
+			var key = this.get('a_key');
+			var new_key = prompt('Новое название ключа для отмеченных тегов', key);
+			if (new_key) {
+				var values = this.get('a_values_checked');
+				values.forEach(function(value, i){
+					Database.rename_tags({key: key, value: value}, {key: new_key, value: value});
+				});
+				this.set('all_tags_checked', false);
+				this.update_tags_keys_approving().then(function(){
+					Tagger.update_tags_values_approving();
+				});
+			}
+		},
 		clear_auto_tags: function(){
 			Database.remove_auto_tags();
 			update_all_views();
@@ -717,7 +755,7 @@ $(function(){
 				if (match && match.length > 1){
 					match.forEach(function(m, i){
 						if (i==0) return;
-						Database.add_tag({hash: file.hash}, {key: '#title_'+i, value: m, auto: true}, function(){
+						Database.add_tag({hash: file.hash}, {key: '#AUTO#'+i, value: m, auto: true}, function(){
 							update_all_views();
 						});
 					});
