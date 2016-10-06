@@ -360,7 +360,7 @@ $(function(){
 		template:
 			'<div class="es">'+
 				'<input type="text" class="es-input form-control" value="{{value}}" autocomplete="off" on-input-keydown="on_key" on-input-keyup="filter" on-blur="hide_list" on-focus="show_list" />'+
-				'<span class="es-clear {{value ? \'show\' : \'hide\'}} text-danger" on-click="clear" title="Очистить">×</span>'+
+				'<span class="es-clear {{value ? \'show\' : \'hide\'}} text-danger fa fa-times" on-click="clear" title="Очистить"></span>'+
 				'<ul class="es-list dropdown-menu {{(list_visible && !no_matches) ? \'show\' : \'hide\'}}">'+
 					'{{#list:i}}<li class="{{visible[i] ? \'show\' : \'hide\' }} {{active==i ? \'active\' : \'\' }}">'+
 						'<a href="#" on-click="select_li" tabindex="-1">{{.}}</a>'+
@@ -404,7 +404,6 @@ $(function(){
 				'on_key': function(e){
 					var self = this;
 					switch (e.original.keyCode) {
-						case 37: // Left
 						case 38: // Up
 							e.original.preventDefault();
 							var l = self.get('list.length');
@@ -414,7 +413,6 @@ $(function(){
 							while (a>0 && !self.get('visible.'+a)) { a--; }
 							self.set('active', (a+l-1)%l);
 							break;
-						case 39: // Right
 						case 40: // Down
 							e.original.preventDefault();
 							var l = self.get('list.length');
@@ -424,7 +422,6 @@ $(function(){
 							while (a<l && !self.get('visible.'+a)) { a++; }
 							self.set('active', (a+1)%l);
 							break;
-						case 9:  // Tab
 						case 13: // Enter
 							if (e.original.keyCode == 13) e.original.preventDefault();
 							var a = self.get('active');
@@ -432,6 +429,7 @@ $(function(){
 								self.set('value', self.get('list.'+a));
 							}
 							// continue
+						case 9:  // Tab
 						case 27: // Esc
 							self.fire('hide_list');
 							break;
@@ -499,7 +497,7 @@ $(function(){
 			}
 		},
 		components: {
-			myselect: EditableSelect
+			combotext: EditableSelect
 		}
 	});
 	Tagger.update_untagged_files = function(){
