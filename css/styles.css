@@ -1,5 +1,5 @@
 body{
-	padding-top: 15px;
+	padding-top: 65px;
 	padding-bottom: 15px;
 	background-color: #333333;
 	min-width: 600px;
@@ -49,6 +49,9 @@ body{
 }
 
 /* Bootstrap improvements */
+.navbar {
+	border-radius: 0!important;
+}
 .dropdown-menu > li > a:after {
 	content: ' ';
 }
