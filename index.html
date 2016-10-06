@@ -67,7 +67,7 @@
 									<tbody style="height:256px;">
 									{{#each files:i}}
 										<tr class="on-hover {{files_checked[i] ? 'active' : ''}}">
-											<td width="40%"><label><input type="checkbox" checked="{{files_checked[i]}}" /> {{name}}<br><small class="text-muted">{{dir}}</small></label></td>
+											<td width="40%"><label><input type="checkbox" checked="{{files_checked[i]}}" /> {{name}}<br><small class="text-muted">{{dir(.)}}</small></label></td>
 											<td width="55%">
 												{{#each tags(.)}}<span on-click="set_tag:{{key}},{{value}}" class="label label-{{(key==~/key) && (value==~/value)? 'primary' : auto ? 'default' : 'success'}} label-link tag-block" title="{{key}}: {{value}}">{{key}}:&nbsp;{{value}}</span>&nbsp;{{/each}}
 											</td>
@@ -202,12 +202,23 @@
 							<button class="btn btn-default" on-click="index">Сгенерировать индексы</button>
 						</fieldset>
 					</div>
-					<div class="col-xs-4">
+					<div class="col-xs-6">
 						<fieldset>
 							<legend>Переименование</legend>
 							<div class="form-group">
 								<label>Маска:</label>
-								<input type="text" class="form-control" value="{{mask}}" />
+								<div class="input-group">
+									<div class="input-group-btn">
+										<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!keys.length ? 'disabled' : ''}} title="Вставить ключ"><i class="fa fa-at"></i></button>
+										<ul class="dropdown-menu">
+											{{#keys}}
+											<li><a href="#" on-click="append_to_mask:{{.}}">{{.}}</a></li>
+											{{/keys}}
+										</ul>
+									</div>
+									<input type="text" class="form-control" value="{{mask}}" />
+								</div>
+								
 							</div>
 							<button class="btn btn-default" on-click="rename" {{!mask ? 'disabled' : ''}}>Переименовать файлы</button>
 						</fieldset>

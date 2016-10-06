@@ -76,6 +76,7 @@ $(function(){
 
 	var GUI    = require('nw.gui');
 	var FS     = require('fs');
+	var Sanitize_Filename = require("sanitize-filename");
 	var Crypto = require('crypto');
 	var Loki   = require('lokijs');
 	Database = {
@@ -121,6 +122,28 @@ $(function(){
 		,
 		get_file: function(hash){
 			return this.files.findOne({'hash': hash});
+		}
+		,
+		rename_file: function(file, new_name){
+			new_name = Sanitize_Filename(new_name);
+			var new_path = file.path.substring(0, file.path.lastIndexOf(file.name))+new_name;
+			try {
+				if (FS.statSync(new_path).isFile()) return;  // prevent file overwriting
+			} catch(e) { /* file not exists */ }
+			try {
+				FS.renameSync(file.path, new_path);
+				this.files.findAndUpdate(
+					function(f){
+						return (f.hash == file.hash) && (f.path == file.path);
+					},
+					function(f){
+						f.name = new_name;
+						f.path = new_path;
+						return f;
+					}
+				);
+			}
+			catch (e){}
 		}
 		,
 		add_tag: function(file, tag, callback){
@@ -196,6 +219,11 @@ $(function(){
 					return obj;
 				}
 			);
+		}
+		,
+		get_all_files: function(){
+			var self = this;
+			return self.files.data;
 		}
 		,
 		get_untagged_files: function(){
@@ -298,6 +326,8 @@ $(function(){
 	var Indexing = new Ractive({
 		template: '#tag-index-tpl',
 		data: {
+			mask: '',
+			keys: []
 		}
 	});
 	
@@ -326,7 +356,6 @@ $(function(){
 		});
 		FS.writeFileSync(filename, Indexing.toHTML());
 	};
-	var Sanitize_Filename = require("sanitize-filename");
 	Processing.on({
 		index: function(){
 			var base_dir = './_index_';
@@ -348,7 +377,31 @@ $(function(){
 				});
 			});
 		},
-		rename: function(){ /* TODO */ }
+		append_to_mask: function(e, key){
+			e.original.preventDefault();
+			var mask = this.get('mask');
+			mask += '<'+key+'>';
+			this.set('mask', mask);
+		},
+		rename: function(){
+			var mask = this.get('mask');
+			var reg = new RegExp("\<(.*?)\>", "g");
+			var mask_keys = mask.match(reg) || [];
+			mask_keys = mask_keys.map(function(s){ return s.substr(1, s.length-2); });
+			var files = Database.get_all_files();
+			files.forEach(function(file, i){
+				var filetags = Database.get_file_tags(file.hash);
+				var replacer = function (match, key, offset, string) {
+					var filetag = filetags.find(function(tag){ return tag.key == key; });
+					return filetag ? filetag.value : '';
+				};
+				var ext = file.name.match(/(.+?)(\.[^.]*$|$)/)[2];
+				var new_name = mask.replace(reg, replacer)+ext;
+				if (new_name && new_name != file.name) {
+					Database.rename_file(file, new_name);
+				}
+			});
+		}
 	});
 
 
@@ -479,8 +532,14 @@ $(function(){
 			all_files_checked: false,
 			files_checked: [],
 			checked_files_hashes: [],
+			dir: function(file){
+				return file ? file.path.substring(0, file.path.lastIndexOf(file.name)) : '';
+			},
+			path_esc: function(file){
+				return file ? escape(file.path) : '';
+			},
 			tags: function(file){
-				return Database.get_file_tags(file.hash);
+				return file ? Database.get_file_tags(file.hash) : [];
 			},
 			name_tpl: ''
 		},
@@ -527,8 +586,6 @@ $(function(){
 	Tagger.add_file_to_clipboard = function(file){
 		var hashes = this.get('files').map(function(f){ return f.hash; });
 		if (hashes.indexOf(file.hash) == -1){
-			file.dir = file.path.substring(0, file.path.indexOf(file.name));
-			file.path_esc = escape(file.path);
 			this.push('files', file);
 		}
 	};
@@ -583,6 +640,8 @@ $(function(){
 			this.set('checked_files_hashes', files_checked);
 		},
 		files: function(){
+			this.update('dir');
+			this.update('path_esc');
 			this.update('tags');
 		}
 	});
@@ -598,6 +657,8 @@ $(function(){
 		Tagger.update_untagged_files();
 		Tagger.update_tagged_files();
 		Tagger.update('tags');
+		
+		Processing.set('keys', Database.get_keys(true));
 	};
 	setInterval(update_all_views, 10000);
 	

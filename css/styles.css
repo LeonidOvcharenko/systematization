@@ -2,6 +2,7 @@ body{
 	padding-top: 15px;
 	padding-bottom: 15px;
 	background-color: #333333;
+	min-width: 600px;
 }
 
 
