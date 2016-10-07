@@ -315,56 +315,54 @@
 			</div>
 		</script>
 		
-		<div class="panel panel-default">
-			<div class="panel-heading"><a name="settings"></a>Настройки</div>
-			<div class="panel-body">
-				<div class="col-xs-6">
-					<div class="form-group">
-						<label>Базовая папка:</label>
-						<div class="input-group">
-							<div class="input-group-btn">
-								<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!keys.length ? 'disabled' : ''}} title="Вставить ключ"><i class="fa fa-at"></i></button>
-								<ul class="dropdown-menu">
-									{{#keys}}
-									<li><a href="#" on-click="append_to_mask:{{.}}">{{.}}</a></li>
-									{{/keys}}
-								</ul>
+		<div id="settings"></div>
+		<script id="settings-tpl" type='text/ractive'>
+			<div class="panel panel-default">
+				<div class="panel-heading"><a name="settings"></a>Настройки</div>
+				<div class="panel-body">
+					<div class="col-xs-6">
+						<div class="form-group">
+							<label>Базовая папка:</label>
+							<div class="input-group">
+								<input type="text" class="form-control" value="{{root_folder}}" />
+								<div class="input-group-btn">
+									<button class="btn btn-default" on-click="select-folder" title="Выбрать папку"><i class="fa fa-folder-o"></i></button>
+								</div>
 							</div>
-							<input type="text" class="form-control" value="{{rootfolder}}" />
 						</div>
-					</div>
-					<div class="form-group">
-						<label>Фильтр файлов по типу при чтении:</label>
-						<div class="input-group">
-							<div class="input-group-btn">
-								<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!keys.length ? 'disabled' : ''}} title="Вставить ключ"><i class="fa fa-at"></i></button>
-								<ul class="dropdown-menu">
-									{{#keys}}
-									<li><a href="#" on-click="append_to_mask:{{.}}">{{.}}</a></li>
-									{{/keys}}
-								</ul>
+						<div class="form-group">
+							<label>Фильтр файлов по типу при чтении:</label>
+							<div class="input-group">
+								<div class="input-group-btn">
+									<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!keys.length ? 'disabled' : ''}} title="Вставить ключ"><i class="fa fa-at"></i></button>
+									<ul class="dropdown-menu">
+										{{#keys}}
+										<li><a href="#" on-click="append_to_mask:{{.}}">{{.}}</a></li>
+										{{/keys}}
+									</ul>
+								</div>
+								<input type="text" class="form-control" value="{{filefilter}}" placeholder="RegExp" />
 							</div>
-							<input type="text" class="form-control" value="{{filefilter}}" placeholder="RegExp" />
 						</div>
-					</div>
-					<label><input type="checkbox" /> автоматически читать метаданные</label>
-					<div class="form-group">
-						<label>Метаданные:</label>
-						<div class="input-group">
-							<div class="input-group-btn">
-								<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!keys.length ? 'disabled' : ''}} title="Вставить ключ"><i class="fa fa-at"></i></button>
-								<ul class="dropdown-menu">
-									{{#keys}}
-									<li><a href="#" on-click="append_to_mask:{{.}}">{{.}}</a></li>
-									{{/keys}}
-								</ul>
+						<label><input type="checkbox" value="{{read_metadata}}" /> автоматически читать метаданные</label>
+						<div class="form-group">
+							<label>Набор метаданных:</label>
+							<div class="input-group">
+								<div class="input-group-btn">
+									<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!keys.length ? 'disabled' : ''}} title="Вставить ключ"><i class="fa fa-at"></i></button>
+									<ul class="dropdown-menu">
+										{{#keys}}
+										<li><a href="#" on-click="append_to_mask:{{.}}">{{.}}</a></li>
+										{{/keys}}
+									</ul>
+								</div>
+								<input type="text" class="form-control" value="{{mask}}" />
 							</div>
-							<input type="text" class="form-control" value="{{mask}}" />
 						</div>
 					</div>
 				</div>
 			</div>
-		</div>
+		</script>
 		
 	</div>
 	<script src="./js/ractive.min.js"></script>

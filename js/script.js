@@ -1,5 +1,6 @@
 $(function(){
 	var Database;
+	var SKARB = {options: {}};
 	
 	var EXIF = require('exif-reader');
 	var AudioMetaData = require('audio-metadata');
@@ -86,7 +87,7 @@ $(function(){
 			var db_loader = function(){
 				self.files     = self.db.getCollection('files') || self.db.addCollection('files', {exact: ['hash', 'path'], unique: ['hash']});
 				self.tags      = self.db.getCollection('tags') || self.db.addCollection('tags', {indices: ['key'], unique: ['key/value']});
-				self.settings  = self.db.getCollection('settings') || self.db.addCollection('settings', {unique: ['key']});
+				self.settings  = self.db.getCollection('settings') || self.db.addCollection('settings', {unique: ['settings']});
 				dfrd.resolve();
 			};
 			self.db = new Loki('files.json', {
@@ -297,6 +298,18 @@ $(function(){
 				return hashes.indexOf(obj.hash) != -1;
 			}).simplesort('path').data();
 			return files;
+		}
+		,
+		save_settings: function(options){
+			try {
+				this.settings.update(options);
+			} catch (e){}
+		}
+		,
+		get_settings: function(){
+			var obj = this.settings.findOne({ 'settings': true });
+			if (!obj) obj = this.settings.insert({ 'settings': true });
+			return obj;
 		}
 	}
 	
@@ -906,7 +919,50 @@ $(function(){
 		return false;
 	});
 	
+	var Settings = new Ractive({
+		el: 'settings',
+		template: '#settings-tpl',
+		data: {
+			folder_selected: '',
+			root_folder: '',
+			filefilter: ''
+		}
+	});
+	Settings.start_observe = function(){
+		this.observe({
+			root_folder: function(path){
+				SKARB.options.root_folder = path;
+				Database.save_settings(SKARB.options);
+			},
+			read_metadata: function(f){
+				SKARB.options.read_metadata = f;
+				Database.save_settings(SKARB.options);
+			},
+			filefilter: function(filter){
+				SKARB.options.filefilter = filter;
+				Database.save_settings(SKARB.options);
+			}
+		});
+	};
+	Settings.on({
+		'select-folder': function(e){
+			var self = this;
+			chrome.fileSystem.chooseEntry({type: 'openDirectory'}, function(dir){
+				chrome.fileSystem.getDisplayPath(dir, function(path){
+					self.set('root_folder', path);
+				});
+			});
+		}
+	});
+	Settings.load_from_DB = function(){
+		SKARB.options = Database.get_settings();
+		this.set(SKARB.options).then(function(){
+			Settings.start_observe();
+		});
+	};
+	
 	Database.init().then(function(){
+		Settings.load_from_DB();
 		update_all_views();
 	});
 });
