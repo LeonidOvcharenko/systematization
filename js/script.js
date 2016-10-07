@@ -3,6 +3,7 @@ $(function(){
 	var SKARB = {options: {}};
 	
 	var EXIF = require('exif-reader');
+	var SizeOf = require('image-size');
 	var AudioMetaData = require('audio-metadata');
 	
 	var Preprocessor = {
@@ -21,8 +22,27 @@ $(function(){
 				case 'jpg':
 				case 'jfif':
 				case 'jif':
-					this.from_jpeg(hash, data);
+					this.from_exif(hash, data);
+					this.image_size(hash, filepath);
 					format = 'JPEG';
+					break;
+				case 'tiff':
+				case 'tif':
+					this.from_exif(hash, data);
+					this.image_size(hash, filepath);
+					format = 'TIFF';
+					break;
+				case 'png':
+				case 'bmp':
+				case 'gif':
+				case 'psd':
+				case 'svg':
+					this.image_size(hash, filepath);
+					format = ext.toUpperCase();
+					break;
+				case 'webp':
+					this.image_size(hash, filepath);
+					format = 'WebP';
 					break;
 				case 'mp3':
 					this.from_mp3(hash, data);
@@ -41,6 +61,10 @@ $(function(){
 				Database.add_tag({hash: hash}, {key: '#Format', value: format, auto: false});
 			}
 		},
+		image_size: function(hash, filepath){
+			var dimensions = SizeOf(filepath);
+			Database.add_tags({hash: hash}, dimensions || {}, true);
+		},
 		from_pdf: function(hash, data){
 			var pdf_file = new Uint8Array(data);
 			PDFJS.getDocument(pdf_file).promise.then(function(doc){
@@ -51,7 +75,7 @@ $(function(){
 				}).catch(function(err) { /* Error getting metadata */ });
 			}).catch(function(err) { /* Error getting PDF */ });
 		},
-		from_jpeg: function(hash, data){
+		from_exif: function(hash, data){
 			var exif_container = data.indexOf('Exif');
 			if (exif_container != -1) {
 				try {
