@@ -32,18 +32,6 @@
 					<li class="active"><a href="#tags"><i class="fa fa-tags"></i> Теги</a></a></li>
 					<li class=""><a href="#approving"><i class="fa fa-check"></i> Проверка</a></a></li>
 					<li class=""><a href="#collection"><i class="fa fa-database"></i> Коллекция</a></a></li>
-					<li class="dropdown">
-						<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Ы <span class="caret"></span></a>
-						<ul class="dropdown-menu">
-							<li><a href="#">Действие1</a></li>
-							<li><a href="#">Действие2</a></li>
-							<li><a href="#">Еще одно</a></li>
-							<li role="separator" class="divider"></li>
-							<li><a href="#">Separated link</a></li>
-							<li role="separator" class="divider"></li>
-							<li><a href="#">One more separated link</a></li>
-						</ul>
-					</li>
 					<li><a href="#stats"><i class="fa fa-bar-chart"></i> Статистика</a></li>
 					<li class="disabled"><a href="#"><i class="fa fa-check"></i> Сохранено</a></a></li>
 				</ul>
@@ -59,8 +47,9 @@
 	
 		<div id="tagger"></div>
 		<script id="tagger-tpl" type='text/ractive'>
+			<a name="tags" class="section"></a>
 			<div class="panel panel-default">
-				<div class="panel-heading"><a name="tags"></a>Теги</div>
+				<div class="panel-heading">Теги</div>
 				<div class="panel-body">
 					<div class="row">
 						<div class="col-xs-12">
@@ -200,10 +189,11 @@
 							<button on-click="clear_to_tag" class="btn btn-default btn-sm" {{!files_to_tag.length ? 'disabled' : '' }} title="Очистить"><i class="fa fa-times"></i></button>
 						</div>
 					</div>
+					<a name="approving" class="section"></a>
 					<div class="row">
 						<div class="col-xs-8">
 							<fieldset>
-								<legend><a name="approving"></a>Проверка тегов</legend>
+								<legend>Проверка тегов</legend>
 								<div class="form-group">
 									<div class="input-group">
 										<div class="input-group-btn">
@@ -265,8 +255,9 @@
 		
 		<div id="processing"></div>
 		<script id="processing-tpl" type='text/ractive'>
+			<a name="collection" class="section"></a>
 			<div class="panel panel-default">
-				<div class="panel-heading"><a name="collection"></a>Коллекция</div>
+				<div class="panel-heading">Коллекция</div>
 				<div class="panel-body">
 					<div class="col-xs-4">
 						<fieldset>
@@ -324,8 +315,9 @@
 		
 		<div id="database"></div>
 		<script id="database-tpl" type='text/ractive'>
+			<a name="stats" class="section"></a>
 			<div class="panel panel-default">
-				<div class="panel-heading"><a name="stats"></a>Статистика</div>
+				<div class="panel-heading">Статистика</div>
 				<div class="panel-body">
 					<div class="row">
 						<div class="col-xs-4">
@@ -351,8 +343,9 @@
 		
 		<div id="settings"></div>
 		<script id="settings-tpl" type='text/ractive'>
+			<a name="settings" class="section"></a>
 			<div class="panel panel-default">
-				<div class="panel-heading"><a name="settings"></a>Настройки</div>
+				<div class="panel-heading">Настройки</div>
 				<div class="panel-body">
 					<div class="col-xs-6">
 						<div class="form-group">

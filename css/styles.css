@@ -158,3 +158,10 @@ table label input[type=radio] {
 [data-toggle="group"] > .btn > input[type="checkbox"] {
 	display: none;
 }
+
+a.section {
+	display: block;
+	position: relative;
+	top: -65px;
+	visibility: hidden;
+}
