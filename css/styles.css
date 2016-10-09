@@ -138,4 +138,20 @@ table label input[type=radio] {
 	font-size: 11px;
 	display: inline-block;
 	vertical-align: top;
+	text-align: left;
+	margin-bottom: 0.5em;
+	margin-right: 0.5em;
+}
+.label-link em {
+	font-weight: normal;
+	font-style: normal;
+	display: block;
+	padding-bottom: 1px;
+	border-bottom: 1px solid white;
+	margin-bottom: 0.3em;
+}
+
+[data-toggle="group"] > .btn > input[type="radio"],
+[data-toggle="group"] > .btn > input[type="checkbox"] {
+	display: none;
 }

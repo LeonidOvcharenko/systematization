@@ -84,7 +84,7 @@
 							<div class="form-group">
 								<label class="text-info">{{#if key && value}}<i class="fa fa-tag fa-flip-horizontal text-muted"></i> {{key}}: {{value}}{{else}}&nbsp;{{/if}}</label><br>
 								<div class="btn-group">
-									<button {{files.length && key && value ? '' : 'disabled'}} class="btn btn-default btn-sm" on-click="checked_files:{{key}},{{value}}" title="Отметить файлы с тегом «{{key}}: {{value}}»"><i class="fa fa-check-square-o"></i></button>
+									<button {{files.length && key ? '' : 'disabled'}} class="btn btn-default btn-sm" on-click="check_files:{{key}},{{value}}" title="Отметить файлы с тегом «{{key}}{{value ? ' :'+value : ''}}»"><i class="fa fa-check-square-o"></i></button>
 									<button {{checked_files_hashes.length && key && value ? '' : 'disabled'}} class="btn btn-success btn-sm" on-click="apply_to_files:{{key}},{{value}},{{checked_files_hashes}}" title="Присвоить тег «{{key}}: {{value}}»"><i class="fa fa-plus"></i> {{ checked_files_hashes.length && key && value ? checked_files_hashes.length : '' }}</button>
 									<button {{checked_files_hashes.length && key && value ? '' : 'disabled'}} class="btn btn-danger btn-sm" on-click="remove_from_files:{{key}},{{value}},{{checked_files_hashes}}" title="Удалить тег «{{key}}: {{value}}»"><i class="fa fa-minus"></i> {{ checked_files_hashes.length && key && value ? checked_files_hashes.length : '' }}</button>
 								</div>
@@ -107,11 +107,24 @@
 								</legend>
 								<table class="table table-condensed table-fixedheader">
 									<thead><tr>
-										<th width="40%"><label><input type="checkbox" checked="{{all_files_checked}}" {{!files.length ? 'disabled' : ''}} /> Все файлы</label></th>
-										<th width="55%">
-											<div class="btn-group">
+										<th width="40%">
+											<div class="btn-group pull-right">
 												<button class="btn btn-default btn-xs" on-click="inverse_checked_files" title="Инвертировать выделение"><i class="fa fa-check-square"></i></button>
 												<button {{checked_files_hashes.length ? '' : 'disabled'}} class="btn btn-default btn-xs" on-click="remove_checked_files" title="Убрать отмеченные из буфера"><i class="fa fa-times"></i></button>
+											</div>
+											<label><input type="checkbox" checked="{{all_files_checked}}" {{!files.length ? 'disabled' : ''}} /> Все файлы</label>
+										</th>
+										<th width="55%">
+											<div class="btn-group pull-left" data-toggle="group">
+												<label class="btn btn-xs btn-default {{tags_type=='' ? 'active' : ''}}" title="Все теги">
+													<input type="radio" name="{{tags_type}}" value="" checked><i class="fa fa-filter"></i>
+												</label>
+												<label class="btn btn-xs btn-danger {{tags_type=='auto' ? 'active' : ''}}" title="Авто теги">
+													<input type="radio" name="{{tags_type}}" value="auto"><i class="fa fa-filter"></i>
+												</label>
+												<label class="btn btn-xs btn-success {{tags_type=='manual' ? 'active' : ''}}" title="Проверенные">
+													<input type="radio" name="{{tags_type}}" value="manual"><i class="fa fa-filter"></i>
+												</label>
 											</div>
 										</th>
 										<th width="5%"></th>
@@ -121,7 +134,7 @@
 										<tr class="on-hover {{files_checked[i] ? 'active' : ''}}">
 											<td width="40%"><label><input type="checkbox" checked="{{files_checked[i]}}" /> {{name}}<br><small class="text-muted">{{dir(.)}}</small></label></td>
 											<td width="55%">
-												{{#each tags(.)}}<span on-click="set_tag:{{key}},{{value}}" class="label label-{{(key==~/key) && (value==~/value)? 'primary' : auto ? 'default' : 'success'}} label-link tag-block" title="{{key}}: {{value}}">{{key}}:&nbsp;{{value}}</span>&nbsp;{{/each}}
+												{{#each tags(.)}}<span on-click="set_tag:{{key}},{{value}}" class="label label-{{(key==~/key) && (value==~/value)? 'primary' : auto ? 'default' : 'success'}} label-link tag-block {{(tags_type == 'manual' && auto) || (tags_type == 'auto' && !auto) ? 'hidden' : '' }}" title="{{key}}: {{value}}"><em>{{key}}</em>{{value}}</span>{{/each}}
 											</td>
 											<td width="5%">
 												<a class="on-hover-show" on-click="exec_file:{{path}}" href="{{path}}" target="_blank" title="Открыть файл"><i class="fa fa-eye text-info"></i></a>

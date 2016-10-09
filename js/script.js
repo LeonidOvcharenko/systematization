@@ -297,7 +297,9 @@ $(function(){
 		}
 		,
 		has_tag: function(hash, key, value){
-			return !!this.tags.findOne({'$and': [{ 'hash': hash }, { 'key': key }, { 'value': value }]});
+			var query = {'$and': [{ 'hash': hash }, { 'key': key }]};
+			if (value) query['$and'].push({ 'value': value });
+			return !!this.tags.findOne(query);
 		}
 		,
 		get_files_by_tag: function(key, value){
@@ -568,6 +570,7 @@ $(function(){
 			a_values: [],
 			a_values_checked: [],
 			files: [],
+			tags_type: '',
 			all_files_checked: false,
 			files_checked: [],
 			checked_files_hashes: [],
@@ -737,7 +740,7 @@ $(function(){
 				update_all_views();
 			});
 		},
-		checked_files: function(e, key, value){
+		check_files: function(e, key, value){
 			var files_checked = [];
 			var files = this.get('files');
 			files.forEach(function(file, i){
