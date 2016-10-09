@@ -82,27 +82,34 @@
 						</div>
 						<div class="col-xs-4">
 							<div class="form-group">
-								<label>Действия с тегом:</label>
-								<button on-click="put_to_clipboard:{{tagged}}" class="btn btn-default btn-sm form-control" {{!tagged.length ? 'disabled' : '' }}><i class="fa fa-play"></i> Добавить в буфер</button>
-								<button on-click="put_to_clipboard:{{untagged}}" class="btn btn-default btn-sm form-control" {{!untagged.length ? 'disabled' : '' }}><i class="fa fa-play"></i> Файлы без тегов</button>
+								<label>&nbsp;</label><br>
+								<div class="btn-group">
+									<button {{files.length && key && value ? '' : 'disabled'}} class="btn btn-default btn-sm" on-click="checked_files:{{key}},{{value}}" title="Отметить файлы с тегом «{{key}}: {{value}}»"><i class="fa fa-check-square-o"></i></button>
+									<button {{checked_files_hashes.length && key && value ? '' : 'disabled'}} class="btn btn-success btn-sm" on-click="apply_to_files:{{key}},{{value}},{{checked_files_hashes}}" title="Присвоить тег «{{key}}: {{value}}»"><i class="fa fa-tag fa-flip-horizontal"></i> {{ checked_files_hashes.length ? checked_files_hashes.length : '' }}</button>
+									<button {{checked_files_hashes.length && key && value ? '' : 'disabled'}} class="btn btn-danger btn-sm" on-click="remove_from_files:{{key}},{{value}},{{checked_files_hashes}}" title="Удалить тег «{{key}}: {{value}}»"><i class="fa fa-tag"></i> {{ checked_files_hashes.length ? checked_files_hashes.length : '' }}</button>
+								</div>
 							</div>
 						</div>
 					</div>
 					<div class="row">
 						<div class="col-xs-12">
 							<fieldset>
-								<legend>Буфер файлов</legend>
+								<legend>Буфер файлов
+									<div class="pull-right">
+										<div class="btn-group">
+											<button on-click="put_to_clipboard:{{tagged}}" class="btn btn-default btn-sm tag-block" {{!tagged.length ? 'disabled' : '' }} title="Добавить в буфер файлы с тегом «{{key}}: {{value}}»"><i class="fa fa-play"></i></button>
+											<button on-click="put_to_clipboard:{{untagged}}" class="btn btn-default btn-sm tag-block" {{key && !untagged.length ? 'disabled' : '' }} title="Добавить в буфер файлы без тега «{{key}}»"><i class="fa fa-play"></i> <s>{{key}}</s></button>
+											<button on-click="clear_clipboard" class="btn btn-default btn-sm tag-block" {{!files.length ? 'disabled' : '' }} title="Очистить буфер"><i class="fa fa-ban"></i></button>
+										</div>
+									</div>
+								</legend>
 								<table class="table table-condensed table-fixedheader">
 									<thead><tr>
 										<th width="40%"><label><input type="checkbox" checked="{{all_files_checked}}" {{!files.length ? 'disabled' : ''}} /> Все файлы</label></th>
 										<th width="55%">
 											<div class="btn-group">
-												<button {{files.length && key && value ? '' : 'disabled'}} class="btn btn-default btn-xs" on-click="checked_files:{{key}},{{value}}" title="Отметить файлы с тегом «{{key}}: {{value}}»"><i class="fa fa-check"></i></button>
+												<button class="btn btn-default btn-xs" on-click="inverse_checked_files" title="Инвертировать выделение"><i class="fa fa-check-square"></i></button>
 												<button {{checked_files_hashes.length ? '' : 'disabled'}} class="btn btn-default btn-xs" on-click="remove_checked_files" title="Убрать отмеченные из буфера"><i class="fa fa-times"></i></button>
-											</div>
-											<div class="btn-group">
-												<button {{checked_files_hashes.length && key && value ? '' : 'disabled'}} class="btn btn-success btn-xs tag-block" on-click="apply_to_files:{{key}},{{value}},{{checked_files_hashes}}" title="Присвоить тег «{{key}}: {{value}}»"><i class="fa fa-tag fa-flip-horizontal"></i>{{#if key && value}}&nbsp;&nbsp;&nbsp;{{key}}:&nbsp{{value}}{{/if}}</button>
-												<button {{checked_files_hashes.length && key && value ? '' : 'disabled'}} class="btn btn-danger btn-xs tag-block" on-click="remove_from_files:{{key}},{{value}},{{checked_files_hashes}}" title="Удалить тег «{{key}}: {{value}}»"><i class="fa fa-minus fa-flip-horizontal"></i>{{#if key && value}}&nbsp;&nbsp;&nbsp;{{key}}:&nbsp{{value}}{{/if}}</button>
 											</div>
 										</th>
 										<th width="5%"></th>
@@ -156,7 +163,7 @@
 									</div>
 								</div>
 							</div>
-							<label>Файлы без тегов:</label>
+							<label>Файлы без тега <span class="text-info">{{key}}</span></label>
 							<select multiple value='{{files_to_tag}}' class="form-control" {{!untagged.length ? 'disabled' : '' }}>
 								{{#untagged}}
 									<option value="{{hash}}">{{name}}</option>

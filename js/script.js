@@ -251,18 +251,6 @@ $(function(){
 			return self.files.data;
 		}
 		,
-		get_untagged_files: function(){
-			var self = this;
-			var untagged = [];
-			var files = self.files.data;
-			files.forEach(function(obj, i){
-				if (!self.tags.findOne({'hash': { '$eq': obj.hash }})) {
-					untagged.push(obj);
-				}
-			});
-			return untagged;
-		}
-		,
 		get_verified_files: function(f){
 			var self = this;
 			var verified = [];
@@ -324,6 +312,20 @@ $(function(){
 			return files;
 		}
 		,
+		get_untagged_files: function(key){
+			var self = this;
+			if (!self.files) return;
+			var untagged = [];
+			var files = self.files.data;
+			files.forEach(function(obj, i){
+				var query = key ? { '$and': [{ 'key': key }, { 'hash': obj.hash }] } : {'hash': obj.hash };
+				if (!self.tags.findOne(query)) {
+					untagged.push(obj);
+				}
+			});
+			return untagged;
+		}
+		,
 		save_settings: function(options){
 			try {
 				this.settings.update(options);
@@ -350,7 +352,7 @@ $(function(){
 	});
 	ViewDB.update_stats = function(){
 		this.set('N_files', Database.files.count() );
-		this.set('untagged', Database.get_untagged_files() );
+		this.set('untagged', Database.get_untagged_files('') );
 		this.set('verified', Database.get_verified_files() );
 	};
 	
@@ -597,7 +599,7 @@ $(function(){
 		}
 	});
 	Tagger.update_untagged_files = function(){
-		return this.set('untagged', Database.get_untagged_files() );
+		return this.set('untagged', Database.get_untagged_files(this.get('key')) );
 	};
 	Tagger.update_tagged_files = function(){
 		return this.set('tagged', Database.get_files_by_tag(this.get('key'), this.get('value')) );
@@ -634,6 +636,7 @@ $(function(){
 		key: function(){
 			this.set('value', '');
 			this.update_tags_values();
+			this.update_untagged_files();
 		},
 		value: function(){
 			this.update_tagged_files();
@@ -742,6 +745,15 @@ $(function(){
 			});
 			this.set('files_checked', files_checked);
 		},
+		inverse_checked_files: function(){
+			var new_checked = [];
+			var checked_files_hashes = this.get('checked_files_hashes');
+			var files = this.get('files');
+			files.forEach(function(file, i){
+				new_checked.push(checked_files_hashes.indexOf(file.hash) == -1);
+			});
+			this.set('files_checked', new_checked);
+		},
 		remove_checked_files: function(){
 			var checked_files_hashes = this.get('checked_files_hashes');
 			var new_files = [];
@@ -749,9 +761,18 @@ $(function(){
 			files.forEach(function(file, i){
 				if (checked_files_hashes.indexOf(file.hash) == -1) new_files.push(file);
 			});
-			this.set('files', new_files);
-			this.set('all_files_checked', false);
-			this.set('files_checked', []);
+			this.set({
+				files: new_files,
+				all_files_checked: false,
+				files_checked: []
+			});
+		},
+		clear_clipboard: function(){
+			this.set({
+				files: [],
+				all_files_checked: false,
+				files_checked: []
+			});
 		},
 		rename_key: function(e, key){
 			e.original.preventDefault();
