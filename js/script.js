@@ -195,7 +195,7 @@ $(function(){
 			var hash = file.hash || self.add_file(file, callback);
 			for (var key in tags){
 				var value = (tags[key]+'').trim();  // convert numbers, objects and arrays to strings
-				if (!value) continue;
+				if (!value || value.toString() == "[object Object]") continue;
 				try {
 					var inserted = self.tags.insert({
 						hash:  hash,
