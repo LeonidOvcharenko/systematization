@@ -82,11 +82,11 @@
 						</div>
 						<div class="col-xs-4">
 							<div class="form-group">
-								<label>&nbsp;</label><br>
+								<label class="text-info">{{#if key && value}}<i class="fa fa-tag fa-flip-horizontal text-muted"></i> {{key}}: {{value}}{{else}}&nbsp;{{/if}}</label><br>
 								<div class="btn-group">
 									<button {{files.length && key && value ? '' : 'disabled'}} class="btn btn-default btn-sm" on-click="checked_files:{{key}},{{value}}" title="Отметить файлы с тегом «{{key}}: {{value}}»"><i class="fa fa-check-square-o"></i></button>
-									<button {{checked_files_hashes.length && key && value ? '' : 'disabled'}} class="btn btn-success btn-sm" on-click="apply_to_files:{{key}},{{value}},{{checked_files_hashes}}" title="Присвоить тег «{{key}}: {{value}}»"><i class="fa fa-tag fa-flip-horizontal"></i> {{ checked_files_hashes.length ? checked_files_hashes.length : '' }}</button>
-									<button {{checked_files_hashes.length && key && value ? '' : 'disabled'}} class="btn btn-danger btn-sm" on-click="remove_from_files:{{key}},{{value}},{{checked_files_hashes}}" title="Удалить тег «{{key}}: {{value}}»"><i class="fa fa-tag"></i> {{ checked_files_hashes.length ? checked_files_hashes.length : '' }}</button>
+									<button {{checked_files_hashes.length && key && value ? '' : 'disabled'}} class="btn btn-success btn-sm" on-click="apply_to_files:{{key}},{{value}},{{checked_files_hashes}}" title="Присвоить тег «{{key}}: {{value}}»"><i class="fa fa-plus"></i> {{ checked_files_hashes.length && key && value ? checked_files_hashes.length : '' }}</button>
+									<button {{checked_files_hashes.length && key && value ? '' : 'disabled'}} class="btn btn-danger btn-sm" on-click="remove_from_files:{{key}},{{value}},{{checked_files_hashes}}" title="Удалить тег «{{key}}: {{value}}»"><i class="fa fa-minus"></i> {{ checked_files_hashes.length && key && value ? checked_files_hashes.length : '' }}</button>
 								</div>
 							</div>
 						</div>
@@ -94,11 +94,13 @@
 					<div class="row">
 						<div class="col-xs-12">
 							<fieldset>
-								<legend>Буфер файлов
+								<legend>
+									Буфер файлов
+									<sup>{{{checked_files_hashes.length ? '<b>'+checked_files_hashes.length+'</b> / ' : ''}}}{{files.length ? files.length : ''}}</sup>
 									<div class="pull-right">
 										<div class="btn-group">
-											<button on-click="put_to_clipboard:{{tagged}}" class="btn btn-default btn-sm tag-block" {{!tagged.length ? 'disabled' : '' }} title="Добавить в буфер файлы с тегом «{{key}}: {{value}}»"><i class="fa fa-play"></i></button>
-											<button on-click="put_to_clipboard:{{untagged}}" class="btn btn-default btn-sm tag-block" {{key && !untagged.length ? 'disabled' : '' }} title="Добавить в буфер файлы без тега «{{key}}»"><i class="fa fa-play"></i> <s>{{key}}</s></button>
+											<button on-click="put_to_clipboard:{{tagged}}" class="btn btn-default btn-sm tag-block" {{!tagged.length ? 'disabled' : '' }} title="Добавить в буфер файлы с тегом «{{key}}: {{value}}»"><i class="fa fa-play"></i> {{tagged.length ? tagged.length : ''}}</button>
+											<button on-click="put_to_clipboard:{{untagged}}" class="btn btn-default btn-sm tag-block" {{!untagged.length ? 'disabled' : '' }} title="Добавить в буфер файлы без {{ key ? 'тега «'+key+'»' : 'тегов'}}"><i class="fa fa-play"></i> <s>{{key}}</s>  {{untagged.length ? untagged.length : ''}}</button>
 											<button on-click="clear_clipboard" class="btn btn-default btn-sm tag-block" {{!files.length ? 'disabled' : '' }} title="Очистить буфер"><i class="fa fa-ban"></i></button>
 										</div>
 									</div>
