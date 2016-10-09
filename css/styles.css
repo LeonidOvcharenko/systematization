@@ -133,6 +133,9 @@ table label input[type=radio] {
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
+.label-plus-primary {
+	border-right: 0.5em solid #4183c4;
+}
 .label-link {
 	cursor: pointer;
 	font-size: 11px;

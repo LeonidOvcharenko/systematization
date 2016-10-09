@@ -224,22 +224,30 @@ $(function(){
 			this.tags.removeWhere({ 'auto': true });
 		}
 		,
-		approve_tags: function(tag){
+		approve_tags: function(tag, hash){
 			this.tags.findAndUpdate(
-				function(obj){ var value_cond = tag.value ? (tag.value == obj.value) : true; return (obj.key == tag.key) && value_cond; },
+				function(obj){
+					var value_cond = tag.value ? (tag.value == obj.value) : true;
+					var file_cond = hash ? (hash == obj.hash) : true;
+					return (obj.key == tag.key) && value_cond && file_cond;
+				},
 				function(obj){ obj.auto = false; return obj; }
 			);
 		}
 		,
-		rename_tags: function(tag1, tag2){
+		rename_tags: function(tag1, tag2, hash){
 			this.tags.findAndUpdate(
 				function(obj){
 					var value_cond = tag1.value ? (tag1.value == obj.value) : true;
-					return (obj.key == tag1.key) && value_cond;
+					var file_cond = hash ? (hash == obj.hash) : true;
+					return (obj.key == tag1.key) && value_cond && file_cond;
 				},
 				function(obj){
 					obj.key = tag2.key || tag1.key;
-					if (tag1.value && tag2.value){ obj.value = tag2.value; }
+					if (tag1.value && tag2.value){
+						obj.value = tag2.value;
+						obj.auto = false;
+					}
 					obj['key/value'] = obj.hash+'¹'+obj.key+'²'+obj.value;
 					return obj;
 				}
@@ -625,6 +633,12 @@ $(function(){
 		filter = (filter == 'all') ? undefined : (filter == 'manual');
 		return this.set('a_values', key ? Database.get_values(key, filter) : []);
 	};
+	Tagger.reset_tags_checked = function(){
+		return this.set({
+			all_tags_checked: false,
+			tags_checked: []
+		});
+	};
 	Tagger.add_file_to_clipboard = function(file){
 		var hashes = this.get('files').map(function(f){ return f.hash; });
 		if (hashes.indexOf(file.hash) == -1){
@@ -656,8 +670,7 @@ $(function(){
 			this.set('tags_checked', tags_checked);
 		},
 		a_key: function(){
-			this.set('all_tags_checked', false);
-			this.set('tags_checked', []);
+			this.reset_tags_checked();
 			this.update_tags_values_approving();
 		},
 		tags_checked: function(checks){
@@ -795,28 +808,55 @@ $(function(){
 			Database.remove_tags({key: key});
 			update_all_views();
 		},
-		approve_tag_value: function(e, key, value){
-			Database.approve_tags({key: key, value: value});
-			this.update_tags_values_approving();
+		approve_tag_value: function(e, key, value, files){
+			var tag = {key: key, value: value};
+			if (files && files.length) {
+				files.forEach(function(hash){
+					Database.approve_tags(tag, hash);
+				});
+			} else {
+				Database.approve_tags(tag);
+			}
+			update_all_views();
+			this.reset_tags_checked();
 		},
 		remove_tag_value: function(e, key, value){
 			Database.remove_tags({key: key, value: value});
-			this.update_tags_values_approving();
+			update_all_views();
+			this.reset_tags_checked();
 		},
-		edit_tag_key: function(e, key, value){
+		edit_tag_key: function(e, key, value, files){
 			var new_key = prompt('Новый ключ для тега «'+value+'»', key);
 			if (new_key) {
-				Database.rename_tags({key: key, value: value}, {key: new_key, value: value});
+				var tag1 = {key: key, value: value};
+				var tag2 = {key: new_key, value: value};
+				if (files && files.length) {
+					files.forEach(function(hash){
+						Database.rename_tags(tag1, tag2, hash);
+					});
+				} else {
+					Database.rename_tags(tag1, tag2);
+				}
 				this.update_tags_keys_approving().then(function(){
-					Tagger.update_tags_values_approving();
+					update_all_views();
+					Tagger.reset_tags_checked();
 				});
 			}
 		},
-		edit_tag_value: function(e, key, value){
+		edit_tag_value: function(e, key, value, files){
 			var new_value = prompt('Новое значение для тега «'+key+'»', value);
 			if (new_value) {
-				Database.rename_tags({key: key, value: value}, {key: key, value: new_value});
+				var tag1 = {key: key, value: value};
+				var tag2 = {key: key, value: new_value};
+				if (files && files.length) {
+					files.forEach(function(hash){
+						Database.rename_tags(tag1, tag2, hash);
+					});
+				} else {
+					Database.rename_tags(tag1, tag2);
+				}
 				this.update_tags_values_approving();
+				this.reset_tags_checked();
 			}
 		},
 		approve_checked_tags: function(){
@@ -825,8 +865,8 @@ $(function(){
 			values.forEach(function(value, i){
 				Database.approve_tags({key: key, value: value});
 			});
-			this.set('all_tags_checked', false);
 			this.update_tags_values_approving();
+			this.reset_tags_checked();
 		},
 		remove_checked_tags: function(){
 			var key = this.get('a_key');
@@ -837,6 +877,7 @@ $(function(){
 			this.set('all_tags_checked', false);
 			this.update_tags_keys_approving().then(function(){
 				Tagger.update_tags_values_approving();
+				Tagger.reset_tags_checked();
 			});
 		},
 		rename_checked_tags_values: function(){
