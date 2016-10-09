@@ -148,18 +148,6 @@
 						</div>
 					</div>
 					<div class="row">
-						<div class="col-xs-6">
-							<div class="form-group">
-								<label>Файлы с тегом{{#if key && value}} <span class="text-info">{{key}}: {{value}}</span>{{/if}}</label>
-								<select multiple value='{{files_with_tag}}' class="form-control" {{!tagged.length ? 'disabled' : '' }}>
-									{{#tagged}}
-										<option value="{{hash}}">{{name}}</option>
-									{{/tagged}}
-								</select>
-								<button on-click="remove_from_files:{{key}},{{value}},{{files_with_tag}}" class="btn btn-default btn-sm" {{!files_with_tag.length ? 'disabled' : '' }}>Удалить тег</button>
-								<button on-click="clear_with_tag" class="btn btn-default btn-sm" {{!files_with_tag.length ? 'disabled' : '' }} title="Очистить"><i class="fa fa-times"></i></button>
-							</div>
-						</div>
 						<div class="form-group col-xs-6">
 							<div class="form-group {{#if name_tpl}}has-{{name_tpl_ok ? 'success' : 'error'}}{{/if}}">
 								<label>Теги из названия:</label>
@@ -179,14 +167,6 @@
 									</div>
 								</div>
 							</div>
-							<label>Файлы без тега <span class="text-info">{{key}}</span></label>
-							<select multiple value='{{files_to_tag}}' class="form-control" {{!untagged.length ? 'disabled' : '' }}>
-								{{#untagged}}
-									<option value="{{hash}}">{{name}}</option>
-								{{/untagged}}
-							</select>
-							<button on-click="apply_to_files:{{key}},{{value}},{{files_to_tag}}" class="btn btn-default btn-sm" {{!files_to_tag.length || !key || !value ? 'disabled' : '' }}>Присвоить тег</button>
-							<button on-click="clear_to_tag" class="btn btn-default btn-sm" {{!files_to_tag.length ? 'disabled' : '' }} title="Очистить"><i class="fa fa-times"></i></button>
 						</div>
 					</div>
 					<a name="approving" class="section"></a>

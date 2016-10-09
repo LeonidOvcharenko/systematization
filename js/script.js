@@ -567,9 +567,7 @@ $(function(){
 			value: '',
 			values: [],
 			untagged: [],
-			files_to_tag: [],
 			tagged: [],
-			files_with_tag: [],
 			tags_filter: 'all',
 			all_tags_checked: false,
 			tags_checked: [],
@@ -719,8 +717,6 @@ $(function(){
 	setInterval(update_all_views, 10000);
 	
 	Tagger.on({
-		clear_to_tag: function(){ this.set('files_to_tag', []); },
-		clear_with_tag: function(){ this.set('files_with_tag', []); },
 		put_to_clipboard: function(e, files){
 			var self = this;
 			files.forEach(function(file, i){
