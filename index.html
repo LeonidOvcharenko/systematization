@@ -175,7 +175,7 @@
 									</div>
 									<input type="text" class="form-control" value="{{name_tpl}}" placeholder="RegExp" />
 									<div class="input-group-btn">
-										<button class="btn btn-default" on-click="parse_tags:{{name_tpl}}" {{!(files.length && name_tpl && name_tpl_ok) ? 'disabled' : ''}}>Взять</button>
+										<button class="btn btn-default" on-click="parse_tags:{{name_tpl}}" {{!(checked_files_hashes.length && name_tpl && name_tpl_ok) ? 'disabled' : ''}}>Взять</button>
 									</div>
 								</div>
 							</div>

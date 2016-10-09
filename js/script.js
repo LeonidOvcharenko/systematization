@@ -910,7 +910,9 @@ $(function(){
 				reg = new RegExp('', 'i');
 			}
 			var files = this.get('files');
+			var checked_files_hashes = this.get('checked_files_hashes');
 			files.forEach(function(file, i){
+				if (checked_files_hashes.indexOf(file.hash) == -1) return;
 				var clearname = file.name.match(/(.+?)(\.[^.]*$|$)/)[1];
 				var match = clearname.match(reg);
 				if (match && match.length > 1){
