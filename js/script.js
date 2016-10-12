@@ -592,6 +592,10 @@ $(function(){
 			tags: function(file, key){
 				return file ? Database.get_file_tags(file.hash, key) : [];
 			},
+			tags_list: function(file, key){
+				var tags = Database.get_file_tags(file.hash, key);
+				return file && tags.length ? tags : [{key: key, value: ''}];
+			},
 			name_tpl: '',
 			tagsets: [],
 			table_keys: []
@@ -707,6 +711,7 @@ $(function(){
 			this.update('dir');
 			this.update('path_esc');
 			this.update('tags');
+			this.update('tags_list');
 		}
 	});
 	
@@ -721,6 +726,7 @@ $(function(){
 		Tagger.update_untagged_files();
 		Tagger.update_tagged_files();
 		Tagger.update('tags');
+		Tagger.update('tags_list');
 		
 		Processing.set('keys', Database.get_keys(true));
 	};
@@ -974,6 +980,7 @@ $(function(){
 			Tagger.update_tags_values_approving();
 		});
 		Tagger.update('tags');
+		Tagger.update('tags_list');
 	}, 500);
 	Tagger.on({
 		save_file_tag: save_file_tag_fn

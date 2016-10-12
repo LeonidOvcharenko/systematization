@@ -268,10 +268,8 @@
 														</div></td>
 														{{#table_keys}}
 														<td class="db-table__cell-tag">
-															{{#each tags(files[i],this)}}
+															{{#each tags_list(files[i],this)}}
 															<input type="text" class="form-control input-xs input-ghost" on-change-input="save_file_tag:{{files[i]}},{{key}},{{value}}" twoway="false" value="{{value}}" />
-															{{else}}
-															<input type="text" class="form-control input-xs input-ghost" on-change-input="save_file_tag:{{files[i]}},{{this}}" value="" />
 															{{/each}}
 														</td>
 														{{else}}
