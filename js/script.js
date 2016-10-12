@@ -924,6 +924,17 @@ $(function(){
 		exec_file: function(e, path){
 			e.original.preventDefault();
 			GUI.Shell.openItem(path);
+		},
+		
+		'scroll-db-table': function(e){
+			var scroll_body = $(e.node);
+			var db_table = scroll_body.closest('.db-table');
+			// scroll header
+			var pos_x = $(e.node).scrollLeft()
+			db_table.find('.db-table__scroll-header').scrollLeft( pos_x );
+			// scroll column
+			db_table.find('.db-table__left-body').toggleClass('db-table__left-body_fixed', pos_x > 0);
+			db_table.find('.db-table__left-body-inner').scrollTop( $(e.node).scrollTop() );
 		}
 	});
 	

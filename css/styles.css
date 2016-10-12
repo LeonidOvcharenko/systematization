@@ -165,3 +165,112 @@ a.section {
 	top: -65px;
 	visibility: hidden;
 }
+
+/* database table */
+.db-table {
+	position: relative;
+	clear: both;
+	height: 329px;
+}
+.db-table table {
+	margin: 0;
+	table-layout: fixed;
+}
+.db-table th {
+	height: 28px;
+	white-space: nowrap;
+}
+.db-table th,
+.db-table td {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.db-table__scroll {
+	clear: both;
+}
+.db-table__scroll-header {
+	overflow: hidden;
+	position: relative;
+	border: 0;
+	/* width: 100%; */
+	margin-right: 17px;
+}
+.db-table__scroll-header-inner {
+	box-sizing: content-box;
+	padding-right: 17px;
+}
+.db-table__scroll-body {
+	position: relative;
+	overflow: scroll;
+	width: 100%;
+	height: 300px;
+}
+.db-table__left-column {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	width: 180px;
+	height: 1px;
+}
+.db-table__left-header {
+	position: relative;
+	top: 0;
+	left: 0;
+	overflow: hidden;
+	background: white;
+}
+.db-table__left-body {
+	position: relative;
+	top: 0px;
+	left: 0px;
+	overflow: hidden;
+	height: 283px;
+	background: white;
+}
+.db-table__left-body_fixed {
+	box-shadow: 3px 0px 3px rgba(44,44,44,0.1);
+}
+.db-table__left-body-inner {
+	position: relative;
+	top: 0px;
+	left: 0px;
+	overflow-y: scroll;
+	width: 197px;
+	height: 283px;
+}
+.db-table__row_hidden,
+.db-table__row_hidden th,
+.db-table__row_hidden td {
+	height: 0!important;
+	padding: 0!important;
+	font-size: 0!important;
+	line-height: 0!important;
+	border: none!important;
+}
+.db-table__dropdown {
+	position: absolute;
+	right: 3px;
+	top: 5px;
+}
+.db-table__cell_visible {
+	overflow: visible;
+}
+.db-table__cell-object {
+	width: 180px;
+}
+.db-table__cell-tag {
+	width: 90px;
+}
+
+.input-xs {
+	height: 20px;
+	padding: 2px 4px;
+	font-size: 11px;
+	line-height: 1.5;
+	border-radius: 2px;
+}
+.input-ghost {
+	box-shadow: none;
+	border-color: transparent;
+	background-color: transparent;
+}
