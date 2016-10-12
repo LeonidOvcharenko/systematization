@@ -255,7 +255,8 @@ a.section {
 .db-table__cell_visible {
 	overflow: visible;
 }
-.db-table__cell-object {
+.db-table__cell-object,
+.db-table__cell-object>div {
 	width: 180px;
 }
 .db-table__cell-tag {
@@ -270,7 +271,22 @@ a.section {
 	border-radius: 2px;
 }
 .input-ghost {
+	-webkit-box-shadow: none;
 	box-shadow: none;
 	border-color: transparent;
+	background-color: #F0F0F0; /* transparent;*/
+}
+.input-ghost[value=""]:not(:focus),
+.input-ghost[value=""]:not(:active) {
 	background-color: transparent;
+	border-bottom-color: #F0F0F0;
+}
+.table tr.active .input-ghost[value=""]:not(:focus),
+.table tr.active .input-ghost[value=""]:not(:active) {
+	border-bottom-color: #FFFFFF;
+}
+.table tr.active .input-ghost:not([value=""]),
+.input-ghost:focus,
+.input-ghost:active {
+	background-color: #FFFFFF;
 }

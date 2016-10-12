@@ -233,7 +233,7 @@
 					<div class="row">
 						<div class="col-xs-12">
 							<fieldset>
-								<legend>Файлы/теги</legend>
+								<legend>Таблица тегов</legend>
 								<div class="db-table">
 									<div class="db-table__scroll">
 										<div class="db-table__scroll-header">
@@ -241,18 +241,11 @@
 												<table class="table table-condensed">
 													<thead><tr>
 														<th class="db-table__cell-object"></th>
-														<th class="db-table__cell-tag"><small class="">#Format</small></th>
-														<th class="db-table__cell-tag"><small class="">Автор</small></th>
-														<th class="db-table__cell-tag"><small class="">Название</small></th>
-														<th class="db-table__cell-tag"><small class="">Издательство</small></th>
-														<th class="db-table__cell-tag"><small class="">Год издания</small></th>
-														<th class="db-table__cell-tag"><small class="">Тип</small></th>
-														<th class="db-table__cell-tag"><small class="">Жанр</small></th>
-														<th class="db-table__cell-tag"><small class="">Тема</small></th>
-														<th class="db-table__cell-tag"><small class="">Ключевые слова</small></th>
-														<th class="db-table__cell-tag"><small class="">Читал?</small></th>
-														<th class="db-table__cell-tag"><small class="">Рекомендация</small></th>
-														<th class="db-table__cell-tag"><small class="">ISBN</small></th>
+														{{#table_keys}}
+														<th class="db-table__cell-tag"><small title="{{.}}">{{.}}</small></th>
+														{{else}}
+														<th></th>
+														{{/table_keys}}
 													</tr></thead>
 												</table>
 											</div>
@@ -261,35 +254,29 @@
 											<table class="table table-condensed">
 												<thead><tr class="db-table__row_hidden">
 													<th class="db-table__cell-object"></th>
-													<th class="db-table__cell-tag"><small class="">#Format</small></th>
-													<th class="db-table__cell-tag"><small class="">Автор</small></th>
-													<th class="db-table__cell-tag"><small class="">Название</small></th>
-													<th class="db-table__cell-tag"><small class="">Издательство</small></th>
-													<th class="db-table__cell-tag"><small class="">Год издания</small></th>
-													<th class="db-table__cell-tag"><small class="">Тип</small></th>
-													<th class="db-table__cell-tag"><small class="">Жанр</small></th>
-													<th class="db-table__cell-tag"><small class="">Тема</small></th>
-													<th class="db-table__cell-tag"><small class="">Ключевые слова</small></th>
-													<th class="db-table__cell-tag"><small class="">Читал?</small></th>
-													<th class="db-table__cell-tag"><small class="">Рекомендация</small></th>
-													<th class="db-table__cell-tag"><small class="">ISBN</small></th>
+													{{#table_keys}}
+													<th class="db-table__cell-tag"><small>{{.}}</small></th>
+													{{else}}
+													<th></th>
+													{{/table_keys}}
 												</tr></thead>
 												<tbody>
 												{{#each files:i}}
 													<tr class="on-hover {{files_checked[i] ? 'active' : ''}}">
-														<td class="db-table__cell-object"><label><input type="checkbox" checked="{{files_checked[i]}}" /> {{name}}<br><small class="text-muted">{{dir(.)}}</small></label></td>
-														<td class="db-table__cell-tag"><input type="text" class="form-control input-xs input-ghost" value="test" /></td>
-														<td class="db-table__cell-tag"><input type="text" class="form-control input-xs input-ghost" value="test" /></td>
-														<td class="db-table__cell-tag"><input type="text" class="form-control input-xs input-ghost" value="test" /></td>
-														<td class="db-table__cell-tag"><input type="text" class="form-control input-xs input-ghost" value="test" /></td>
-														<td class="db-table__cell-tag"><input type="text" class="form-control input-xs input-ghost" value="test" /></td>
-														<td class="db-table__cell-tag"><input type="text" class="form-control input-xs input-ghost" value="test" /></td>
-														<td class="db-table__cell-tag"><input type="text" class="form-control input-xs input-ghost" value="test" /></td>
-														<td class="db-table__cell-tag"><input type="text" class="form-control input-xs input-ghost" value="test" /></td>
-														<td class="db-table__cell-tag"><input type="text" class="form-control input-xs input-ghost" value="test" /></td>
-														<td class="db-table__cell-tag"><input type="text" class="form-control input-xs input-ghost" value="test" /></td>
-														<td class="db-table__cell-tag"><input type="text" class="form-control input-xs input-ghost" value="test" /></td>
-														<td class="db-table__cell-tag"><input type="text" class="form-control input-xs input-ghost" value="test" /></td>
+														<td class="db-table__cell-object"><div>
+															<label><input type="checkbox" /> {{name}}<br><small class="text-muted">{{dir(.)}}</small></label>
+														</div></td>
+														{{#table_keys}}
+														<td class="db-table__cell-tag">
+															{{#each tags(files[i],this)}}
+															<input type="text" class="form-control input-xs input-ghost" on-change-input="save_file_tag:{{files[i]}},{{key}},{{value}}" twoway="false" value="{{value}}" />
+															{{else}}
+															<input type="text" class="form-control input-xs input-ghost" on-change-input="save_file_tag:{{files[i]}},{{this}}" value="" />
+															{{/each}}
+														</td>
+														{{else}}
+														<td></td>
+														{{/table_keys}}
 													</tr>
 												{{/each}}
 												</tbody>
@@ -300,17 +287,17 @@
 										<div class="db-table__left-header db-table__cell_visible">
 											<table class="table table-condensed">
 												<thead><tr>
-													<th class="db-table__cell-object db-table__cell_visible">
+													<th class="db-table__cell-object db-table__cell_visible"><div>
 														<div class="db-table__dropdown">
-															<button class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" title="Набор тегов"><i class="fa fa-caret-right"></i></button>
+															<button class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" title="Набор ключей">&lt;#&gt;</button>
 															<ul class="dropdown-menu">
-																<li><a href="#"><b>Все теги</b></a></li>
-																<li><a href="#">Книга</a></li>
-																<li><a href="#">Фонограмма</a></li>
-																<li><a href="#">Картинка</li>
+																<li><a href="#" on-click="set_table_keys:''"><b>Все теги</b></a></li>
+																{{#tagsets}}
+																<li><a href="#" on-click="set_table_keys:{{keys}}">{{title}}</a></li>
+																{{/tagsets}}
 															</ul>
 														</div>
-													</th>
+													</div></th>
 												</tr></thead>
 											</table>
 										</div>
@@ -323,7 +310,9 @@
 													<tbody>
 													{{#each files:i}}
 														<tr class="on-hover {{files_checked[i] ? 'active' : ''}}">
-															<td class="db-table__cell-object"><label><input type="checkbox" checked="{{files_checked[i]}}" /> {{name}}<br><small class="text-muted">{{dir(.)}}</small></label></td>
+															<td class="db-table__cell-object">
+																<label><input type="checkbox" checked="{{files_checked[i]}}" /> {{name}}<br><small class="text-muted">{{dir(.)}}</small></label>
+															</td>
 														</tr>
 													{{/each}}
 													</tbody>
@@ -450,28 +439,29 @@
 									<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!keys.length ? 'disabled' : ''}} title="Вставить ключ"><i class="fa fa-at"></i></button>
 									<ul class="dropdown-menu">
 										{{#keys}}
-										<li><a href="#" on-click="append_to_mask:{{.}}">{{.}}</a></li>
+											<li><a href="#" on-click="append_to_mask:{{.}}">{{.}}</a></li>
 										{{/keys}}
 									</ul>
 								</div>
 								<input type="text" class="form-control" value="{{filefilter}}" placeholder="RegExp" />
 							</div>
 						</div>
-						<label><input type="checkbox" value="{{read_metadata}}" /> автоматически читать метаданные</label>
+						<div class="checkbox">
+							<label><input type="checkbox" value="{{read_metadata}}" /> автоматически читать метаданные</label>
+						</div>
+					</div>
+					<div class="col-xs-12">
 						<div class="form-group">
-							<label>Набор метаданных:</label>
-							<div class="input-group">
-								<div class="input-group-btn">
-									<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!keys.length ? 'disabled' : ''}} title="Вставить ключ"><i class="fa fa-at"></i></button>
-									<ul class="dropdown-menu">
-										{{#keys}}
-										<li><a href="#" on-click="append_to_mask:{{.}}">{{.}}</a></li>
-										{{/keys}}
-									</ul>
-								</div>
-								<input type="text" class="form-control" value="{{mask}}" />
+							<label>Наборы тегов:</label>
+							<div class="form-inline">
+								<input type="text" class="form-control" placeholder="Название" value="{{tagset_title}}" />
+								<input type="text" class="form-control" placeholder="Ключи (через ;)" value="{{tagset_keys}}" />
+								<button class="form-control btn btn-default" {{tagset_title && tagset_keys ? '' : 'disabled'}} on-click="add-tagset">Добавить</button>
 							</div>
 						</div>
+						{{#tagsets}}
+							<div><b>{{title}}:</b> <span>{{keys}}</span></div>
+						{{/tagsets}}
 					</div>
 				</div>
 			</div>

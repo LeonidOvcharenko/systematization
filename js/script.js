@@ -1,6 +1,8 @@
 $(function(){
+	var _ = require('lodash');
+	
 	var Database;
-	var SKARB = {options: {}};
+	var S = {options: {}};
 	
 	var EXIF = require('exif-reader');
 	var SizeOf = require('image-size');
@@ -300,8 +302,9 @@ $(function(){
 			return distinct.sort();
 		}
 		,
-		get_file_tags: function(hash){
-			return this.tags.chain().find({ 'hash': hash }).compoundsort(['key','value']).data();
+		get_file_tags: function(hash, key){
+			var query = key ? {'$and': [{ 'hash': hash }, { 'key': key }]} : { 'hash': hash };
+			return this.tags.chain().find(query).compoundsort(['key','value']).data();
 		}
 		,
 		has_tag: function(hash, key, value){
@@ -586,10 +589,12 @@ $(function(){
 			path_esc: function(file){
 				return file ? escape(file.path) : '';
 			},
-			tags: function(file){
-				return file ? Database.get_file_tags(file.hash) : [];
+			tags: function(file, key){
+				return file ? Database.get_file_tags(file.hash, key) : [];
 			},
-			name_tpl: ''
+			name_tpl: '',
+			tagsets: [],
+			table_keys: []
 		},
 		computed: {
 			name_tpl_ok: function(){ 
@@ -646,6 +651,11 @@ $(function(){
 	Tagger.add_file_to_clipboard_by_hash = function(hash){
 		var file = Database.get_file(hash);
 		Tagger.add_file_to_clipboard(file);
+	};
+	Tagger.update_tagsets = function(){
+		if (S.options.tagsets) {
+			this.set('tagsets', S.options.tagsets);
+		}
 	};
 	Tagger.observe({
 		key: function(){
@@ -935,9 +945,39 @@ $(function(){
 			// scroll column
 			db_table.find('.db-table__left-body').toggleClass('db-table__left-body_fixed', pos_x > 0);
 			db_table.find('.db-table__left-body-inner').scrollTop( $(e.node).scrollTop() );
+		},
+		set_table_keys: function(e, keys){
+			e.original.preventDefault();
+			var table_keys = !keys ? this.get('keys') : keys.split(';').map(function(key){ return key.trim(); });
+			this.set('table_keys', table_keys);
 		}
 	});
-	
+	var save_file_tag_fn = _.throttle(function(e, file, key, old_value){
+		var new_value = e.node.value;
+		var old_tag = {key: key, value: old_value};
+		var new_tag = {key: key, value: new_value};
+		if (old_value) {
+			if (new_value) {
+				Database.rename_tags(old_tag, new_tag, file.hash);
+			} else {
+				Database.remove_tag(file.hash, old_tag);
+			}
+		} else {
+			if (new_value) {
+				Database.add_tag(file, new_tag);
+			}
+		}
+		Tagger.update_tags_keys().then(function(){
+			Tagger.update_tags_values();
+		});
+		Tagger.update_tags_keys_approving().then(function(){
+			Tagger.update_tags_values_approving();
+		});
+		Tagger.update('tags');
+	}, 500);
+	Tagger.on({
+		save_file_tag: save_file_tag_fn
+	});
 	
 	
 	$(window).on('dragover drop', function(e){ e.preventDefault(); return false; });
@@ -1023,22 +1063,23 @@ $(function(){
 		data: {
 			folder_selected: '',
 			root_folder: '',
-			filefilter: ''
+			filefilter: '',
+			tagsets: []
 		}
 	});
 	Settings.start_observe = function(){
 		this.observe({
 			root_folder: function(path){
-				SKARB.options.root_folder = path;
-				Database.save_settings(SKARB.options);
+				S.options.root_folder = path;
+				Database.save_settings(S.options);
 			},
 			read_metadata: function(f){
-				SKARB.options.read_metadata = f;
-				Database.save_settings(SKARB.options);
+				S.options.read_metadata = f;
+				Database.save_settings(S.options);
 			},
 			filefilter: function(filter){
-				SKARB.options.filefilter = filter;
-				Database.save_settings(SKARB.options);
+				S.options.filefilter = filter;
+				Database.save_settings(S.options);
 			}
 		});
 	};
@@ -1050,12 +1091,24 @@ $(function(){
 					self.set('root_folder', path);
 				});
 			});
+		},
+		'add-tagset': function(){
+			if (!S.options.tagsets) S.options.tagsets = [];
+			S.options.tagsets.push({
+				title: this.get('tagset_title'),
+				keys:  this.get('tagset_keys')
+			});
+			S.options.tagsets.sort(function(a,b){return (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0);});
+			Database.save_settings(S.options);
+			this.set('tagsets', S.options.tagsets);
+			Tagger.update_tagsets();
 		}
 	});
 	Settings.load_from_DB = function(){
-		SKARB.options = Database.get_settings();
-		this.set(SKARB.options).then(function(){
+		S.options = Database.get_settings();
+		this.set(S.options).then(function(){
 			Settings.start_observe();
+			Tagger.update_tagsets();
 		});
 	};
 	
