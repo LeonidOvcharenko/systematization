@@ -185,6 +185,9 @@ a.section {
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
+.db-table td {
+	height: 70px;
+}
 .db-table__scroll {
 	clear: both;
 }
@@ -209,7 +212,7 @@ a.section {
 	position: absolute;
 	top: 0px;
 	left: 0px;
-	width: 180px;
+	width: 240px;
 	height: 1px;
 }
 .db-table__left-header {
@@ -235,7 +238,7 @@ a.section {
 	top: 0px;
 	left: 0px;
 	overflow-y: scroll;
-	width: 197px;
+	width: 257px;
 	height: 283px;
 }
 .db-table__row_hidden,
@@ -257,10 +260,10 @@ a.section {
 }
 .db-table__cell-object,
 .db-table__cell-object>div {
-	width: 180px;
+	width: 240px;
 }
 .db-table__cell-tag {
-	width: 90px;
+	width: 120px;
 }
 
 .input-xs {
@@ -270,23 +273,39 @@ a.section {
 	line-height: 1.5;
 	border-radius: 2px;
 }
+select[multiple].input-xs {
+	padding: 0;
+}
+select[multiple].input-xs option {
+	height: 18px;
+	padding: 2px 4px;
+}
+
 .input-ghost {
 	-webkit-box-shadow: none;
 	box-shadow: none;
 	border-color: transparent;
 	background-color: #F0F0F0; /* transparent;*/
 }
-.input-ghost[value=""]:not(:focus),
-.input-ghost[value=""]:not(:active) {
+.input-ghost_empty:not(:focus),
+.input-ghost_empty:not(:active) {
 	background-color: transparent;
 	border-bottom-color: #F0F0F0;
 }
-.table tr.active .input-ghost[value=""]:not(:focus),
-.table tr.active .input-ghost[value=""]:not(:active) {
+.table tr.active .input-ghost_empty:not(:focus),
+.table tr.active .input-ghost_empty:not(:active) {
 	border-bottom-color: #FFFFFF;
 }
-.table tr.active .input-ghost:not([value=""]),
+.table tr.active .input-ghost:not(.input-ghost_empty),
 .input-ghost:focus,
 .input-ghost:active {
 	background-color: #FFFFFF;
+}
+
+.te input[type="text"] {
+	display: block;
+	margin-bottom: 3px;
+}
+.te select[multiple] {
+	max-height: 40px;
 }

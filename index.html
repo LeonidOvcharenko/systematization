@@ -266,11 +266,9 @@
 														<td class="db-table__cell-object"><div>
 															<label><input type="checkbox" /> {{name}}<br><small class="text-muted">{{dir(.)}}</small></label>
 														</div></td>
-														{{#table_keys}}
+														{{#table_keys:j}}
 														<td class="db-table__cell-tag">
-															{{#each tags_list(files[i],this)}}
-															<input type="text" class="form-control input-xs input-ghost" on-change-input="save_file_tag:{{files[i]}},{{key}},{{value}}" twoway="false" value="{{value}}" />
-															{{/each}}
+															<tagsedit file="{{files[i]}}" key="{{this}}" />
 														</td>
 														{{else}}
 														<td></td>

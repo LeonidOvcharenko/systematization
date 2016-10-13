@@ -560,6 +560,102 @@ $(function(){
 			});
 		}
 	});
+	var TagsEditor = Ractive.extend({
+		isolated: true,
+		template:
+			'<div class="te">'+
+				'<input type="text" class="form-control input-xs input-ghost {{!value ? \'input-ghost_empty\' : \'\'}}" value="{{value}}" lazy="300" autocomplete="off" on-keyup="on_key" />'+
+				'<select class="form-control input-xs input-ghost {{(tags.length > 1) ? \'show\' : \'hide\'}}" multiple value="{{selected}}" on-change="on_select:{{selected}}">'+
+					'{{#tags}}<option value="{{value}}">{{value}}</option>{{/tags}}'+
+				'</select>'+
+			'</div>',
+		/*onchange: function(a){ console.log('X',a)},*/
+		oninit: function(){
+			var self = this;
+			var select_input_text = function(){
+				var input = self.find('input');
+				if (input){
+					input.select();
+				}
+			};
+			var selected_to_input = function(val){
+				self.set({
+					current: val,
+					value:   val
+				});
+				// when input is focused, setting data doesn't affect input
+				var input = self.find('input');
+				if (input){
+					input.value = val;
+					self.updateModel('value');
+				}
+			};
+			var update_tags = function(value_to_set){
+				var file = self.get('file');
+				var key  = self.get('key');
+				var tags = file ? Database.get_file_tags(file.hash, key) : [];
+				if (!value_to_set){
+					value_to_set = tags.length ? tags[0].value : '';
+				}
+				self.set({
+					tags: tags,
+					selected: [ value_to_set ]
+				});
+				selected_to_input(value_to_set);
+			};
+			var reset_nodes = function(){
+				self.set({
+					value: '',
+					current: '',
+					selected: []
+				});
+				update_tags();
+			};
+			reset_nodes();
+			var save_tag = function(new_value){
+				var old_value = self.get('current') || '';
+				new_value = new_value || '';
+				if (old_value == new_value) return;
+				var file = self.get('file');
+				var key  = self.get('key');
+				var old_tag = {key: key, value: old_value};
+				var new_tag = {key: key, value: new_value};
+				if (new_value) {
+					if (old_value) {
+						Database.rename_tags(old_tag, new_tag, file.hash);
+					} else {
+						Database.add_tag(file, new_tag);
+					}
+					update_tags(new_value);
+				} else {
+					if (old_value) {
+						Database.remove_tag(file.hash, old_tag);
+						update_tags();
+					}
+				}
+			};
+			self.observe({
+				'file key': reset_nodes,
+				'value': save_tag
+			});
+			self.on({
+				'on_select': function(e, sels){
+					selected_to_input(sels[0] || '');
+				},
+				'on_key': function(e){
+					var self = this;
+					// Ctrl+Enter
+					if (e.original.ctrlKey && e.original.keyCode == 13) {
+						e.original.preventDefault();
+						var new_tag = {key: self.get('key'), value: '?'};
+						Database.add_tag(self.get('file'), new_tag);
+						update_tags('?');
+						select_input_text();
+					}
+				}
+			});
+		}
+	});
 	
 	var Tagger = new Ractive({
 		el: 'tagger',
@@ -590,11 +686,19 @@ $(function(){
 				return file ? escape(file.path) : '';
 			},
 			tags: function(file, key){
+				// for auto update on change
+				var files = this.get('files');
+				var keys = this.get('table_keys');
 				return file ? Database.get_file_tags(file.hash, key) : [];
 			},
 			tags_list: function(file, key){
+				// for auto update on change
+				var files = this.get('files');
+				var keys = this.get('table_keys');
+				var empty = [{key: key, value: ''}];
+				if (!file) return empty;
 				var tags = Database.get_file_tags(file.hash, key);
-				return file && tags.length ? tags : [{key: key, value: ''}];
+				return tags.length ? tags : empty;
 			},
 			name_tpl: '',
 			tagsets: [],
@@ -613,7 +717,8 @@ $(function(){
 			}
 		},
 		components: {
-			combotext: EditableSelect
+			combotext: EditableSelect,
+			tagsedit: TagsEditor
 		}
 	});
 	Tagger.update_untagged_files = function(){
@@ -710,8 +815,6 @@ $(function(){
 		files: function(){
 			this.update('dir');
 			this.update('path_esc');
-			this.update('tags');
-			this.update('tags_list');
 		}
 	});
 	
@@ -725,8 +828,6 @@ $(function(){
 		});
 		Tagger.update_untagged_files();
 		Tagger.update_tagged_files();
-		Tagger.update('tags');
-		Tagger.update('tags_list');
 		
 		Processing.set('keys', Database.get_keys(true));
 	};
@@ -756,6 +857,7 @@ $(function(){
 			hashes.forEach(function(hash){
 				Database.add_tag({hash: hash}, {key: key, value: value, auto: false}, function(){
 					update_all_views();
+					Tagger.update('files');
 				});
 			});
 		},
@@ -763,6 +865,7 @@ $(function(){
 			hashes.forEach(function(hash){
 				Database.remove_tag(hash, {key: key, value: value});
 				update_all_views();
+				Tagger.update('files');
 			});
 		},
 		check_files: function(e, key, value){
@@ -810,6 +913,7 @@ $(function(){
 				this.update_tags_values_approving();
 			}
 			update_all_views();
+			Tagger.update('files');
 		},
 		filter_tags: function(e, filter){
 			e.original.preventDefault();
@@ -819,6 +923,7 @@ $(function(){
 			e.original.preventDefault();
 			Database.remove_tags({key: key});
 			update_all_views();
+			Tagger.update('files');
 		},
 		approve_tag_value: function(e, key, value, files){
 			var tag = {key: key, value: value};
@@ -830,11 +935,13 @@ $(function(){
 				Database.approve_tags(tag);
 			}
 			update_all_views();
+			Tagger.update('files');
 			this.reset_tags_checked();
 		},
 		remove_tag_value: function(e, key, value){
 			Database.remove_tags({key: key, value: value});
 			update_all_views();
+			Tagger.update('files');
 			this.reset_tags_checked();
 		},
 		edit_tag_key: function(e, key, value, files){
@@ -851,6 +958,7 @@ $(function(){
 				}
 				this.update_tags_keys_approving().then(function(){
 					update_all_views();
+					Tagger.update('files');
 					Tagger.reset_tags_checked();
 				});
 			}
@@ -909,6 +1017,7 @@ $(function(){
 		clear_auto_tags: function(){
 			Database.remove_auto_tags();
 			update_all_views();
+			Tagger.update('files');
 		},
 		regexp_tags: function(e, pattern){
 			e.original.preventDefault();
@@ -932,6 +1041,7 @@ $(function(){
 						if (i==0) return;
 						Database.add_tag({hash: file.hash}, {key: '#AUTO#'+i, value: m, auto: true}, function(){
 							update_all_views();
+							Tagger.update('files');
 						});
 					});
 				}
@@ -958,33 +1068,14 @@ $(function(){
 			this.set('table_keys', table_keys);
 		}
 	});
-	var save_file_tag_fn = _.throttle(function(e, file, key, old_value){
-		var new_value = e.node.value;
-		var old_tag = {key: key, value: old_value};
-		var new_tag = {key: key, value: new_value};
-		if (old_value) {
-			if (new_value) {
-				Database.rename_tags(old_tag, new_tag, file.hash);
-			} else {
-				Database.remove_tag(file.hash, old_tag);
-			}
-		} else {
-			if (new_value) {
-				Database.add_tag(file, new_tag);
-			}
-		}
+	var save_file_tag_fn = function(e, file, key, old_value){
 		Tagger.update_tags_keys().then(function(){
 			Tagger.update_tags_values();
 		});
 		Tagger.update_tags_keys_approving().then(function(){
 			Tagger.update_tags_values_approving();
 		});
-		Tagger.update('tags');
-		Tagger.update('tags_list');
-	}, 500);
-	Tagger.on({
-		save_file_tag: save_file_tag_fn
-	});
+	};
 	
 	
 	$(window).on('dragover drop', function(e){ e.preventDefault(); return false; });
