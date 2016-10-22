@@ -135,7 +135,7 @@
 										<tr class="on-hover {{files_checked[i] ? 'active' : ''}}">
 											<td width="40%"><label><input type="checkbox" checked="{{files_checked[i]}}" /> {{name}}<br><small class="text-muted">{{dir(.)}}</small></label></td>
 											<td width="55%">
-												{{#each tags(.)}}<span on-click="set_tag:{{key}},{{value}}" class="label label-{{(key==~/key) && (value==~/value)? 'primary' : auto ? 'default' : 'success'}} label-link tag-block {{(tags_type == 'manual' && auto) || (tags_type == 'auto' && !auto) ? 'hidden' : '' }}" title="{{key}}: {{value}}"><em>{{key}}</em>{{value}}</span>{{/each}}
+												{{#each tags(files[i])}}<span on-click="set_tag:{{.key}},{{.value}}" class="label label-{{(key==~/key) && (value==~/value)? 'primary' : auto ? 'default' : 'success'}} label-link tag-block {{(tags_type == 'manual' && auto) || (tags_type == 'auto' && !auto) ? 'hidden' : '' }}" title="{{key}}: {{value}}"><em>{{.key}}</em>{{.value}}</span>{{/each}}
 											</td>
 											<td width="5%">
 												<a class="on-hover-show" on-click="exec_file:{{path}}" href="{{path}}" target="_blank" title="Открыть файл"><i class="fa fa-eye text-info"></i></a>

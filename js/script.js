@@ -546,7 +546,7 @@ $(function(){
 				'filter': function(){
 					var self = this;
 					var list = self.get('list');
-					var search = self.get('value').toLowerCase().trim();
+					var search = (self.get('value') || '').toLowerCase().trim();
 					var first = self.get('active') >=0 ? self.get('active') : -1;
 					var no_matches = true;
 					for (var i=0; i<list.length; i++){
