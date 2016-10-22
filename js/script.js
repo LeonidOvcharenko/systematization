@@ -341,7 +341,7 @@ $(function(){
 		,
 		remove_empty_tags: function(){
 			var self = this;
-			var query = { '$or': [{ 'key': '' }, { 'value': '' }] };
+			var query = { '$or': [{ 'key': '' }, { 'key': null }, { 'key': void 0 }, { 'value': '' }, { 'value': null }, { 'value': void 0 }] };
 			self.tags.removeWhere(query);
 		}
 		,
