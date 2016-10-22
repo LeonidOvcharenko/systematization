@@ -139,7 +139,9 @@ $(function(){
 				});
 				if (inserted && callback) { callback(); }
 			} catch(e){}
-			Preprocessor.auto_tags(file.path, hash, data);
+			if (S.options.read_metadata) {
+				Preprocessor.auto_tags(file.path, hash, data);
+			}
 			return hash;
 		}
 		,
