@@ -339,6 +339,12 @@ $(function(){
 			return untagged;
 		}
 		,
+		remove_empty_tags: function(){
+			var self = this;
+			var query = { '$or': [{ 'key': '' }, { 'value': '' }] };
+			self.tags.removeWhere(query);
+		}
+		,
 		save_settings: function(options){
 			try {
 				this.settings.update(options);
@@ -368,6 +374,14 @@ $(function(){
 		this.set('untagged', Database.get_untagged_files('') );
 		this.set('verified', Database.get_verified_files() );
 	};
+	ViewDB.on({
+		'save': function(){
+			Database.db.saveDatabase();
+		},
+		'optimize': function(){
+			Database.remove_empty_tags();
+		},
+	});
 	
 	var Processing = new Ractive({
 		el: 'processing',
@@ -456,9 +470,6 @@ $(function(){
 		}
 	});
 
-
-	
-	$('#save_db').on('click', function(){ Database.db.saveDatabase(); });
 	
 	var EditableSelect = Ractive.extend({
 		isolated: true,
