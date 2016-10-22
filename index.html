@@ -204,6 +204,7 @@
 												{{#each files:i}}
 													<tr class="on-hover {{files_checked[i] ? 'active' : ''}}">
 														<td class="db-table__cell-object"><div>
+															<a class="db-table__view-object on-hover-show" on-click="exec_file:{{path}}" href="{{path}}" target="_blank" title="Открыть файл"><i class="fa fa-eye text-info"></i></a>
 															<label><input type="checkbox" /> {{name}}<br><small class="text-muted">{{dir(.)}}</small></label>
 														</div></td>
 														{{#table_keys:j}}
@@ -247,6 +248,7 @@
 													{{#each files:i}}
 														<tr class="on-hover {{files_checked[i] ? 'active' : ''}}">
 															<td class="db-table__cell-object">
+																<a class="db-table__view-object on-hover-show" on-click="exec_file:{{path}}" href="{{path}}" target="_blank" title="Открыть файл"><i class="fa fa-eye text-info"></i></a>
 																<label><input type="checkbox" checked="{{files_checked[i]}}" /> {{name}}<br><small class="text-muted">{{dir(.)}}</small></label>
 															</td>
 														</tr>

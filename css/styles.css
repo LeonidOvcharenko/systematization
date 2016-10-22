@@ -265,6 +265,20 @@ a.section {
 .db-table__cell-tag {
 	width: 120px;
 }
+.db-table__view-object {
+	width: 20px;
+	text-align: center;
+	display: block;
+	float: left;
+}
+.db-table__cell-object>label {
+	margin-left: 20px;
+	padding-left: 20px;
+}
+.db-table__cell-object>label>input[type="checkbox"] {
+	float: left;
+	margin-left: -16px!important;
+}
 .db-table__btn-tagset {
 	max-width: 200px;
 	white-space: nowrap;
