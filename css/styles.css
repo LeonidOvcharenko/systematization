@@ -265,6 +265,12 @@ a.section {
 .db-table__cell-tag {
 	width: 120px;
 }
+.db-table__btn-tagset {
+	max-width: 200px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
 
 .input-xs {
 	height: 20px;

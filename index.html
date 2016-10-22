@@ -225,11 +225,11 @@
 												<thead><tr>
 													<th class="db-table__cell-object db-table__cell_visible"><div>
 														<div class="db-table__dropdown">
-															<button class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" title="Набор ключей">&lt;#&gt;</button>
+															<button class="db-table__btn-tagset btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" title="Набор ключей">&#123;{{tagset_title || '#'}}&#125;</button>
 															<ul class="dropdown-menu">
 																<li><a href="#" on-click="set_table_keys:''"><b>Все теги</b></a></li>
 																{{#tagsets}}
-																<li><a href="#" on-click="set_table_keys:{{keys}}">{{title}}</a></li>
+																<li><a href="#" on-click="set_table_keys:{{keys}},{{title}}">{{title}}</a></li>
 																{{/tagsets}}
 															</ul>
 														</div>

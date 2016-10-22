@@ -713,6 +713,7 @@ $(function(){
 			},
 			name_tpl: '',
 			tagsets: [],
+			tagset_title: '',
 			table_keys: []
 		},
 		computed: {
@@ -1073,10 +1074,11 @@ $(function(){
 			db_table.find('.db-table__left-body').toggleClass('db-table__left-body_fixed', pos_x > 0);
 			db_table.find('.db-table__left-body-inner').scrollTop( $(e.node).scrollTop() );
 		},
-		set_table_keys: function(e, keys){
+		set_table_keys: function(e, keys, title){
 			e.original.preventDefault();
 			var table_keys = !keys ? this.get('keys') : keys.split(';').map(function(key){ return key.trim(); });
 			this.set('table_keys', table_keys);
+			this.set('tagset_title', title);
 		}
 	});
 	var save_file_tag_fn = function(e, file, key, old_value){
