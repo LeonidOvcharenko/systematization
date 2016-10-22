@@ -169,6 +169,97 @@
 							</div>
 						</div>
 					</div>
+					
+					<div class="row">
+						<div class="col-xs-12">
+							<fieldset>
+								<legend>Таблица тегов</legend>
+								<div class="db-table">
+									<div class="db-table__scroll">
+										<div class="db-table__scroll-header">
+											<div class="db-table__scroll-header-inner">
+												<table class="table table-condensed">
+													<thead><tr>
+														<th class="db-table__cell-object"></th>
+														{{#table_keys}}
+														<th class="db-table__cell-tag"><small title="{{.}}">{{.}}</small></th>
+														{{else}}
+														<th></th>
+														{{/table_keys}}
+													</tr></thead>
+												</table>
+											</div>
+										</div>
+										<div class="db-table__scroll-body" on-scroll="scroll-db-table">
+											<table class="table table-condensed">
+												<thead><tr class="db-table__row_hidden">
+													<th class="db-table__cell-object"></th>
+													{{#table_keys}}
+													<th class="db-table__cell-tag"><small>{{.}}</small></th>
+													{{else}}
+													<th></th>
+													{{/table_keys}}
+												</tr></thead>
+												<tbody>
+												{{#each files:i}}
+													<tr class="on-hover {{files_checked[i] ? 'active' : ''}}">
+														<td class="db-table__cell-object"><div>
+															<label><input type="checkbox" /> {{name}}<br><small class="text-muted">{{dir(.)}}</small></label>
+														</div></td>
+														{{#table_keys:j}}
+														<td class="db-table__cell-tag">
+															<!--tagsedit file="{{files[i]}}" key="{{table_keys[j]}}" /-->
+														</td>
+														{{else}}
+														<td></td>
+														{{/table_keys}}
+													</tr>
+												{{/each}}
+												</tbody>
+											</table>
+										</div>
+									</div>
+									<div class="db-table__left-column">
+										<div class="db-table__left-header db-table__cell_visible">
+											<table class="table table-condensed">
+												<thead><tr>
+													<th class="db-table__cell-object db-table__cell_visible"><div>
+														<div class="db-table__dropdown">
+															<button class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" title="Набор ключей">&lt;#&gt;</button>
+															<ul class="dropdown-menu">
+																<li><a href="#" on-click="set_table_keys:''"><b>Все теги</b></a></li>
+																{{#tagsets}}
+																<li><a href="#" on-click="set_table_keys:{{keys}}">{{title}}</a></li>
+																{{/tagsets}}
+															</ul>
+														</div>
+													</div></th>
+												</tr></thead>
+											</table>
+										</div>
+										<div class="db-table__left-body">
+											<div class="db-table__left-body-inner">
+												<table class="table table-condensed">
+													<thead><tr class="db-table__row_hidden">
+														<th class="db-table__cell-object"></th>
+													</tr></thead>
+													<tbody>
+													{{#each files:i}}
+														<tr class="on-hover {{files_checked[i] ? 'active' : ''}}">
+															<td class="db-table__cell-object">
+																<label><input type="checkbox" checked="{{files_checked[i]}}" /> {{name}}<br><small class="text-muted">{{dir(.)}}</small></label>
+															</td>
+														</tr>
+													{{/each}}
+													</tbody>
+												</table>
+											</div>
+										</div>
+									</div>
+								</div>
+							</fieldset>
+						</div>
+					</div>
 					<a name="approving" class="section"></a>
 					<div class="row">
 						<div class="col-xs-8">
@@ -226,97 +317,6 @@
 									</tbody>
 								</table>
 								<button on-click="clear_auto_tags" class="btn btn-default btn-sm">Удалить все автотеги</button>
-							</fieldset>
-						</div>
-					</div>
-					
-					<div class="row">
-						<div class="col-xs-12">
-							<fieldset>
-								<legend>Таблица тегов</legend>
-								<div class="db-table">
-									<div class="db-table__scroll">
-										<div class="db-table__scroll-header">
-											<div class="db-table__scroll-header-inner">
-												<table class="table table-condensed">
-													<thead><tr>
-														<th class="db-table__cell-object"></th>
-														{{#table_keys}}
-														<th class="db-table__cell-tag"><small title="{{.}}">{{.}}</small></th>
-														{{else}}
-														<th></th>
-														{{/table_keys}}
-													</tr></thead>
-												</table>
-											</div>
-										</div>
-										<div class="db-table__scroll-body" on-scroll="scroll-db-table">
-											<table class="table table-condensed">
-												<thead><tr class="db-table__row_hidden">
-													<th class="db-table__cell-object"></th>
-													{{#table_keys}}
-													<th class="db-table__cell-tag"><small>{{.}}</small></th>
-													{{else}}
-													<th></th>
-													{{/table_keys}}
-												</tr></thead>
-												<tbody>
-												{{#each files:i}}
-													<tr class="on-hover {{files_checked[i] ? 'active' : ''}}">
-														<td class="db-table__cell-object"><div>
-															<label><input type="checkbox" /> {{name}}<br><small class="text-muted">{{dir(.)}}</small></label>
-														</div></td>
-														{{#table_keys:j}}
-														<td class="db-table__cell-tag">
-															<tagsedit file="{{files[i]}}" key="{{this}}" />
-														</td>
-														{{else}}
-														<td></td>
-														{{/table_keys}}
-													</tr>
-												{{/each}}
-												</tbody>
-											</table>
-										</div>
-									</div>
-									<div class="db-table__left-column">
-										<div class="db-table__left-header db-table__cell_visible">
-											<table class="table table-condensed">
-												<thead><tr>
-													<th class="db-table__cell-object db-table__cell_visible"><div>
-														<div class="db-table__dropdown">
-															<button class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" title="Набор ключей">&lt;#&gt;</button>
-															<ul class="dropdown-menu">
-																<li><a href="#" on-click="set_table_keys:''"><b>Все теги</b></a></li>
-																{{#tagsets}}
-																<li><a href="#" on-click="set_table_keys:{{keys}}">{{title}}</a></li>
-																{{/tagsets}}
-															</ul>
-														</div>
-													</div></th>
-												</tr></thead>
-											</table>
-										</div>
-										<div class="db-table__left-body">
-											<div class="db-table__left-body-inner">
-												<table class="table table-condensed">
-													<thead><tr class="db-table__row_hidden">
-														<th class="db-table__cell-object"></th>
-													</tr></thead>
-													<tbody>
-													{{#each files:i}}
-														<tr class="on-hover {{files_checked[i] ? 'active' : ''}}">
-															<td class="db-table__cell-object">
-																<label><input type="checkbox" checked="{{files_checked[i]}}" /> {{name}}<br><small class="text-muted">{{dir(.)}}</small></label>
-															</td>
-														</tr>
-													{{/each}}
-													</tbody>
-												</table>
-											</div>
-										</div>
-									</div>
-								</div>
 							</fieldset>
 						</div>
 					</div>
