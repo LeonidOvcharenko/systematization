@@ -430,6 +430,9 @@ $(function(){
 			create_folder(base_dir);
 			var f_verified = this.get('tags')=='manual' || undefined;
 			var keys = Database.get_keys(f_verified);
+			if (!this.get('special_tags')){
+				keys = keys.filter(function(key){ return !key.match(/^(#|@)/g); });
+			}
 			keys.forEach(function(key, i){
 				var dirname = Sanitize_Filename(key) || '_k_'+i;
 				create_folder(base_dir+'/'+dirname);
