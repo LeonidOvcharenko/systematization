@@ -575,7 +575,7 @@ $(function(){
 		isolated: true,
 		template:
 			'<div class="te">'+
-				'<input type="text" class="form-control input-xs input-ghost {{!value ? \'input-ghost_empty\' : \'\'}}" value="{{value}}" lazy="300" autocomplete="off" on-keyup="on_key" />'+
+				'<input type="text" class="form-control input-xs input-ghost {{auto ? \'input-color_danger\' : \'\'}} {{!value ? \'input-ghost_empty\' : \'\'}}" value="{{value}}" lazy="300" autocomplete="off" on-keyup="on_key" />'+
 				'<select class="form-control input-xs input-ghost {{(tags.length > 1) ? \'show\' : \'hide\'}}" multiple value="{{selected}}">'+
 					'{{#tags}}<option value="{{.value}}">{{.value}}</option>{{/tags}}'+
 				'</select>'+
@@ -589,9 +589,11 @@ $(function(){
 				}
 			};
 			var selected_to_input = function(val){
+				var tag = self.get('tags').find(function(t){ return t.value === val; });
 				self.set({
 					current: val,
-					value:   val
+					value:   val,
+					auto:    !!(tag && tag.auto)
 				});
 				// when input is focused, setting data doesn't affect input
 				var input = self.find('input');
@@ -614,10 +616,10 @@ $(function(){
 				}).then(function(){
 					self.set('selected', sel);
 				});
-				selected_to_input(value_to_set);
 			};
-			var reset_nodes = function(n,o,k){
+			var reset_nodes = function(){
 				self.set({
+					auto: false,
 					value: '',
 					current: '',
 					selected: []
@@ -633,7 +635,7 @@ $(function(){
 				var file = self.get('file');
 				var key  = self.get('key');
 				var old_tag = {key: key, value: old_value};
-				var new_tag = {key: key, value: new_value};
+				var new_tag = {key: key, value: new_value, auto: false};
 				if (new_value) {
 					if (old_value) {
 						Database.rename_tags(old_tag, new_tag, file.hash);
@@ -662,7 +664,7 @@ $(function(){
 					// Ctrl+Enter
 					if (e.original.ctrlKey && e.original.keyCode == 13) {
 						e.original.preventDefault();
-						var new_tag = {key: self.get('key'), value: '?'};
+						var new_tag = {key: self.get('key'), value: '?', auto: true};
 						Database.add_tag(self.get('file'), new_tag);
 						update_tags('?');
 						select_input_text();

@@ -312,6 +312,10 @@ select[multiple].input-xs option {
 	background-color: transparent;
 	border-bottom-color: #F0F0F0;
 }
+.input-color_danger {
+	color: #900!important;
+	border-color: #b94a48;
+}
 .table tr.active .input-ghost_empty:not(:focus),
 .table tr.active .input-ghost_empty:not(:active) {
 	border-bottom-color: #FFFFFF;
