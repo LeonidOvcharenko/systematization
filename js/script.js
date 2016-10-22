@@ -576,11 +576,10 @@ $(function(){
 		template:
 			'<div class="te">'+
 				'<input type="text" class="form-control input-xs input-ghost {{!value ? \'input-ghost_empty\' : \'\'}}" value="{{value}}" lazy="300" autocomplete="off" on-keyup="on_key" />'+
-				'<select class="form-control input-xs input-ghost {{(tags.length > 1) ? \'show\' : \'hide\'}}" multiple value="{{selected}}" on-change="on_select:{{selected}}">'+
-					'{{#tags}}<option value="{{value}}">{{value}}</option>{{/tags}}'+
+				'<select class="form-control input-xs input-ghost {{(tags.length > 1) ? \'show\' : \'hide\'}}" multiple value="{{selected}}">'+
+					'{{#tags}}<option value="{{.value}}">{{.value}}</option>{{/tags}}'+
 				'</select>'+
 			'</div>',
-		/*onchange: function(a){ console.log('X',a)},*/
 		oninit: function(){
 			var self = this;
 			var select_input_text = function(){
@@ -601,6 +600,7 @@ $(function(){
 					self.updateModel('value');
 				}
 			};
+			var NO_SELECTED = [];
 			var update_tags = function(value_to_set){
 				var file = self.get('file');
 				var key  = self.get('key');
@@ -608,13 +608,15 @@ $(function(){
 				if (!value_to_set){
 					value_to_set = tags.length ? tags[0].value : '';
 				}
+				var sel = value_to_set ? [ value_to_set ] : NO_SELECTED;
 				self.set({
-					tags: tags,
-					selected: [ value_to_set ]
+					tags: tags
+				}).then(function(){
+					self.set('selected', sel);
 				});
 				selected_to_input(value_to_set);
 			};
-			var reset_nodes = function(){
+			var reset_nodes = function(n,o,k){
 				self.set({
 					value: '',
 					current: '',
@@ -622,6 +624,7 @@ $(function(){
 				});
 				update_tags();
 			};
+			self.set('selected', []);
 			reset_nodes();
 			var save_tag = function(new_value){
 				var old_value = self.get('current') || '';
@@ -647,12 +650,13 @@ $(function(){
 			};
 			self.observe({
 				'file key': reset_nodes,
-				'value': save_tag
+				'value': save_tag,
+				'selected': function(selected, prev){
+					if (selected === prev && selected[0] === prev[0]) return;
+					selected_to_input(selected[0] || '');
+				}
 			});
 			self.on({
-				'on_select': function(e, sels){
-					selected_to_input(sels[0] || '');
-				},
 				'on_key': function(e){
 					var self = this;
 					// Ctrl+Enter
