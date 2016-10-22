@@ -1130,9 +1130,23 @@ $(function(){
 		return true;
 	});
 	var all_dropped_files = function(items, callback){
+		// filter by regexp
+		var filter;
+		if (S.options.filefilter) {
+			try {
+				filter = new RegExp(S.options.filefilter, 'i');
+			} catch(e) {
+				filter = null;
+			}
+		} else {
+			filter = null;
+		}
+		
 		var files_dropped = [];
 		var push_file = function(file){
 			// TODO: make low priority queue, esp. if total size > 10M
+			var m = file.name.match(filter);
+			if (filter && (!m || !m[0])){ return; }
 			callback(file);
 			// files_dropped.push(file);
 		};
@@ -1201,6 +1215,18 @@ $(function(){
 			root_folder: '',
 			filefilter: '',
 			tagsets: []
+		},
+		computed: {
+			filefilter_ok: function(){ 
+				var pattern = this.get('filefilter');
+				var reg;
+				try {
+					reg = new RegExp(pattern, 'i');
+				} catch (e) {
+					reg = null;
+				}
+				return !!reg;
+			}
 		}
 	});
 	Settings.start_observe = function(){
@@ -1227,6 +1253,10 @@ $(function(){
 					self.set('root_folder', path);
 				});
 			});
+		},
+		regexp_filter: function(e, pattern){
+			e.original.preventDefault();
+			this.set('filefilter', pattern);
 		},
 		'add-tagset': function(){
 			if (!S.options.tagsets) S.options.tagsets = [];

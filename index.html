@@ -433,15 +433,15 @@
 								</div>
 							</div>
 						</div>
-						<div class="form-group">
-							<label>Фильтр файлов по типу при чтении:</label>
+						<div class="form-group {{#if filefilter}}has-{{filefilter_ok ? 'success' : 'error'}}{{/if}}">
+							<label>Фильтр файлов при чтении:</label>
 							<div class="input-group">
 								<div class="input-group-btn">
-									<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!keys.length ? 'disabled' : ''}} title="Вставить ключ"><i class="fa fa-at"></i></button>
+									<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" title="Примеры шаблонов"><i class="fa fa-asterisk"></i></button>
 									<ul class="dropdown-menu">
-										{{#keys}}
-											<li><a href="#" on-click="append_to_mask:{{.}}">{{.}}</a></li>
-										{{/keys}}
+										<li><a href="#" on-click="regexp_filter:'wav|mp3|wma|ogg|asf|m4a|aiff|midi?$'" title="wav|mp3|wma|ogg|asf|m4a|aiff|midi?$">Только музыкальные файлы</a></li>
+										<li><a href="#" on-click="regexp_filter:'fb2|epub|txt|pdf|chm|djvu?|rtf|docx?$'" title="fb2|epub|txt|pdf|chm|djvu?|rtf|docx?$">Только книги</a></li>
+										<li><a href="#" on-click="regexp_filter:'^(?!.*zip)(?!.*rar)(?!.*gz)(?!.*gzip)(?!.*7z)(?!.*tar).*$'" title="^(?!.*zip)(?!.*rar)(?!.*gz)(?!.*gzip)(?!.*7z)(?!.*tar).*$">Все, кроме архивов</a></li>
 									</ul>
 								</div>
 								<input type="text" class="form-control" value="{{filefilter}}" placeholder="RegExp" lazy="500" />
