@@ -422,7 +422,7 @@
 						<div class="form-group">
 							<label>Базовая папка:</label>
 							<div class="input-group">
-								<input type="text" class="form-control" value="{{root_folder}}" />
+								<input type="text" class="form-control" value="{{root_folder}}" lazy="500" />
 								<div class="input-group-btn">
 									<button class="btn btn-default" on-click="select-folder" title="Выбрать папку"><i class="fa fa-folder-o"></i></button>
 								</div>
@@ -439,7 +439,7 @@
 										{{/keys}}
 									</ul>
 								</div>
-								<input type="text" class="form-control" value="{{filefilter}}" placeholder="RegExp" />
+								<input type="text" class="form-control" value="{{filefilter}}" placeholder="RegExp" lazy="500" />
 							</div>
 						</div>
 						<div class="checkbox">
