@@ -1079,11 +1079,25 @@ $(function(){
 			var scroll_body = $(e.node);
 			var db_table = scroll_body.closest('.db-table');
 			// scroll header
-			var pos_x = $(e.node).scrollLeft()
+			var pos_x = $(e.node).scrollLeft();
 			db_table.find('.db-table__scroll-header').scrollLeft( pos_x );
 			// scroll column
+			var pos_y = scroll_body.scrollTop();
+			if (db_table.data('scrollTop') != pos_y){
+				db_table.data('scrollTop', pos_y);
+				db_table.find('.db-table__left-body-inner').scrollTop( pos_y );
+			}
 			db_table.find('.db-table__left-body').toggleClass('db-table__left-body_fixed', pos_x > 0);
-			db_table.find('.db-table__left-body-inner').scrollTop( $(e.node).scrollTop() );
+		},
+		'scroll-db-table-fixed-column': function(e){
+			var scroll_column = $(e.node);
+			var db_table = scroll_column.closest('.db-table');
+			// scroll table body
+			var pos_y = scroll_column.scrollTop();
+			if (db_table.data('scrollTop') != pos_y){
+				db_table.data('scrollTop', pos_y);
+				db_table.find('.db-table__scroll-body').scrollTop( pos_y );
+			}
 		},
 		set_table_keys: function(e, keys, title){
 			e.original.preventDefault();
