@@ -152,7 +152,7 @@ $(function(){
 		}
 		,
 		rename_file: function(file, new_name){
-			new_name = Sanitize_Filename(new_name);
+			new_name = Sanitize_Filename(new_name,{replacement:'_'});
 			var new_path = file.path.substring(0, file.path.lastIndexOf(file.name))+new_name;
 			try {
 				if (FS.statSync(new_path).isFile()) return;  // prevent file overwriting
@@ -432,14 +432,14 @@ $(function(){
 				keys = keys.filter(function(key){ return !key.match(/^(#|@)/g); });
 			}
 			keys.forEach(function(key, i){
-				var dirname = Sanitize_Filename(key) || '_k_'+i;
+				var dirname = Sanitize_Filename(key,{replacement:'_'}) || '_k_'+i;
 				create_folder(base_dir+'/'+dirname);
 				
 				var values = Database.get_values(key, f_verified);
 				values.forEach(function(value, j){
 					var files = Database.get_files_by_tag(key, value);
 					if (files.length > 0) {
-						var filename = Sanitize_Filename(value) || '_v_'+j;
+						var filename = Sanitize_Filename(value,{replacement:'_'}) || '_v_'+j;
 						var path = base_dir+'/'+dirname+'/'+filename+'.html';
 						create_tag_index_file(path, key, value, files);
 					}
