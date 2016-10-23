@@ -274,6 +274,7 @@ a.section {
 .db-table__cell-object>label {
 	margin-left: 20px;
 	padding-left: 20px;
+	word-break: break-word;
 }
 .db-table__cell-object>label>input[type="checkbox"] {
 	float: left;
