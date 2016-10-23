@@ -1,6 +1,4 @@
 $(function(){
-	var _ = require('lodash');
-	
 	var Database;
 	var S = {options: {}};
 	
