@@ -580,7 +580,7 @@ $(function(){
 		isolated: true,
 		template:
 			'<div class="te">'+
-				'<input type="text" class="form-control input-xs input-ghost {{auto ? \'input-color_danger\' : \'\'}} {{!value ? \'input-ghost_empty\' : \'\'}}" value="{{value}}" lazy="300" autocomplete="off" on-keyup="on_key" />'+
+				'<input type="text" class="form-control input-xs input-ghost {{auto ? \'input-color_danger\' : \'\'}} {{!value ? \'input-ghost_empty\' : \'\'}}" value="{{value}}" lazy="300" autocomplete="off" on-keydown="on_key" />'+
 				'<select class="form-control input-xs input-ghost {{(tags.length > 1) ? \'show\' : \'hide\'}}" multiple value="{{selected}}">'+
 					'{{#tags}}<option value="{{.value}}">{{.value}}</option>{{/tags}}'+
 				'</select>'+
