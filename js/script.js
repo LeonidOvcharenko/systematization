@@ -1,6 +1,12 @@
 $(function(){
 	var Database;
-	var S = {options: {}};
+	var S = {
+		interval: {
+			update_view: 10000,
+			db_save: 5000
+		},
+		settings: {}
+	};
 	
 	var EXIF = require('exif-reader');
 	var SizeOf = require('image-size');
@@ -105,18 +111,18 @@ $(function(){
 	var Crypto = require('crypto');
 	var Loki   = require('lokijs');
 	Database = {
-		init: function(callback){
+		init: function(){
 			var self = this;
 			var dfrd = $.Deferred();
 			var db_loader = function(){
-				self.files     = self.db.getCollection('files') || self.db.addCollection('files', {exact: ['hash', 'path'], unique: ['hash']});
-				self.tags      = self.db.getCollection('tags') || self.db.addCollection('tags', {indices: ['key'], unique: ['key/value']});
-				self.settings  = self.db.getCollection('settings') || self.db.addCollection('settings', {unique: ['settings']});
+				self.files     = self.db.getCollection('files')    || self.db.addCollection('files', {exact: ['hash', 'path'], unique: ['hash']});
+				self.tags      = self.db.getCollection('tags')     || self.db.addCollection('tags',  {indices: ['key'], unique: ['key/value']});
+				self.settings  = self.db.getCollection('settings') || self.db.addCollection('settings');
 				dfrd.resolve();
 			};
 			self.db = new Loki('files.json', {
 				autoload: true, autoloadCallback: db_loader,
-				autosave: true, autosaveInterval: 5000
+				autosave: true, autosaveInterval: S.interval.db_save
 			});
 			return dfrd.promise();
 		}
@@ -137,7 +143,7 @@ $(function(){
 				});
 				if (inserted && callback) { callback(); }
 			} catch(e){}
-			if (S.options.read_metadata) {
+			if (S.settings.read_metadata) {
 				Preprocessor.auto_tags(file.path, hash, data);
 			}
 			return hash;
@@ -345,15 +351,22 @@ $(function(){
 			self.tags.removeWhere(query);
 		}
 		,
-		save_settings: function(options){
-			try {
-				this.settings.update(options);
-			} catch (e){}
+		save_settings: function(settings){
+			this.settings.update(settings);
+			/*
+			this.settings.findAndUpdate(
+				function(obj){
+					return !!obj.settings;
+				},
+				function(obj){ return settings; }
+			);
+			*/
 		}
 		,
 		get_settings: function(){
-			var obj = this.settings.findOne({ 'settings': true });
-			if (!obj) obj = this.settings.insert({ 'settings': true });
+			// var obj = this.settings.findOne({ 's': 1 });
+			var obj = this.settings.get(1);
+			if (!obj) obj = this.settings.insert({});
 			return obj;
 		}
 	}
@@ -783,8 +796,8 @@ $(function(){
 		Tagger.add_file_to_clipboard(file);
 	};
 	Tagger.update_tagsets = function(){
-		if (S.options.tagsets) {
-			this.set('tagsets', S.options.tagsets);
+		if (S.settings.tagsets) {
+			this.set('tagsets', S.settings.tagsets);
 		}
 	};
 	Tagger.observe({
@@ -852,7 +865,6 @@ $(function(){
 		
 		Processing.set('keys', Database.get_keys(true));
 	};
-	setInterval(update_all_views, 10000);
 	
 	Tagger.on({
 		put_to_clipboard: function(e, files){
@@ -1130,9 +1142,9 @@ $(function(){
 	var all_dropped_files = function(items, callback){
 		// filter by regexp
 		var filter;
-		if (S.options.filefilter) {
+		if (S.settings.filefilter) {
 			try {
-				filter = new RegExp(S.options.filefilter, 'i');
+				filter = new RegExp(S.settings.filefilter, 'i');
 			} catch(e) {
 				filter = null;
 			}
@@ -1211,6 +1223,7 @@ $(function(){
 		data: {
 			folder_selected: '',
 			root_folder: '',
+			read_metadata: false,
 			filefilter: '',
 			tagsets: []
 		},
@@ -1230,16 +1243,16 @@ $(function(){
 	Settings.start_observe = function(){
 		this.observe({
 			root_folder: function(path){
-				S.options.root_folder = path;
-				Database.save_settings(S.options);
+				S.settings.root_folder = path;
+				Database.save_settings(S.settings);
 			},
 			read_metadata: function(f){
-				S.options.read_metadata = f;
-				Database.save_settings(S.options);
+				S.settings.read_metadata = f;
+				Database.save_settings(S.settings);
 			},
 			filefilter: function(filter){
-				S.options.filefilter = filter;
-				Database.save_settings(S.options);
+				S.settings.filefilter = filter;
+				Database.save_settings(S.settings);
 			}
 		});
 	};
@@ -1264,18 +1277,18 @@ $(function(){
 			});
 		},
 		'save-tagset': function(e, title){
-			if (!S.options.tagsets) S.options.tagsets = [];
+			if (!S.settings.tagsets) S.settings.tagsets = [];
 			if (title) {
-				S.options.tagsets = S.options.tagsets.filter(function(ts,i){ return ts.title !== title });
+				S.settings.tagsets = S.settings.tagsets.filter(function(ts,i){ return ts.title !== title });
 			}
-			S.options.tagsets.push({
+			S.settings.tagsets.push({
 				title: this.get('tagset_title'),
 				keys:  this.get('tagset_keys')
 			});
-			S.options.tagsets.sort(function(a,b){return (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0);});
-			Database.save_settings(S.options);
+			S.settings.tagsets.sort(function(a,b){return (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0);});
+			Database.save_settings(S.settings);
 			this.set({
-				tagsets: S.options.tagsets,
+				tagsets: S.settings.tagsets,
 				current_tagset: '',
 				tagset_title:   '',
 				tagset_keys:    ''
@@ -1284,8 +1297,8 @@ $(function(){
 		}
 	});
 	Settings.load_from_DB = function(){
-		S.options = Database.get_settings();
-		this.set(S.options).then(function(){
+		S.settings = Database.get_settings();
+		this.set(S.settings).then(function(){
 			Settings.start_observe();
 			Tagger.update_tagsets();
 		});
@@ -1294,5 +1307,6 @@ $(function(){
 	Database.init().then(function(){
 		Settings.load_from_DB();
 		update_all_views();
+		setInterval(update_all_views, S.interval.update_view);
 	});
 });
