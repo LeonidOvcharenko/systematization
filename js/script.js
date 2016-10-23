@@ -1258,15 +1258,30 @@ $(function(){
 			e.original.preventDefault();
 			this.set('filefilter', pattern);
 		},
-		'add-tagset': function(){
+		'edit-tagset': function(e, tagset){
+			this.set({
+				current_tagset: tagset.title,
+				tagset_title:   tagset.title,
+				tagset_keys:    tagset.keys
+			});
+		},
+		'save-tagset': function(e, title){
 			if (!S.options.tagsets) S.options.tagsets = [];
+			if (title) {
+				S.options.tagsets = S.options.tagsets.filter(function(ts,i){ return ts.title !== title });
+			}
 			S.options.tagsets.push({
 				title: this.get('tagset_title'),
 				keys:  this.get('tagset_keys')
 			});
 			S.options.tagsets.sort(function(a,b){return (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0);});
 			Database.save_settings(S.options);
-			this.set('tagsets', S.options.tagsets);
+			this.set({
+				tagsets: S.options.tagsets,
+				current_tagset: '',
+				tagset_title:   '',
+				tagset_keys:    ''
+			});
 			Tagger.update_tagsets();
 		}
 	});

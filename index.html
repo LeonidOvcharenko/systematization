@@ -457,11 +457,14 @@
 							<div class="form-inline">
 								<input type="text" class="form-control" placeholder="Название" value="{{tagset_title}}" />
 								<input type="text" class="form-control" placeholder="Ключи (через ;)" value="{{tagset_keys}}" />
-								<button class="form-control btn btn-default" {{tagset_title && tagset_keys ? '' : 'disabled'}} on-click="add-tagset">Добавить</button>
+								<button class="form-control btn btn-default" {{tagset_title && tagset_keys ? '' : 'disabled'}} on-click="save-tagset:{{current_tagset}}">{{current_tagset ? 'Редактировать' : 'Добавить' }}</button>
 							</div>
 						</div>
 						{{#tagsets}}
-							<div><b>{{title}}:</b> <span>{{keys}}</span></div>
+							<div class="{{current_tagset==.title ? 'text-warning' : ''}}">
+								<b>{{.title}}:</b> <span>{{.keys}}</span>
+								<button class="btn btn-xs btn-default" title="Редактировать набор" on-click="edit-tagset:{{.}}"><i class="fa fa-pencil"></i></button>
+							</div>
 						{{/tagsets}}
 					</div>
 				</div>
