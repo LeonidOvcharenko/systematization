@@ -355,18 +355,9 @@ $(function(){
 		,
 		save_settings: function(settings){
 			this.settings.update(settings);
-			/*
-			this.settings.findAndUpdate(
-				function(obj){
-					return !!obj.settings;
-				},
-				function(obj){ return settings; }
-			);
-			*/
 		}
 		,
 		get_settings: function(){
-			// var obj = this.settings.findOne({ 's': 1 });
 			var obj = this.settings.get(1);
 			if (!obj) obj = this.settings.insert({});
 			return obj;
