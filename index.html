@@ -336,7 +336,13 @@
 						<fieldset>
 							<legend>Индексы</legend>
 							<div class="form-group">
-								<label>Использовать теги:</label>
+								<label>Набор тегов:</label>
+								<select class="form-control" value="{{tagset}}">
+									<option value="">Все теги</option>
+									{{#tagsets}}
+									<option value="{{keys}}">{{title}}</option>
+									{{/tagsets}}
+								</select>
 								<div class="radio"><label><input type="radio" name='{{tags}}' value='all' checked /> Все теги</label></div>
 								<div class="radio"><label><input type="radio" name='{{tags}}' value='manual' /> Только проверенные</label></div>
 							</div>

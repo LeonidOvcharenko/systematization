@@ -439,11 +439,19 @@ $(function(){
 		index: function(){
 			var base_dir = './_index_';
 			create_folder(base_dir);
+			// pick keys
 			var f_verified = this.get('tags')=='manual' || undefined;
 			var keys = Database.get_keys(f_verified);
+			var tagset = this.get('tagset');
+			if (tagset) {
+				tagset = tagset.split(';').map(function(key){ return key.trim(); });
+				keys = keys.filter(function(key){ return tagset.indexOf(key) != -1; });
+			}
+			// filter special
 			if (!this.get('special_tags')){
 				keys = keys.filter(function(key){ return !key.match(/^(#|@)/g); });
 			}
+			// generate indexes
 			keys.forEach(function(key, i){
 				var dirname = Sanitize_Filename(key,{replacement:'_'}) || '_k_'+i;
 				create_folder(base_dir+'/'+dirname);
@@ -485,6 +493,11 @@ $(function(){
 			});
 		}
 	});
+	Processing.update_tagsets = function(){
+		if (S.settings.tagsets) {
+			this.set('tagsets', S.settings.tagsets);
+		}
+	};
 
 	
 	var EditableSelect = Ractive.extend({
@@ -1294,6 +1307,7 @@ $(function(){
 				tagset_keys:    ''
 			});
 			Tagger.update_tagsets();
+			Processing.update_tagsets();
 		}
 	});
 	Settings.load_from_DB = function(){
@@ -1301,6 +1315,7 @@ $(function(){
 		this.set(S.settings).then(function(){
 			Settings.start_observe();
 			Tagger.update_tagsets();
+			Processing.update_tagsets();
 		});
 	};
 	
