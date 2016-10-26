@@ -127,6 +127,8 @@ $(function(){
 			return dfrd.promise();
 		}
 		,
+		NoFile: '-'
+		,
 		hash_file: function(data){
 			return Crypto.createHash('sha1').update(data).digest('hex');
 		}
@@ -1238,7 +1240,8 @@ $(function(){
 			root_folder: '',
 			read_metadata: false,
 			filefilter: '',
-			tagsets: []
+			tagsets: [],
+			pretags: []
 		},
 		computed: {
 			filefilter_ok: function(){ 
@@ -1308,6 +1311,19 @@ $(function(){
 			});
 			Tagger.update_tagsets();
 			Processing.update_tagsets();
+		},
+		'save-pretag': function(){
+			var tag = {
+				key:   this.get('pretag_key'),
+				value: this.get('pretag_value'),
+				auto:  false
+			};
+			Database.add_tag({hash: Database.NoFile}, tag);
+			this.push('pretags', tag);
+		},
+		'remove-pretag': function(e, tag, i){
+			Database.remove_tag(Database.NoFile, tag);
+			this.splice('pretags', i, 1);
 		}
 	});
 	Settings.load_from_DB = function(){
@@ -1317,6 +1333,7 @@ $(function(){
 			Tagger.update_tagsets();
 			Processing.update_tagsets();
 		});
+		this.set('pretags', Database.get_file_tags(Database.NoFile));
 	};
 	
 	Database.init().then(function(){

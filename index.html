@@ -429,49 +429,75 @@
 			<div class="panel panel-default">
 				<div class="panel-heading">Настройки</div>
 				<div class="panel-body">
-					<div class="col-xs-6">
-						<div class="form-group">
-							<label>Базовая папка:</label>
-							<div class="input-group">
-								<input type="text" class="form-control" value="{{root_folder}}" lazy="500" />
-								<div class="input-group-btn">
-									<button class="btn btn-default" on-click="select-folder" title="Выбрать папку"><i class="fa fa-folder-o"></i></button>
+					<div class="row">
+						<div class="col-xs-6">
+							<fieldset>
+								<legend>Импорт файлов</legend>
+								<div class="form-group">
+									<label>Базовая папка:</label>
+									<div class="input-group">
+										<input type="text" class="form-control" value="{{root_folder}}" lazy="500" />
+										<div class="input-group-btn">
+											<button class="btn btn-default" on-click="select-folder" title="Выбрать папку"><i class="fa fa-folder-o"></i></button>
+										</div>
+									</div>
 								</div>
-							</div>
-						</div>
-						<div class="form-group {{#if filefilter}}has-{{filefilter_ok ? 'success' : 'error'}}{{/if}}">
-							<label>Фильтр файлов при чтении:</label>
-							<div class="input-group">
-								<div class="input-group-btn">
-									<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" title="Примеры шаблонов"><i class="fa fa-asterisk"></i></button>
-									<ul class="dropdown-menu">
-										<li><a href="#" on-click="regexp_filter:'wav|mp3|wma|ogg|asf|m4a|aiff|midi?$'" title="wav|mp3|wma|ogg|asf|m4a|aiff|midi?$">Только музыкальные файлы</a></li>
-										<li><a href="#" on-click="regexp_filter:'fb2|epub|txt|pdf|chm|djvu?|rtf|docx?$'" title="fb2|epub|txt|pdf|chm|djvu?|rtf|docx?$">Только книги</a></li>
-										<li><a href="#" on-click="regexp_filter:'^(?!.*zip)(?!.*rar)(?!.*gz)(?!.*gzip)(?!.*7z)(?!.*tar).*$'" title="^(?!.*zip)(?!.*rar)(?!.*gz)(?!.*gzip)(?!.*7z)(?!.*tar).*$">Все, кроме архивов</a></li>
-									</ul>
+								<div class="form-group {{#if filefilter}}has-{{filefilter_ok ? 'success' : 'error'}}{{/if}}">
+									<label>Фильтр файлов при чтении:</label>
+									<div class="input-group">
+										<div class="input-group-btn">
+											<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" title="Примеры шаблонов"><i class="fa fa-asterisk"></i></button>
+											<ul class="dropdown-menu">
+												<li><a href="#" on-click="regexp_filter:'wav|mp3|wma|ogg|asf|m4a|aiff|midi?$'" title="wav|mp3|wma|ogg|asf|m4a|aiff|midi?$">Только музыкальные файлы</a></li>
+												<li><a href="#" on-click="regexp_filter:'fb2|epub|txt|pdf|chm|djvu?|rtf|docx?$'" title="fb2|epub|txt|pdf|chm|djvu?|rtf|docx?$">Только книги</a></li>
+												<li><a href="#" on-click="regexp_filter:'^(?!.*zip)(?!.*rar)(?!.*gz)(?!.*gzip)(?!.*7z)(?!.*tar).*$'" title="^(?!.*zip)(?!.*rar)(?!.*gz)(?!.*gzip)(?!.*7z)(?!.*tar).*$">Все, кроме архивов</a></li>
+											</ul>
+										</div>
+										<input type="text" class="form-control" value="{{filefilter}}" placeholder="RegExp" lazy="500" />
+									</div>
 								</div>
-								<input type="text" class="form-control" value="{{filefilter}}" placeholder="RegExp" lazy="500" />
-							</div>
+								<div class="checkbox">
+									<label><input type="checkbox" checked="{{read_metadata}}" /> автоматически читать метаданные</label>
+								</div>
+							</fieldset>
 						</div>
-						<div class="checkbox">
-							<label><input type="checkbox" checked="{{read_metadata}}" /> автоматически читать метаданные</label>
+						<div class="col-xs-6">
+							<fieldset>
+								<legend>Наборы тегов</legend>
+								<div class="form-group">
+									<div class="form-inline">
+										<input type="text" class="form-control" placeholder="Название" value="{{tagset_title}}" />
+										<input type="text" class="form-control" placeholder="Ключи (через ;)" value="{{tagset_keys}}" />
+										<button class="form-control btn btn-default" {{tagset_title && tagset_keys ? '' : 'disabled'}} on-click="save-tagset:{{current_tagset}}">{{current_tagset ? 'Редактировать' : 'Добавить' }}</button>
+									</div>
+								</div>
+								{{#tagsets}}
+									<div class="{{current_tagset==.title ? 'text-warning' : ''}}">
+										<b>{{.title}}:</b> <span>{{.keys}}</span>
+										<button class="btn btn-xs btn-default" title="Редактировать набор" on-click="edit-tagset:{{.}}"><i class="fa fa-pencil"></i></button>
+									</div>
+								{{/tagsets}}
+							</fieldset>
 						</div>
 					</div>
-					<div class="col-xs-12">
-						<div class="form-group">
-							<label>Наборы тегов:</label>
-							<div class="form-inline">
-								<input type="text" class="form-control" placeholder="Название" value="{{tagset_title}}" />
-								<input type="text" class="form-control" placeholder="Ключи (через ;)" value="{{tagset_keys}}" />
-								<button class="form-control btn btn-default" {{tagset_title && tagset_keys ? '' : 'disabled'}} on-click="save-tagset:{{current_tagset}}">{{current_tagset ? 'Редактировать' : 'Добавить' }}</button>
+					<div class="row">
+					<div class="col-xs-6">
+						<fieldset>
+							<legend>Предустановленные теги</legend>
+							<div class="form-group">
+								<div class="form-inline">
+									<input type="text" class="form-control" placeholder="Ключ" value="{{pretag_key}}" />
+									<input type="text" class="form-control" placeholder="Значение" value="{{pretag_value}}" />
+									<button class="form-control btn btn-default" {{pretag_key && pretag_value ? '' : 'disabled'}} on-click="save-pretag">Добавить</button>
+								</div>
 							</div>
-						</div>
-						{{#tagsets}}
-							<div class="{{current_tagset==.title ? 'text-warning' : ''}}">
-								<b>{{.title}}:</b> <span>{{.keys}}</span>
-								<button class="btn btn-xs btn-default" title="Редактировать набор" on-click="edit-tagset:{{.}}"><i class="fa fa-pencil"></i></button>
-							</div>
-						{{/tagsets}}
+							{{#pretags:i}}
+								<div>
+									<b>{{.key}}: {{.value}}</b>
+									<button class="btn btn-xs btn-danger" title="Удалить тег" on-click="remove-pretag:{{.}},{{i}}"><i class="fa fa-times"></i></button>
+								</div>
+							{{/pretags}}
+						</fieldset>
 					</div>
 				</div>
 			</div>
