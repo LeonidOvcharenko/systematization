@@ -718,7 +718,7 @@ $(function(){
 			a_values_checked: [],
 			files: [],
 			tags_type: '',
-			tags_view: 'list',
+			tags_view: 'table',
 			files_checked: [],
 			checked_files_hashes: [],
 			dir: function(file){
