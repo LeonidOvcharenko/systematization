@@ -265,7 +265,7 @@ a.section {
 	width: 120px;
 }
 .db-table__cell-alltags {
-	min-width: 800px;
+	width: 1200px;
 	white-space: nowrap;
 }
 .db-table__view-object {
