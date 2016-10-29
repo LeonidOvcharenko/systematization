@@ -366,7 +366,8 @@ $(function(){
 	
 
 	var ViewDB = new Ractive({
-		el: 'database',
+		el: 'content',
+		append: true,
 		template: '#database-tpl',
 		data: {
 			N_files: [],
@@ -390,7 +391,8 @@ $(function(){
 	});
 	
 	var Processing = new Ractive({
-		el: 'processing',
+		el: 'content',
+		append: true,
 		template: '#processing-tpl',
 		data: {
 		}
@@ -697,7 +699,8 @@ $(function(){
 	});
 	
 	var Tagger = new Ractive({
-		el: 'tagger',
+		el: 'content',
+		append: true,
 		template: '#tagger-tpl',
 		data: {
 			key: '',
@@ -1224,7 +1227,8 @@ $(function(){
 	});
 	
 	var Settings = new Ractive({
-		el: 'settings',
+		el: 'content',
+		append: true,
 		template: '#settings-tpl',
 		data: {
 			folder_selected: '',

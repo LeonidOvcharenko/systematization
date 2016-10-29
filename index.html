@@ -17,7 +17,7 @@
 		<div class="container-fluid">
 			<!-- Brand and toggle get grouped for better mobile display -->
 			<div class="navbar-header">
-				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapsed" aria-expanded="false">
 					<span class="sr-only">Меню</span>
 					<span class="icon-bar"></span>
 					<span class="icon-bar"></span>
@@ -27,28 +27,24 @@
 			</div>
 
 			<!-- Collect the nav links, forms, and other content for toggling -->
-			<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+			<div class="collapse navbar-collapse" id="navbar-collapsed">
 				<ul class="nav navbar-nav">
-					<li class="active"><a href="#tags"><i class="fa fa-tags"></i> Теги</a></a></li>
-					<li class=""><a href="#approving"><i class="fa fa-check"></i> Проверка</a></a></li>
-					<li class=""><a href="#collection"><i class="fa fa-database"></i> Коллекция</a></a></li>
-					<li><a href="#stats"><i class="fa fa-bar-chart"></i> Статистика</a></li>
+					<li class="active"><a href="#tags" data-toggle="tab"><i class="fa fa-tags"></i> Теги</a></a></li>
+					<li><a href="#approving" data-toggle="tab"><i class="fa fa-check"></i> Проверка</a></a></li>
+					<li><a href="#processing" data-toggle="tab"><i class="fa fa-database"></i> Коллекция</a></a></li>
+					<li><a href="#database" data-toggle="tab"><i class="fa fa-bar-chart"></i> Статистика</a></li>
+					<li><a href="#settings" data-toggle="tab"><i class="fa fa-cog"></i> Настройки</a></li>
 					<li class="disabled"><a href="#"><i class="fa fa-check"></i> Сохранено</a></a></li>
-				</ul>
-				<ul class="nav navbar-nav navbar-right">
-					<li><a href="#settings"><i class="fa fa-cog"></i> Настройки</a></li>
 				</ul>
 			</div><!-- /.navbar-collapse -->
 		</div><!-- /.container-fluid -->
 	</nav>
 
-	<div class="container">
+	<div id="content" class="container-fluid tab-content">
 	
-	
-		<div id="tagger"></div>
 		<script id="tagger-tpl" type='text/ractive'>
 			<a name="tags" class="section"></a>
-			<div class="panel panel-default">
+			<div class="panel panel-default tab-pane active" id="tags">
 				<div class="panel-heading">Теги</div>
 				<div class="panel-body">
 					<div class="row">
@@ -262,74 +258,75 @@
 							</fieldset>
 						</div>
 					</div>
-					<a name="approving" class="section"></a>
+				</div>
+			</div>
+			<a name="approving" class="section"></a>
+			<div class="panel panel-default tab-pane" id="approving">
+				<div class="panel-heading">Проверка тегов</div>
+				<div class="panel-body">
 					<div class="row">
 						<div class="col-xs-8">
-							<fieldset>
-								<legend>Проверка тегов</legend>
-								<div class="form-group">
-									<div class="input-group">
-										<div class="input-group-btn">
-											<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!a_key || !a_keys.length ? 'disabled' : ''}}><i class="fa fa-bars"></i></button>
-											<ul class="dropdown-menu">
-												<li><a href="#" on-click="rename_key:{{a_key}}"><i class="fa fa-pencil"></i> Переименовать ключ</a></li>
-												<li class="divider"></li>
-												<li><a href="#" on-click="remove_key:{{a_key}}"><i class="fa fa-times"></i> Удалить ключ</a></li>
-											</ul>
-										</div>
-										<select value='{{a_key}}' class="form-control" {{!a_keys.length ? 'disabled' : '' }}>
-											{{#a_keys}}<option value="{{.}}">{{.}}</option>{{/a_keys}}
-										</select>
-										<div class="input-group-btn">
-											<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!a_key ? 'disabled' : ''}}><span class="fa fa-filter {{tags_filter == 'auto' ? 'text-danger' : tags_filter == 'manual' ? 'text-success' : ''}}"></span></button>
-											<ul class="dropdown-menu pull-right">
-												<li><a href="#" on-click="filter_tags:all">Все теги</a></li>
-												<li><a href="#" on-click="filter_tags:auto">Авто теги</a></li>
-												<li><a href="#" on-click="filter_tags:manual">Проверенные</li>
-											</ul>
-										</div>
+							<div class="form-group">
+								<div class="input-group">
+									<div class="input-group-btn">
+										<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!a_key || !a_keys.length ? 'disabled' : ''}}><i class="fa fa-bars"></i></button>
+										<ul class="dropdown-menu">
+											<li><a href="#" on-click="rename_key:{{a_key}}"><i class="fa fa-pencil"></i> Переименовать ключ</a></li>
+											<li class="divider"></li>
+											<li><a href="#" on-click="remove_key:{{a_key}}"><i class="fa fa-times"></i> Удалить ключ</a></li>
+										</ul>
+									</div>
+									<select value='{{a_key}}' class="form-control" {{!a_keys.length ? 'disabled' : '' }}>
+										{{#a_keys}}<option value="{{.}}">{{.}}</option>{{/a_keys}}
+									</select>
+									<div class="input-group-btn">
+										<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!a_key ? 'disabled' : ''}}><span class="fa fa-filter {{tags_filter == 'auto' ? 'text-danger' : tags_filter == 'manual' ? 'text-success' : ''}}"></span></button>
+										<ul class="dropdown-menu pull-right">
+											<li><a href="#" on-click="filter_tags:all">Все теги</a></li>
+											<li><a href="#" on-click="filter_tags:auto">Авто теги</a></li>
+											<li><a href="#" on-click="filter_tags:manual">Проверенные</li>
+										</ul>
 									</div>
 								</div>
-								<table class="table table-condensed table-fixedheader">
-									<thead><tr>
-										<th width="50%"><label><input type="checkbox" checked="{{all_tags_checked}}" {{!a_values.length ? 'disabled' : ''}} /> {{#if a_values.length}}{{a_key}}{{/if}}</label></th>
-										<th width="50%">
-											<div class="btn-group">
-												<button {{a_values_checked.length ? '' : 'disabled'}} class="btn btn-success btn-xs" on-click="approve_checked_tags" title="Утвердить все"><i class="fa fa-check"></i></button>
-												<button {{a_values_checked.length ? '' : 'disabled'}} class="btn btn-danger btn-xs" on-click="remove_checked_tags" title="Удалить все"><i class="fa fa-times"></i></button>
-												<button {{a_values_checked.length ? '' : 'disabled'}} class="btn btn-default btn-xs" on-click="rename_checked_tags_values" title="Редактировать ключ для отмеченных"><i class="fa fa-at"></i></button>
+							</div>
+							<table class="table table-condensed table-fixedheader">
+								<thead><tr>
+									<th width="50%"><label><input type="checkbox" checked="{{all_tags_checked}}" {{!a_values.length ? 'disabled' : ''}} /> {{#if a_values.length}}{{a_key}}{{/if}}</label></th>
+									<th width="50%">
+										<div class="btn-group">
+											<button {{a_values_checked.length ? '' : 'disabled'}} class="btn btn-success btn-xs" on-click="approve_checked_tags" title="Утвердить все"><i class="fa fa-check"></i></button>
+											<button {{a_values_checked.length ? '' : 'disabled'}} class="btn btn-danger btn-xs" on-click="remove_checked_tags" title="Удалить все"><i class="fa fa-times"></i></button>
+											<button {{a_values_checked.length ? '' : 'disabled'}} class="btn btn-default btn-xs" on-click="rename_checked_tags_values" title="Редактировать ключ для отмеченных"><i class="fa fa-at"></i></button>
+										</div>
+									</th>
+								</tr></thead>
+								<tbody style="height:256px;">
+								{{#a_values:i}}
+									<tr class="on-hover {{tags_checked[i] ? 'active' : ''}}">
+										<td width="50%"><label><input type="checkbox" checked="{{tags_checked[i]}}" /> {{.}}</label></td>
+										<td width="50%">
+											<div class="btn-group on-hover-show">
+												<button class="btn btn-default btn-xs" on-click="approve_tag_value:{{a_key}},{{.}}" title="Утвердить тег" {{tags_filter=='manual' ? 'disabled' : ''}}><i class="fa fa-check text-success"></i></button>
+												<button class="btn btn-default btn-xs" on-click="remove_tag_value:{{a_key}},{{.}}" title="Удалить тег"><i class="fa fa-times text-danger"></i></button>
+												<button class="btn btn-default btn-xs" on-click="edit_tag_value:{{a_key}},{{.}}" title="Редактировать тег"><i class="fa fa-pencil"></i></button>
+												<button class="btn btn-default btn-xs" on-click="edit_tag_key:{{a_key}},{{.}}" title="Редактировать ключ"><i class="fa fa-at"></i></button>
+												<button class="btn btn-default btn-xs" on-click="put_to_clipboard_tagged:{{a_key}},{{.}}" title="Добавить файлы в буфер"><i class="fa fa-list"></i></button>
 											</div>
-										</th>
-									</tr></thead>
-									<tbody style="height:256px;">
-									{{#a_values:i}}
-										<tr class="on-hover {{tags_checked[i] ? 'active' : ''}}">
-											<td width="50%"><label><input type="checkbox" checked="{{tags_checked[i]}}" /> {{.}}</label></td>
-											<td width="50%">
-												<div class="btn-group on-hover-show">
-													<button class="btn btn-default btn-xs" on-click="approve_tag_value:{{a_key}},{{.}}" title="Утвердить тег" {{tags_filter=='manual' ? 'disabled' : ''}}><i class="fa fa-check text-success"></i></button>
-													<button class="btn btn-default btn-xs" on-click="remove_tag_value:{{a_key}},{{.}}" title="Удалить тег"><i class="fa fa-times text-danger"></i></button>
-													<button class="btn btn-default btn-xs" on-click="edit_tag_value:{{a_key}},{{.}}" title="Редактировать тег"><i class="fa fa-pencil"></i></button>
-													<button class="btn btn-default btn-xs" on-click="edit_tag_key:{{a_key}},{{.}}" title="Редактировать ключ"><i class="fa fa-at"></i></button>
-													<button class="btn btn-default btn-xs" on-click="put_to_clipboard_tagged:{{a_key}},{{.}}" title="Добавить файлы в буфер"><i class="fa fa-list"></i></button>
-												</div>
-											</td>
-										</tr>
-									{{/a_values}}
-									</tbody>
-								</table>
-								<button on-click="clear_auto_tags" class="btn btn-default btn-sm">Удалить все автотеги</button>
-							</fieldset>
+										</td>
+									</tr>
+								{{/a_values}}
+								</tbody>
+							</table>
+							<button on-click="clear_auto_tags" class="btn btn-default btn-sm">Удалить все автотеги</button>
 						</div>
 					</div>
 				</div>
 			</div>
 		</script>
 		
-		<div id="processing"></div>
 		<script id="processing-tpl" type='text/ractive'>
 			<a name="collection" class="section"></a>
-			<div class="panel panel-default">
+			<div id="processing" class="panel panel-default tab-pane">
 				<div class="panel-heading">Коллекция</div>
 				<div class="panel-body">
 					<div class="col-xs-4">
@@ -395,10 +392,9 @@
 			</html>
 		</script>
 		
-		<div id="database"></div>
 		<script id="database-tpl" type='text/ractive'>
 			<a name="stats" class="section"></a>
-			<div class="panel panel-default">
+			<div id="database" class="panel panel-default tab-pane">
 				<div class="panel-heading">Статистика</div>
 				<div class="panel-body">
 					<div class="row">
@@ -423,16 +419,14 @@
 			</div>
 		</script>
 		
-		<div id="settings"></div>
 		<script id="settings-tpl" type='text/ractive'>
 			<a name="settings" class="section"></a>
-			<div class="panel panel-default">
-				<div class="panel-heading">Настройки</div>
-				<div class="panel-body">
-					<div class="row">
-						<div class="col-xs-6">
-							<fieldset>
-								<legend>Импорт файлов</legend>
+			<div id="settings" class="tab-pane">
+				<div class="row">
+					<div class="col-xs-6">
+						<div class="panel panel-default">
+							<div class="panel-heading">Импорт файлов</div>
+							<div class="panel-body">
 								<div class="form-group">
 									<label>Базовая папка:</label>
 									<div class="input-group">
@@ -459,11 +453,13 @@
 								<div class="checkbox">
 									<label><input type="checkbox" checked="{{read_metadata}}" /> автоматически читать метаданные</label>
 								</div>
-							</fieldset>
+							</div>
 						</div>
-						<div class="col-xs-6">
-							<fieldset>
-								<legend>Наборы тегов</legend>
+					</div>
+					<div class="col-xs-6">
+						<div class="panel panel-default">
+							<div class="panel-heading">Наборы тегов</div>
+							<div class="panel-body">
 								<div class="form-group">
 									<div class="form-inline">
 										<input type="text" class="form-control" placeholder="Название" value="{{tagset_title}}" />
@@ -477,27 +473,37 @@
 										<button class="btn btn-xs btn-default" title="Редактировать набор" on-click="edit-tagset:{{.}}"><i class="fa fa-pencil"></i></button>
 									</div>
 								{{/tagsets}}
-							</fieldset>
+							</div>
 						</div>
 					</div>
-					<div class="row">
+				</div>
+				<div class="row">
 					<div class="col-xs-6">
-						<fieldset>
-							<legend>Предустановленные теги</legend>
-							<div class="form-group">
-								<div class="form-inline">
-									<input type="text" class="form-control" placeholder="Ключ" value="{{pretag_key}}" />
-									<input type="text" class="form-control" placeholder="Значение" value="{{pretag_value}}" />
-									<button class="form-control btn btn-default" {{pretag_key && pretag_value ? '' : 'disabled'}} on-click="save-pretag">Добавить</button>
+						<div class="panel panel-default">
+							<div class="panel-heading">Предустановленные теги</div>
+							<div class="panel-body">
+								<div class="form-group">
+									<div class="form-inline">
+										<input type="text" class="form-control" placeholder="Ключ" value="{{pretag_key}}" />
+										<input type="text" class="form-control" placeholder="Значение" value="{{pretag_value}}" />
+										<button class="form-control btn btn-default" {{pretag_key && pretag_value ? '' : 'disabled'}} on-click="save-pretag">Добавить</button>
+									</div>
 								</div>
+								{{#pretags:i}}
+									<div>
+										<b>{{.key}}: {{.value}}</b>
+										<button class="btn btn-xs btn-danger" title="Удалить тег" on-click="remove-pretag:{{.}},{{i}}"><i class="fa fa-times"></i></button>
+									</div>
+								{{/pretags}}
 							</div>
-							{{#pretags:i}}
-								<div>
-									<b>{{.key}}: {{.value}}</b>
-									<button class="btn btn-xs btn-danger" title="Удалить тег" on-click="remove-pretag:{{.}},{{i}}"><i class="fa fa-times"></i></button>
-								</div>
-							{{/pretags}}
-						</fieldset>
+						</div>
+					</div>
+					<div class="col-xs-6">
+						<div class="panel panel-default">
+							<div class="panel-heading">...</div>
+							<div class="panel-body">
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>

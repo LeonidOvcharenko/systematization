@@ -10,7 +10,6 @@ body{
 	font-weight: bold;
 }
 
-
 /* Dropzone */
 .dropzone {
 	height: 120px;
@@ -334,3 +333,5 @@ select[multiple].input-xs option {
 .te select[multiple] {
 	max-height: 40px;
 }
+
+
