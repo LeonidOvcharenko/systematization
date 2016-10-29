@@ -718,7 +718,7 @@ $(function(){
 			a_values_checked: [],
 			files: [],
 			tags_type: '',
-			all_files_checked: false,
+			tags_view: 'list',
 			files_checked: [],
 			checked_files_hashes: [],
 			dir: function(file){
@@ -841,12 +841,6 @@ $(function(){
 			});
 			this.set('a_values_checked', values_checked);
 		},
-		all_files_checked: function(v){
-			var files_checked = [];
-			var l = this.get('files.length');
-			for (var i=0;i<l;i++){ files_checked.push(!!v); }
-			this.set('files_checked', files_checked);
-		},
 		files_checked: function(checks){
 			var files_checked = [];
 			var files = this.get('files');
@@ -918,6 +912,12 @@ $(function(){
 			});
 			this.set('files_checked', files_checked);
 		},
+		check_all_files: function(){
+			var files_checked = [];
+			var l = this.get('files.length');
+			for (var i=0;i<l;i++){ files_checked.push(true); }
+			this.set('files_checked', files_checked);
+		},
 		inverse_checked_files: function(){
 			var new_checked = [];
 			var checked_files_hashes = this.get('checked_files_hashes');
@@ -936,14 +936,12 @@ $(function(){
 			});
 			this.set({
 				files: new_files,
-				all_files_checked: false,
 				files_checked: []
 			});
 		},
 		clear_clipboard: function(){
 			this.set({
 				files: [],
-				all_files_checked: false,
 				files_checked: []
 			});
 		},

@@ -87,7 +87,19 @@
 						<div class="col-xs-12">
 							<fieldset>
 								<legend>
-									Буфер файлов
+									<div class="pull-left">
+										<div class="btn-toolbar">
+											<div class="btn-group" data-toggle="group">
+												<label class="btn btn-sm btn-default {{tags_view=='list' ? 'active' : ''}}" title="Теги списком">
+													<input type="radio" name="{{tags_view}}" value="list"><i class="fa fa-th"></i>
+												</label>
+												<label class="btn btn-sm btn-default {{tags_view=='table' ? 'active' : ''}}" title="Теги таблицей">
+													<input type="radio" name="{{tags_view}}" value="table"><i class="fa fa-table"></i>
+												</label>
+											</div>
+										</div>
+									</div>
+									&nbsp;Буфер файлов
 									<sup class="badge">{{{checked_files_hashes.length ? '<b>'+checked_files_hashes.length+'</b> / ' : ''}}}{{files.length ? files.length : ''}}</sup>
 									<div class="pull-right">
 										<div class="btn-toolbar">
@@ -95,81 +107,13 @@
 												<button on-click="clear_clipboard" class="btn btn-default btn-sm tag-block" {{!files.length ? 'disabled' : '' }} title="Очистить буфер"><i class="fa fa-ban"></i></button>
 											</div>
 											<div class="btn-group">
-												<button on-click="check_files:{{key}},{{value}}" class="btn btn-default btn-sm" {{files.length && key ? '' : 'disabled'}} title="Отметить файлы с тегом «{{key}}{{value ? ' :'+value : ''}}»"><i class="fa fa-check-square-o"></i></button>
+												<button on-click="check_files:{{key}},{{value}}" class="btn btn-default btn-sm" {{files.length && key ? '' : 'disabled'}} title="Отметить файлы с тегом «{{key}}{{value ? ': '+value : ''}}»"><i class="fa fa-check-circle-o"></i></button>
 												<button on-click="put_to_clipboard:{{tagged}}" class="btn btn-default btn-sm tag-block" {{!tagged.length ? 'disabled' : '' }} title="Добавить в буфер файлы с тегом «{{key}}: {{value}}»"><i class="fa fa-list"></i> {{tagged.length ? tagged.length : ''}}</button>
 												<button on-click="put_to_clipboard:{{untagged}}" class="btn btn-default btn-sm tag-block" {{!untagged.length ? 'disabled' : '' }} title="Добавить в буфер файлы без {{ key ? 'тега «'+key+'»' : 'тегов'}}"><i class="fa fa-list"></i> <s>{{key}}</s>  {{untagged.length ? untagged.length : ''}}</button>
 											</div>
 										</div>
 									</div>
 								</legend>
-								<table class="table table-condensed table-fixedheader">
-									<thead><tr>
-										<th width="40%">
-											<div class="btn-group pull-right">
-												<button class="btn btn-default btn-xs" on-click="inverse_checked_files" title="Инвертировать выделение"><i class="fa fa-check-square"></i></button>
-												<button {{checked_files_hashes.length ? '' : 'disabled'}} class="btn btn-default btn-xs" on-click="remove_checked_files" title="Убрать отмеченные из буфера"><i class="fa fa-times"></i></button>
-											</div>
-											<label><input type="checkbox" checked="{{all_files_checked}}" {{!files.length ? 'disabled' : ''}} /> Все файлы</label>
-										</th>
-										<th width="55%">
-											<div class="btn-group pull-left" data-toggle="group">
-												<label class="btn btn-xs btn-default {{tags_type=='' ? 'active' : ''}}" title="Все теги">
-													<input type="radio" name="{{tags_type}}" value="" checked><i class="fa fa-filter"></i>
-												</label>
-												<label class="btn btn-xs btn-danger {{tags_type=='auto' ? 'active' : ''}}" title="Авто теги">
-													<input type="radio" name="{{tags_type}}" value="auto"><i class="fa fa-filter"></i>
-												</label>
-												<label class="btn btn-xs btn-success {{tags_type=='manual' ? 'active' : ''}}" title="Проверенные">
-													<input type="radio" name="{{tags_type}}" value="manual"><i class="fa fa-filter"></i>
-												</label>
-											</div>
-										</th>
-										<th width="5%"></th>
-									</tr></thead>
-									<tbody style="height:256px;">
-									{{#each files:i}}
-										<tr class="on-hover {{files_checked[i] ? 'active' : ''}}">
-											<td width="40%"><label><input type="checkbox" checked="{{files_checked[i]}}" /> {{name}}<br><small class="text-muted">{{dir(.)}}</small></label></td>
-											<td width="55%">
-												{{#each tags(files[i])}}<span on-click="set_tag:{{.key}},{{.value}}" class="label label-{{(.key==~/key) && (.value==~/value)? 'primary' : auto ? 'default' : 'success'}} label-link tag-block {{(tags_type == 'manual' && auto) || (tags_type == 'auto' && !auto) ? 'hidden' : '' }}" title="{{.key}}: {{.value}}"><em>{{.key}}</em>{{.value}}</span>{{/each}}
-											</td>
-											<td width="5%">
-												<a class="on-hover-show" on-click="exec_file:{{path}}" href="{{path}}" target="_blank" title="Открыть файл"><i class="fa fa-eye text-info"></i></a>
-											</td>
-										</tr>
-									{{/each}}
-									</tbody>
-								</table>
-							</fieldset>
-						</div>
-					</div>
-					<div class="row">
-						<div class="form-group col-xs-6">
-							<div class="form-group {{#if name_tpl}}has-{{name_tpl_ok ? 'success' : 'error'}}{{/if}}">
-								<label>Теги из названия:</label>
-								<div class="input-group">
-									<div class="input-group-btn">
-										<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!files.length ? 'disabled' : ''}} title="Примеры шаблонов"><i class="fa fa-asterisk"></i></button>
-										<ul class="dropdown-menu">
-											<li><a href="#" on-click="regexp_tags:'(.+)'" title="(.+)"><b>Библиотека</b>.zip</a></li>
-											<li><a href="#" on-click="regexp_tags:'([^-]+)\\s\\-\\s([^-]+)'" title="(\w+)\s\-\s(\w+)"><b>Автор В.В.</b>&nbsp;-&nbsp;<b>Название книги</b>.fb2</a></li>
-											<li><a href="#" on-click="regexp_tags:'(\\d+)\\.?\\s?(.+)'" title="(\d+)\.?\s?(.+)"><b>12</b>.&nbsp;<b>Название трека</b>.mp3</a></li>
-											<li><a href="#" on-click="regexp_tags:'(.+)\\-(\\d{1,3}\\.\\d{1,3}\\.?\\d{0,3}\\.?\\d{0,3})'" title="(.+)\-(\d{1,3}\.\d{1,3}\.?\d{0,3}\.?\d{0,3})"><b>js-lib</b>-<b>2.0</b>.zip</li>
-										</ul>
-									</div>
-									<input type="text" class="form-control" value="{{name_tpl}}" placeholder="RegExp" />
-									<div class="input-group-btn">
-										<button class="btn btn-default" on-click="parse_tags:{{name_tpl}}" {{!(checked_files_hashes.length && name_tpl && name_tpl_ok) ? 'disabled' : ''}}>Взять</button>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-					
-					<div class="row">
-						<div class="col-xs-12">
-							<fieldset>
-								<legend>Таблица тегов</legend>
 								<div class="db-table">
 									<div class="db-table__scroll">
 										<div class="db-table__scroll-header">
@@ -177,11 +121,27 @@
 												<table class="table table-condensed">
 													<thead><tr>
 														<th class="db-table__cell-object"></th>
-														{{#table_keys}}
-														<th class="db-table__cell-tag"><small title="{{.}}">{{.}}</small></th>
+														{{#if tags_view == 'table'}}
+															{{#table_keys}}
+															<th class="db-table__cell-tag"><small title="{{.}}">{{.}}</small></th>
+															{{else}}
+															<th></th>
+															{{/table_keys}}
 														{{else}}
-														<th></th>
-														{{/table_keys}}
+															<th class="db-table__cell-alltags">
+																<div class="btn-group pull-left" data-toggle="group">
+																	<label class="btn btn-xs btn-default {{tags_type=='' ? 'active' : ''}}" title="Все теги">
+																		<input type="radio" name="{{tags_type}}" value="" checked><i class="fa fa-filter"></i>
+																	</label>
+																	<label class="btn btn-xs btn-danger {{tags_type=='auto' ? 'active' : ''}}" title="Авто теги">
+																		<input type="radio" name="{{tags_type}}" value="auto"><i class="fa fa-filter"></i>
+																	</label>
+																	<label class="btn btn-xs btn-success {{tags_type=='manual' ? 'active' : ''}}" title="Проверенные">
+																		<input type="radio" name="{{tags_type}}" value="manual"><i class="fa fa-filter"></i>
+																	</label>
+																</div>
+															</th>
+														{{/if}}
 													</tr></thead>
 												</table>
 											</div>
@@ -190,11 +150,15 @@
 											<table class="table table-condensed">
 												<thead><tr class="db-table__row_hidden">
 													<th class="db-table__cell-object"></th>
-													{{#table_keys}}
-													<th class="db-table__cell-tag"><small>{{.}}</small></th>
+													{{#if tags_view == 'table'}}
+														{{#table_keys}}
+														<th class="db-table__cell-tag"><small>{{.}}</small></th>
+														{{else}}
+														<th></th>
+														{{/table_keys}}
 													{{else}}
-													<th></th>
-													{{/table_keys}}
+														<th class="db-table__cell-alltags">&nbsp;</th>
+													{{/if}}
 												</tr></thead>
 												<tbody>
 												{{#each files:i}}
@@ -203,13 +167,19 @@
 															<a class="db-table__view-object on-hover-show" on-click="exec_file:{{path}}" href="{{path}}" target="_blank" title="Открыть файл"><i class="fa fa-eye text-info"></i></a>
 															<label><input type="checkbox" /> {{name}}<br><small class="text-muted">{{dir(.)}}</small></label>
 														</td>
-														{{#table_keys:j}}
-														<td class="db-table__cell-tag">
-															<tagsedit file="{{files[i]}}" key="{{table_keys[j]}}" />
-														</td>
+														{{#if tags_view == 'table'}}
+															{{#table_keys:j}}
+															<td class="db-table__cell-tag">
+																<tagsedit file="{{files[i]}}" key="{{table_keys[j]}}" />
+															</td>
+															{{else}}
+															<td></td>
+															{{/table_keys}}
 														{{else}}
-														<td></td>
-														{{/table_keys}}
+															<td class="db-table__cell-alltags">
+																{{#each tags(files[i])}}<span on-click="set_tag:{{.key}},{{.value}}" class="label label-{{(.key==~/key) && (.value==~/value)? 'primary' : auto ? 'default' : 'success'}} label-link tag-block {{(tags_type == 'manual' && auto) || (tags_type == 'auto' && !auto) ? 'hidden' : '' }}" title="{{.key}}: {{.value}}"><em>{{.key}}</em>{{.value}}</span>{{/each}}
+															</td>
+														{{/if}}
 													</tr>
 												{{/each}}
 												</tbody>
@@ -221,15 +191,22 @@
 											<table class="table table-condensed">
 												<thead><tr>
 													<th class="db-table__cell-object db-table__cell_visible"><div>
-														<div class="db-table__dropdown">
-															<button class="db-table__btn-tagset btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" title="Набор ключей">{{{tagset_title ? '&#123;'+tagset_title+'&#125;' : '<i class="fa fa-caret-down"></i>' }}}</button>
-															<ul class="dropdown-menu">
-																<li><a href="#" on-click="set_table_keys:'','*'"><b>Все теги</b></a></li>
-																{{#tagsets}}
-																<li><a href="#" on-click="set_table_keys:{{keys}},{{title}}">{{title}}</a></li>
-																{{/tagsets}}
-															</ul>
+														<div class="btn-group">
+															<button {{files.length > checked_files_hashes.length ? '' : 'disabled'}} class="btn btn-default btn-xs" on-click="check_all_files" title="Выделить все файлы"><i class="fa fa-check-square-o"></i></button>
+															<button {{files.length ? '' : 'disabled'}} class="btn btn-default btn-xs" on-click="inverse_checked_files" title="Инвертировать выделение"><i class="fa fa-check-square"></i></button>
+															<button {{checked_files_hashes.length ? '' : 'disabled'}} class="btn btn-default btn-xs" on-click="remove_checked_files" title="Убрать отмеченные из буфера"><i class="fa fa-times"></i></button>
 														</div>
+														{{#if tags_view == 'table'}}
+															<div class="db-table__dropdown">
+																<button class="db-table__btn-tagset btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" title="Набор ключей">{{{tagset_title ? '&#123;'+tagset_title+'&#125;' : '<i class="fa fa-caret-down"></i>' }}}</button>
+																<ul class="dropdown-menu">
+																	<li><a href="#" on-click="set_table_keys:'','*'"><b>Все теги</b></a></li>
+																	{{#tagsets}}
+																	<li><a href="#" on-click="set_table_keys:{{keys}},{{title}}">{{title}}</a></li>
+																	{{/tagsets}}
+																</ul>
+															</div>
+														{{/if}}
 													</div></th>
 												</tr></thead>
 											</table>
@@ -256,6 +233,28 @@
 									</div>
 								</div>
 							</fieldset>
+						</div>
+					</div>
+					<div class="row">
+						<div class="form-group col-xs-6">
+							<div class="form-group {{#if name_tpl}}has-{{name_tpl_ok ? 'success' : 'error'}}{{/if}}">
+								<label>Теги из названия:</label>
+								<div class="input-group">
+									<div class="input-group-btn">
+										<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!files.length ? 'disabled' : ''}} title="Примеры шаблонов"><i class="fa fa-asterisk"></i></button>
+										<ul class="dropdown-menu">
+											<li><a href="#" on-click="regexp_tags:'(.+)'" title="(.+)"><b>Библиотека</b>.zip</a></li>
+											<li><a href="#" on-click="regexp_tags:'([^-]+)\\s\\-\\s([^-]+)'" title="(\w+)\s\-\s(\w+)"><b>Автор В.В.</b>&nbsp;-&nbsp;<b>Название книги</b>.fb2</a></li>
+											<li><a href="#" on-click="regexp_tags:'(\\d+)\\.?\\s?(.+)'" title="(\d+)\.?\s?(.+)"><b>12</b>.&nbsp;<b>Название трека</b>.mp3</a></li>
+											<li><a href="#" on-click="regexp_tags:'(.+)\\-(\\d{1,3}\\.\\d{1,3}\\.?\\d{0,3}\\.?\\d{0,3})'" title="(.+)\-(\d{1,3}\.\d{1,3}\.?\d{0,3}\.?\d{0,3})"><b>js-lib</b>-<b>2.0</b>.zip</li>
+										</ul>
+									</div>
+									<input type="text" class="form-control" value="{{name_tpl}}" placeholder="RegExp" />
+									<div class="input-group-btn">
+										<button class="btn btn-default" on-click="parse_tags:{{name_tpl}}" {{!(checked_files_hashes.length && name_tpl && name_tpl_ok) ? 'disabled' : ''}}>Взять</button>
+									</div>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>

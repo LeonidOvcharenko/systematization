@@ -100,7 +100,7 @@ table.table-fixedheader>thead tr th {
 table th label,
 table td label {
 	margin-bottom: 0;
-	display: block;
+	display: inline-block;
 }
 table td label {
 	font-weight: normal;
@@ -263,6 +263,10 @@ a.section {
 }
 .db-table__cell-tag {
 	width: 120px;
+}
+.db-table__cell-alltags {
+	min-width: 800px;
+	white-space: nowrap;
 }
 .db-table__view-object {
 	width: 20px;
