@@ -325,12 +325,11 @@
 		
 		<script id="processing-tpl" type='text/ractive'>
 			<a name="collection" class="section"></a>
-			<div id="processing" class="panel panel-default tab-pane">
-				<div class="panel-heading">Коллекция</div>
-				<div class="panel-body">
-					<div class="col-xs-4">
-						<fieldset>
-							<legend>Индексы</legend>
+			<div id="processing" class="row tab-pane">
+				<div class="col-xs-6">
+					<div class="panel panel-info">
+						<div class="panel-heading">Индексы</div>
+						<div class="panel-body">
 							<div class="form-group">
 								<label>Набор тегов:</label>
 								<select class="form-control" value="{{tagset}}">
@@ -346,11 +345,13 @@
 								<div class="checkbox"><label><input type="checkbox" checked='{{special_tags}}' /> Включить служебные теги (@ и #)</label></div>
 							</div>
 							<button class="btn btn-default" on-click="index">Сгенерировать индексы</button>
-						</fieldset>
+						</div>
 					</div>
-					<div class="col-xs-6">
-						<fieldset>
-							<legend>Переименование</legend>
+				</div>
+				<div class="col-xs-6">
+					<div class="panel panel-danger">
+						<div class="panel-heading">Переименование</div>
+						<div class="panel-body">
 							<div class="form-group">
 								<label>Маска:</label>
 								<div class="input-group">
@@ -367,7 +368,7 @@
 								
 							</div>
 							<button class="btn btn-default" on-click="rename" {{!mask ? 'disabled' : ''}}>Переименовать файлы</button>
-						</fieldset>
+						</div>
 					</div>
 				</div>
 			</div>
