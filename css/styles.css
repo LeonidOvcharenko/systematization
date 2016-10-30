@@ -220,6 +220,7 @@ a.section {
 	left: 0;
 	overflow: hidden;
 	background: white;
+	z-index: 3;
 }
 .db-table__left-body {
 	position: relative;
@@ -297,10 +298,10 @@ a.section {
 	line-height: 1.5;
 	border-radius: 2px;
 }
-select[multiple].input-xs {
+select.input-xs {
 	padding: 0;
 }
-select[multiple].input-xs option {
+select.input-xs option {
 	height: 18px;
 	padding: 2px 4px;
 }
@@ -330,6 +331,26 @@ select[multiple].input-xs option {
 	background-color: #FFFFFF;
 }
 
+/* Tags editor */
+.te {
+	position: relative;
+}
+.te-caret {
+	position: absolute;
+	top: 3px;
+	right: 4px;
+	cursor: pointer;
+}
+.te-list {
+	display: block;
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 18px;
+	border: transparent;
+	background: transparent;
+	box-shadow: none;
+}
 .te input[type="text"] {
 	display: block;
 	margin-bottom: 3px;

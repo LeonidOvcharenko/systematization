@@ -600,13 +600,28 @@ $(function(){
 		isolated: true,
 		template:
 			'<div class="te">'+
-				'<input type="text" class="form-control input-xs input-ghost {{auto ? \'input-color_danger\' : \'\'}} {{!value ? \'input-ghost_empty\' : \'\'}}" value="{{value}}" lazy="300" autocomplete="off" on-keydown="on_key" />'+
-				'<select class="form-control input-xs input-ghost {{(tags.length > 1) ? \'show\' : \'hide\'}}" multiple value="{{selected}}">'+
+				'<input type="text" class="form-control input-xs input-ghost {{auto ? \'input-color_danger\' : \'\'}} {{!value ? \'input-ghost_empty\' : \'\'}}" value="{{value}}" lazy="300" autocomplete="off" on-keydown="on_key" on-focus="make_list" on-blur="on_blur:1" />'+
+				'{{#if list.length}}<select class="te-list form-control input-xs" value="{{ready_value}}" on-focus="on_focus:3" on-blur="on_blur:3">'+
+					'{{#if value}}<option value="{{value}}">{{value}}</option>{{/if}}'+
+					'<option value=""></option>'+
+					'{{#list}}{{#if this!=value}}<option value="{{.}}">{{.}}</option>{{/if}}{{/list}}'+
+				'</select>{{/if}}'+
+				'<select class="form-control input-xs input-ghost {{(tags.length > 1) ? \'show\' : \'hide\'}}" multiple value="{{selected}}" on-focus="on_focus:2" on-blur="on_blur:2">'+
 					'{{#tags}}<option value="{{.value}}">{{.value}}</option>{{/tags}}'+
 				'</select>'+
 			'</div>',
 		oninit: function(){
 			var self = this;
+			var Focused = {}, on_all_blurred = null;
+			var tag_values_list = function(){
+				var file = self.get('file');
+				var key  = self.get('key');
+				var ready_tags = file ? Database.get_file_tags(file.hash, key) : [];
+				ready_tags = ready_tags.map(function(tag){ return tag.value; });
+				var possible_tags = Database.get_values(key);
+				possible_tags.filter(function(value){ return ready_tags.indexOf(value) == -1; });
+				return possible_tags;
+			};
 			var select_input_text = function(){
 				var input = self.find('input');
 				if (input){
@@ -616,8 +631,8 @@ $(function(){
 			var selected_to_input = function(val){
 				var tag = self.get('tags').find(function(t){ return t.value === val; });
 				self.set({
-					current: val,
 					value:   val,
+					current: val,
 					auto:    !!(tag && tag.auto)
 				});
 				// when input is focused, setting data doesn't affect input
@@ -640,6 +655,9 @@ $(function(){
 					tags: tags
 				}).then(function(){
 					self.set('selected', sel);
+					if (Focused['1'] || Focused['2'] || Focused['3'] || on_all_blurred){
+						self.set('list', tag_values_list());
+					}
 				});
 			};
 			var reset_nodes = function(){
@@ -662,6 +680,8 @@ $(function(){
 				var old_tag = {key: key, value: old_value};
 				var new_tag = {key: key, value: new_value, auto: false};
 				if (new_value) {
+					var ready_tags = (self.get('tags') || []).map(function(tag){ return tag.value; });
+					if (ready_tags.indexOf(new_value) != -1) return;
 					if (old_value) {
 						Database.rename_tags(old_tag, new_tag, file.hash);
 					} else {
@@ -681,6 +701,10 @@ $(function(){
 				'selected': function(selected, prev){
 					if (selected === prev && selected[0] === prev[0]) return;
 					selected_to_input(selected[0] || '');
+				},
+				'ready_value': function(selected, prev){
+					if (selected===prev || selected==self.get('value')) return;
+					self.set('value', selected);
 				}
 			});
 			self.on({
@@ -694,6 +718,27 @@ $(function(){
 						update_tags('?');
 						select_input_text();
 					}
+					// Up or Down
+					else if (e.original.keyCode == 38 || e.original.keyCode == 40) {
+						e.original.preventDefault();
+						$(e.node).closest('.te').find('.te-list').focus().trigger('mousedown');
+					}
+				},
+				'make_list': function(e){
+					self.set('list', tag_values_list());
+					self.fire('on_focus', e, 1);
+				},
+				'on_focus': function(e, k){
+					Focused[k+''] = true;
+					if (on_all_blurred) { clearTimeout(on_all_blurred); on_all_blurred = null; }
+				},
+				'on_blur': function(e, k){
+					Focused[k+''] = false;
+					if (Focused['1'] || Focused['2'] || Focused['3']){
+						if (on_all_blurred) { clearTimeout(on_all_blurred); on_all_blurred = null; }
+						return;
+					}
+					on_all_blurred = setTimeout(function(){ self.set('list', []); on_all_blurred = null; }, 400);
 				}
 			});
 		}
