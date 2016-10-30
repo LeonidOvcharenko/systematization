@@ -159,11 +159,13 @@ $(function(){
 			return this.files.findOne({'hash': hash});
 		}
 		,
-		rename_file: function(file, new_name){
-			new_name = Sanitize_Filename(new_name,{replacement:'_'});
+		rename_file: function(file, new_name, ext, version){
+			var new_name_raw = new_name;
+			new_name = Sanitize_Filename(new_name+(version ? ' ('+version+')' : '')+ext, {replacement:'_'});
 			var new_path = file.path.substring(0, file.path.lastIndexOf(file.name))+new_name;
 			try {
-				if (FS.statSync(new_path).isFile()) return;  // prevent file overwriting
+				version = version > 0 ? version+1 : 1;
+				if (FS.statSync(new_path).isFile()) return Database.rename_file(file, new_name_raw, ext, version);  // prevent file overwriting
 			} catch(e) { /* file not exists */ }
 			try {
 				FS.renameSync(file.path, new_path);
@@ -482,9 +484,9 @@ $(function(){
 					return filetag ? filetag.value : '';
 				};
 				var ext = file.name.match(/(.+?)(\.[^.]*$|$)/)[2];
-				var new_name = mask.replace(reg, replacer)+ext;
+				var new_name = mask.replace(reg, replacer);
 				if (new_name && new_name != file.name) {
-					Database.rename_file(file, new_name);
+					Database.rename_file(file, new_name, ext);
 				}
 			});
 		}
