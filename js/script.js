@@ -395,6 +395,7 @@ $(function(){
 		append: true,
 		template: '#processing-tpl',
 		data: {
+			tags: 'manual'
 		}
 	});
 	var Indexing = new Ractive({
