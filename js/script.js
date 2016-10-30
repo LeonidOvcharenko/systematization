@@ -464,7 +464,7 @@ $(function(){
 		var mask = this.get('mask');
 		mask += '<'+key+'>';
 		this.set('mask', mask);
-		return true;
+		this.event.original.preventDefault();
 	};
 	Processing.on({
 		index: function(){
@@ -533,7 +533,7 @@ $(function(){
 				'<span class="es-clear {{value ? \'show\' : \'hide\'}} text-danger fa fa-times" on-click="clear" title="Очистить"></span>'+
 				'<ul class="es-list dropdown-menu {{(list_visible && !no_matches) ? \'show\' : \'hide\'}}">'+
 					'{{#list:i}}<li class="{{visible[i] ? \'show\' : \'hide\' }} {{active==i ? \'active\' : \'\' }}">'+
-						'<a href="#" on-click="select_li" tabindex="-1">{{.}}</a>'+
+						'<a href="#" on-click="@this.select_li(this)" tabindex="-1">{{.}}</a>'+
 					'</li>{{/list}}'+
 				'</ul>'+
 			'</div>',
@@ -549,10 +549,6 @@ $(function(){
 				'clear': function(e){
 					e.original.preventDefault();
 					self.set('value', '');
-				},
-				'select_li': function(e){
-					e.original.preventDefault();
-					self.set('value', e.context);
 				},
 				'show_list': function(e){
 					var $input = $(e.node);
@@ -623,6 +619,10 @@ $(function(){
 					self.set('no_matches', no_matches);
 				}
 			});
+			self.select_li = function(v){
+				self.set('value', v);
+				return false;
+			};
 		}
 	});
 	var TagsEditor = Ractive.extend({
@@ -639,6 +639,12 @@ $(function(){
 					'{{#tags}}<option value="{{.value}}">{{.value}}</option>{{/tags}}'+
 				'</select>'+
 			'</div>',
+		// necessary defaults
+		data: {
+			value: '',
+			ready_value: '',
+			selected: []
+		},
 		oninit: function(){
 			var self = this;
 			var Focused = {}, on_all_blurred = null;
@@ -665,9 +671,8 @@ $(function(){
 					auto:    !!(tag && tag.auto)
 				});
 				// when input is focused, setting data doesn't affect input
-				var input = self.find('input');
-				if (input){
-					input.value = val;
+				if (self.el && self.find('input')){
+					self.find('input').value = val;
 					self.updateModel('value');
 				}
 			};
@@ -777,6 +782,7 @@ $(function(){
 		el: 'content',
 		append: true,
 		template: '#tagger-tpl',
+		modifyArrays: true,
 		data: {
 			key: '',
 			keys: [],
@@ -786,7 +792,6 @@ $(function(){
 			tagged: [],
 			tags_filter: 'all',
 			all_tags_checked: false,
-			tags_checked: [],
 			a_key: '',
 			a_keys: [],
 			a_values: [],
@@ -795,7 +800,6 @@ $(function(){
 			tags_type: '',
 			tags_view: 'table',
 			files_checked: [],
-			checked_files_hashes: [],
 			dir: function(file){
 				return file ? file.path.substring(0, file.path.lastIndexOf(file.name)) : '';
 			},
@@ -866,13 +870,13 @@ $(function(){
 	Tagger.reset_tags_checked = function(){
 		return this.set({
 			all_tags_checked: false,
-			tags_checked: []
+			a_values_checked: []
 		});
 	};
 	Tagger.add_file_to_clipboard = function(file){
-		var hashes = this.get('files').map(function(f){ return f.hash; });
-		if (hashes.indexOf(file.hash) == -1){
-			this.push('files', file);
+		var exists = this.get('files').find(function(f){ return f.hash==file.hash; });
+		if (!exists){
+			this.push('files', {hash: file.hash, name: file.name, path: file.path});
 		}
 	};
 	Tagger.add_file_to_clipboard_by_hash = function(hash){
@@ -899,30 +903,13 @@ $(function(){
 			});
 		},
 		all_tags_checked: function(v){
-			var tags_checked = [];
-			var l = this.get('a_values.length');
-			for (var i=0;i<l;i++){ tags_checked.push(!!v); }
-			this.set('tags_checked', tags_checked);
+			var vals = this.get('a_values');
+			var tags_checked = v ? vals.map(function(v){ return v; }) : [];
+			this.set('a_values_checked', tags_checked);
 		},
 		a_key: function(){
 			this.reset_tags_checked();
 			this.update_tags_values_approving();
-		},
-		tags_checked: function(checks){
-			var values_checked = [];
-			var values = this.get('a_values');
-			checks.forEach(function(v, i){
-				if (v) values_checked.push(values[i]);
-			});
-			this.set('a_values_checked', values_checked);
-		},
-		files_checked: function(checks){
-			var files_checked = [];
-			var files = this.get('files');
-			checks.forEach(function(v, i){
-				if (v) files_checked.push(files[i].hash);
-			});
-			this.set('checked_files_hashes', files_checked);
 		},
 		files: function(){
 			this.update('dir');
@@ -982,28 +969,27 @@ $(function(){
 		var files_checked = [];
 		var files = this.get('files');
 		files.forEach(function(file, i){
-			if (Database.has_tag(file.hash, key, value)) files_checked[i] = true;
+			if (Database.has_tag(file.hash, key, value)) files_checked.push(file.hash);
 		});
 		this.set('files_checked', files_checked);
 	};
 	Tagger.on({
 		check_all_files: function(){
-			var files_checked = [];
-			var l = this.get('files.length');
-			for (var i=0;i<l;i++){ files_checked.push(true); }
+			var files = this.get('files');
+			var files_checked = files.map(function(f){ return f.hash; });
 			this.set('files_checked', files_checked);
 		},
 		inverse_checked_files: function(){
 			var new_checked = [];
-			var checked_files_hashes = this.get('checked_files_hashes');
+			var checked_files_hashes = this.get('files_checked');
 			var files = this.get('files');
 			files.forEach(function(file, i){
-				new_checked.push(checked_files_hashes.indexOf(file.hash) == -1);
+				if (checked_files_hashes.indexOf(file.hash) == -1) new_checked.push(file.hash);
 			});
 			this.set('files_checked', new_checked);
 		},
 		remove_checked_files: function(){
-			var checked_files_hashes = this.get('checked_files_hashes');
+			var checked_files_hashes = this.get('files_checked');
 			var new_files = [];
 			var files = this.get('files');
 			files.forEach(function(file, i){
@@ -1127,6 +1113,7 @@ $(function(){
 			this.set('all_tags_checked', false);
 			this.update_tags_keys_approving().then(function(){
 				Tagger.update_tags_values_approving();
+				Tagger.reset_tags_checked();
 			});
 		}
 	};
@@ -1137,7 +1124,7 @@ $(function(){
 	};
 	Tagger.regexp_tags = function(pattern){
 		this.set('name_tpl', pattern);
-		return false;
+		this.event.original.preventDefault();
 	};
 	Tagger.parse_tags = function(pattern){
 		var reg;
@@ -1147,7 +1134,7 @@ $(function(){
 			reg = new RegExp('', 'i');
 		}
 		var files = this.get('files');
-		var checked_files_hashes = this.get('checked_files_hashes');
+		var checked_files_hashes = this.get('files_checked');
 		files.forEach(function(file, i){
 			if (checked_files_hashes.indexOf(file.hash) == -1) return;
 			var clearname = file.name.match(/(.+?)(\.[^.]*$|$)/)[1];
@@ -1197,7 +1184,7 @@ $(function(){
 		var table_keys = !keys ? this.get('keys') : keys.split(';').map(function(key){ return key.trim(); });
 		this.set('table_keys', table_keys);
 		this.set('tagset_title', title);
-		return false;
+		this.event.original.preventDefault();
 	};
 	var save_file_tag_fn = function(e, file, key, old_value){
 		Tagger.update_tags_keys().then(function(){
@@ -1304,8 +1291,8 @@ $(function(){
 		el: 'content',
 		append: true,
 		template: '#settings-tpl',
+		modifyArrays: true,
 		data: {
-			folder_selected: '',
 			root_folder: '',
 			read_metadata: false,
 			filefilter: '',
@@ -1313,7 +1300,7 @@ $(function(){
 			pretags: []
 		},
 		computed: {
-			filefilter_ok: function(){ 
+			filefilter_ok: function(){
 				var pattern = this.get('filefilter');
 				var reg;
 				try {
@@ -1353,7 +1340,7 @@ $(function(){
 	});
 	Settings.regexp_filter = function(pattern){
 		this.set('filefilter', pattern);
-		return false;
+		this.event.original.preventDefault();
 	};
 	Settings.edit_tagset = function(tagset){
 		this.set({
@@ -1399,6 +1386,10 @@ $(function(){
 	};
 	Settings.load_from_DB = function(){
 		S.settings = Database.get_settings();
+		S.settings.folder_selected = S.settings.folder_selected || '';
+		S.settings.read_metadata   = S.settings.read_metadata || false;
+		S.settings.filefilter      = S.settings.filefilter || '';
+		S.settings.tagsets         = (S.settings.tagsets || []).map(function(t){ return {title: t.title, keys: t.keys}; });   // ractive hangs on reading array from pure DB data
 		this.set(S.settings).then(function(){
 			Settings.start_observe();
 			Tagger.update_tagsets();
