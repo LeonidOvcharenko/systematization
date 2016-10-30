@@ -467,12 +467,18 @@
 										<button class="form-control btn btn-default" {{tagset_title && tagset_keys ? '' : 'disabled'}} on-click="save-tagset:{{current_tagset}}">{{current_tagset ? 'Редактировать' : 'Добавить' }}</button>
 									</div>
 								</div>
-								{{#tagsets}}
-									<div class="{{current_tagset==.title ? 'text-warning' : ''}}">
-										<b>{{.title}}:</b> <span>{{.keys}}</span>
+							</div>
+							<div class="list-group">
+							{{#tagsets}}
+								<a class="list-group-item {{current_tagset==.title ? 'active' : ''}}">
+									<div class="btn-group pull-right">
 										<button class="btn btn-xs btn-default" title="Редактировать набор" on-click="edit-tagset:{{.}}"><i class="fa fa-pencil"></i></button>
+										<button class="btn btn-xs btn-danger" title="Удалить набор" on-click="save-tagset:{{.title}},true"><i class="fa fa-times"></i></button>
 									</div>
-								{{/tagsets}}
+									<h4 class="list-group-item-heading">{{.title}}</h4>
+									<p class="list-group-item-text">{{.keys}}</p>
+								</a>
+							{{/tagsets}}
 							</div>
 						</div>
 					</div>

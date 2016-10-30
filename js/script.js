@@ -1286,16 +1286,18 @@ $(function(){
 				tagset_keys:    tagset.keys
 			});
 		},
-		'save-tagset': function(e, title){
+		'save-tagset': function(e, title, remove){
 			if (!S.settings.tagsets) S.settings.tagsets = [];
 			if (title) {
 				S.settings.tagsets = S.settings.tagsets.filter(function(ts,i){ return ts.title !== title });
 			}
-			S.settings.tagsets.push({
-				title: this.get('tagset_title'),
-				keys:  this.get('tagset_keys')
-			});
-			S.settings.tagsets.sort(function(a,b){return (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0);});
+			if (!remove) {
+				S.settings.tagsets.push({
+					title: this.get('tagset_title'),
+					keys:  this.get('tagset_keys')
+				});
+				S.settings.tagsets.sort(function(a,b){return (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0);});
+			}
 			Database.save_settings(S.settings);
 			this.set({
 				tagsets: S.settings.tagsets,
