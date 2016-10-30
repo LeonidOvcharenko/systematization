@@ -391,13 +391,22 @@ $(function(){
 			N_files: [],
 			files: [],
 			untagged: [],
-			verified: []
+			verified: [],
+			N_keys: 0,
+			N_tags: 0
 		}
 	});
 	ViewDB.update_stats = function(){
 		this.set('N_files', Database.files.count() );
 		this.set('untagged', Database.get_untagged_files('') );
 		this.set('verified', Database.get_verified_files() );
+		var N_tags = 0;
+		var keys = Database.get_keys();
+		keys.forEach(function(key, i){
+			N_tags += Database.get_values(key).length;
+		});
+		this.set('N_keys', keys.length );
+		this.set('N_tags', N_tags );
 	};
 	ViewDB.on({
 		'save': function(){

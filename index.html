@@ -406,6 +406,10 @@
 								<dd>{{untagged.length}}{{#if N_files>0 && untagged.length>0}}&nbsp;({{Math.round(untagged.length/N_files*100)}}%){{/if}}</dd>
 								<dt {{verified.length==N_files ? 'class="text-success"': ''}}>Проверенных:</dt>
 								<dd>{{verified.length}}{{#if N_files>0}}&nbsp;({{Math.round(verified.length/N_files*100)}}%){{/if}}</dd>
+								<dt>Ключей:</dt>
+								<dd>{{N_keys}}</dd>
+								<dt>Различных тегов:</dt>
+								<dd>{{N_tags}}</dd>
 							</dl>
 						</div>
 						<div class="col-xs-4"></div>
