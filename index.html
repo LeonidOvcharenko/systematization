@@ -495,13 +495,16 @@
 										<button class="form-control btn btn-default" {{pretag_key && pretag_value ? '' : 'disabled'}} on-click="save-pretag">Добавить</button>
 									</div>
 								</div>
-								{{#pretags:i}}
-									<div>
-										<b>{{.key}}: {{.value}}</b>
-										<button class="btn btn-xs btn-danger" title="Удалить тег" on-click="remove-pretag:{{.}},{{i}}"><i class="fa fa-times"></i></button>
-									</div>
-								{{/pretags}}
 							</div>
+							<table class="table table-condensed"><tbody>
+							{{#pretags:i}}
+								<tr class="on-hover">
+									<th width="20%" class="text-right">{{.key}}</th>
+									<td width="70%">{{.value}}</td>
+									<td><button class="btn btn-xs btn-danger on-hover-show" title="Удалить тег" on-click="remove-pretag:{{.}},{{i}}"><i class="fa fa-times"></i></button></td>
+								</tr>
+							{{/pretags}}
+							</tbody></table>
 						</div>
 					</div>
 					<div class="col-xs-6">
