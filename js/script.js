@@ -271,6 +271,22 @@ $(function(){
 			return self.files.data;
 		}
 		,
+		remove_dead_files: function(){
+			var self = this;
+			var files = self.get_all_files();
+			files.forEach(function(file, i){
+				var query = { '$and': [{'path': file.path}, {'hash': file.hash}] };
+				try {
+					if (!FS.statSync(file.path).isFile()) {
+						self.files.removeWhere(query);
+					}
+				} catch(e) {
+					/* file not exists */
+					self.files.removeWhere(query);
+				}
+			});
+		}
+		,
 		get_verified_files: function(f){
 			var self = this;
 			var verified = [];
@@ -388,7 +404,9 @@ $(function(){
 			Database.db.saveDatabase();
 		},
 		'optimize': function(){
+			Database.remove_dead_files();
 			Database.remove_empty_tags();
+			ViewDB.update_stats();
 		},
 	});
 	
