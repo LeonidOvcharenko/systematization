@@ -460,6 +460,12 @@ $(function(){
 		});
 		FS.writeFileSync(filename, Indexing.toHTML());
 	};
+	Processing.append_to_mask = function(key){
+		var mask = this.get('mask');
+		mask += '<'+key+'>';
+		this.set('mask', mask);
+		return true;
+	};
 	Processing.on({
 		index: function(){
 			var base_dir = './_index_';
@@ -491,12 +497,6 @@ $(function(){
 					}
 				});
 			});
-		},
-		append_to_mask: function(e, key){
-			e.original.preventDefault();
-			var mask = this.get('mask');
-			mask += '<'+key+'>';
-			this.set('mask', mask);
 		},
 		rename: function(){
 			var mask = this.get('mask');
@@ -629,13 +629,13 @@ $(function(){
 		isolated: true,
 		template:
 			'<div class="te">'+
-				'<input type="text" class="form-control input-xs input-ghost {{auto ? \'input-color_danger\' : \'\'}} {{!value ? \'input-ghost_empty\' : \'\'}}" value="{{value}}" lazy="300" autocomplete="off" on-keydown="on_key" on-focus="make_list" on-blur="on_blur:1" />'+
-				'{{#if list.length}}<select class="te-list form-control input-xs" value="{{ready_value}}" on-focus="on_focus:3" on-blur="on_blur:3">'+
+				'<input type="text" class="form-control input-xs input-ghost {{auto ? \'input-color_danger\' : \'\'}} {{!value ? \'input-ghost_empty\' : \'\'}}" value="{{value}}" lazy="300" autocomplete="off" on-keydown="on_key" on-focus="make_list" on-blur="@this.on_blur(1)" />'+
+				'{{#if list.length}}<select class="te-list form-control input-xs" value="{{ready_value}}" on-focus="@this.on_focus(2)" on-blur="@this.on_blur(2)">'+
 					'{{#if value}}<option value="{{value}}">{{value}}</option>{{/if}}'+
 					'<option value=""></option>'+
 					'{{#list}}{{#if this!=value}}<option value="{{.}}">{{.}}</option>{{/if}}{{/list}}'+
 				'</select>{{/if}}'+
-				'<select class="form-control input-xs input-ghost {{(tags.length > 1) ? \'show\' : \'hide\'}}" multiple value="{{selected}}" on-focus="on_focus:2" on-blur="on_blur:2">'+
+				'<select class="form-control input-xs input-ghost {{(tags.length > 1) ? \'show\' : \'hide\'}}" multiple value="{{selected}}" on-focus="@this.on_focus(3)" on-blur="@this.on_blur(3)">'+
 					'{{#tags}}<option value="{{.value}}">{{.value}}</option>{{/tags}}'+
 				'</select>'+
 			'</div>',
@@ -755,21 +755,21 @@ $(function(){
 				},
 				'make_list': function(e){
 					self.set('list', tag_values_list());
-					self.fire('on_focus', e, 1);
-				},
-				'on_focus': function(e, k){
-					Focused[k+''] = true;
-					if (on_all_blurred) { clearTimeout(on_all_blurred); on_all_blurred = null; }
-				},
-				'on_blur': function(e, k){
-					Focused[k+''] = false;
-					if (Focused['1'] || Focused['2'] || Focused['3']){
-						if (on_all_blurred) { clearTimeout(on_all_blurred); on_all_blurred = null; }
-						return;
-					}
-					on_all_blurred = setTimeout(function(){ self.set('list', []); on_all_blurred = null; }, 400);
+					self.on_focus(1);
 				}
 			});
+			self.on_focus = function(k){
+				Focused[k+''] = true;
+				if (on_all_blurred) { clearTimeout(on_all_blurred); on_all_blurred = null; }
+			};
+			self.on_blur = function(k){
+				Focused[k+''] = false;
+				if (Focused['1'] || Focused['2'] || Focused['3']){
+					if (on_all_blurred) { clearTimeout(on_all_blurred); on_all_blurred = null; }
+					return;
+				}
+				on_all_blurred = setTimeout(function(){ self.set('list', []); on_all_blurred = null; }, 400);
+			};
 		}
 	});
 	
@@ -944,49 +944,49 @@ $(function(){
 		Processing.set('keys', Database.get_keys(true));
 	};
 	
-	Tagger.on({
-		put_to_clipboard: function(e, files){
-			var self = this;
-			files.forEach(function(file, i){
-				self.add_file_to_clipboard(file);
-			});
-		},
-		put_to_clipboard_tagged: function(e, key, value){
-			var self = this;
-			var files = Database.get_files_by_tag(key, value);
-			files.forEach(function(file, i){
-				self.add_file_to_clipboard(file);
-			});
-		},
-		set_tag: function(e, key, value){
-			var self = this;
-			self.set('key', key).then(function(){  // wait for keys list loading before setting tag value
-				self.set('value', value);
-			});
-		},
-		apply_to_files: function(e, key, value, hashes){
-			hashes.forEach(function(hash){
-				Database.add_tag({hash: hash}, {key: key, value: value, auto: false}, function(){
-					update_all_views();
-					Tagger.update('files');
-				});
-			});
-		},
-		remove_from_files: function(e, key, value, hashes){
-			hashes.forEach(function(hash){
-				Database.remove_tag(hash, {key: key, value: value});
+	Tagger.put_to_clipboard = function(files){
+		var self = this;
+		files.forEach(function(file, i){
+			self.add_file_to_clipboard(file);
+		});
+	};
+	Tagger.put_to_clipboard_tagged = function(key, value){
+		var self = this;
+		var files = Database.get_files_by_tag(key, value);
+		files.forEach(function(file, i){
+			self.add_file_to_clipboard(file);
+		});
+	};
+	Tagger.set_tag = function(key, value){
+		var self = this;
+		self.set('key', key).then(function(){  // wait for keys list loading before setting tag value
+			self.set('value', value);
+		});
+	};
+	Tagger.apply_to_files = function(key, value, hashes){
+		hashes.forEach(function(hash){
+			Database.add_tag({hash: hash}, {key: key, value: value, auto: false}, function(){
 				update_all_views();
 				Tagger.update('files');
 			});
-		},
-		check_files: function(e, key, value){
-			var files_checked = [];
-			var files = this.get('files');
-			files.forEach(function(file, i){
-				if (Database.has_tag(file.hash, key, value)) files_checked[i] = true;
-			});
-			this.set('files_checked', files_checked);
-		},
+		});
+	};
+	Tagger.remove_from_files = function(key, value, hashes){
+		hashes.forEach(function(hash){
+			Database.remove_tag(hash, {key: key, value: value});
+			update_all_views();
+			Tagger.update('files');
+		});
+	};
+	Tagger.check_files = function(key, value){
+		var files_checked = [];
+		var files = this.get('files');
+		files.forEach(function(file, i){
+			if (Database.has_tag(file.hash, key, value)) files_checked[i] = true;
+		});
+		this.set('files_checked', files_checked);
+	};
+	Tagger.on({
 		check_all_files: function(){
 			var files_checked = [];
 			var l = this.get('files.length');
@@ -1019,154 +1019,155 @@ $(function(){
 				files: [],
 				files_checked: []
 			});
-		},
-		rename_key: function(e, key){
-			e.original.preventDefault();
-			var new_key = prompt('Новое название ключа «'+key+'»', key);
-			if (new_key) {
-				Database.rename_tags({key: key}, {key: new_key});
-				this.update_tags_values_approving();
-			}
-			update_all_views();
-			Tagger.update('files');
-		},
-		filter_tags: function(e, filter){
-			e.original.preventDefault();
-			this.set('tags_filter', filter);
-		},
-		remove_key: function(e, key){
-			e.original.preventDefault();
-			Database.remove_tags({key: key});
-			update_all_views();
-			Tagger.update('files');
-		},
-		approve_tag_value: function(e, key, value, files){
-			var tag = {key: key, value: value};
+		}
+	});
+	Tagger.rename_key = function(key){
+		var new_key = prompt('Новое название ключа «'+key+'»', key);
+		if (new_key) {
+			Database.rename_tags({key: key}, {key: new_key});
+			this.update_tags_values_approving();
+		}
+		update_all_views();
+		Tagger.update('files');
+		return false;
+	};
+	Tagger.filter_tags = function(filter){
+		this.set('tags_filter', filter);
+		return false;
+	};
+	Tagger.remove_key = function(key){
+		Database.remove_tags({key: key});
+		update_all_views();
+		Tagger.update('files');
+		return false;
+	};
+	Tagger.approve_tag_value = function(key, value, files){
+		var tag = {key: key, value: value};
+		if (files && files.length) {
+			files.forEach(function(hash){
+				Database.approve_tags(tag, hash);
+			});
+		} else {
+			Database.approve_tags(tag);
+		}
+		update_all_views();
+		Tagger.update('files');
+		this.reset_tags_checked();
+	};
+	Tagger.remove_tag_value = function(key, value){
+		Database.remove_tags({key: key, value: value});
+		update_all_views();
+		Tagger.update('files');
+		this.reset_tags_checked();
+	};
+	Tagger.edit_tag_key = function(key, value, files){
+		var new_key = prompt('Новый ключ для тега «'+value+'»', key);
+		if (new_key) {
+			var tag1 = {key: key, value: value};
+			var tag2 = {key: new_key, value: value};
 			if (files && files.length) {
 				files.forEach(function(hash){
-					Database.approve_tags(tag, hash);
+					Database.rename_tags(tag1, tag2, hash);
 				});
 			} else {
-				Database.approve_tags(tag);
+				Database.rename_tags(tag1, tag2);
 			}
-			update_all_views();
-			Tagger.update('files');
-			this.reset_tags_checked();
-		},
-		remove_tag_value: function(e, key, value){
-			Database.remove_tags({key: key, value: value});
-			update_all_views();
-			Tagger.update('files');
-			this.reset_tags_checked();
-		},
-		edit_tag_key: function(e, key, value, files){
-			var new_key = prompt('Новый ключ для тега «'+value+'»', key);
-			if (new_key) {
-				var tag1 = {key: key, value: value};
-				var tag2 = {key: new_key, value: value};
-				if (files && files.length) {
-					files.forEach(function(hash){
-						Database.rename_tags(tag1, tag2, hash);
-					});
-				} else {
-					Database.rename_tags(tag1, tag2);
-				}
-				this.update_tags_keys_approving().then(function(){
-					update_all_views();
-					Tagger.update('files');
-					Tagger.reset_tags_checked();
-				});
-			}
-		},
-		edit_tag_value: function(e, key, value, files){
-			var new_value = prompt('Новое значение для тега «'+key+'»', value);
-			if (new_value) {
-				var tag1 = {key: key, value: value};
-				var tag2 = {key: key, value: new_value};
-				if (files && files.length) {
-					files.forEach(function(hash){
-						Database.rename_tags(tag1, tag2, hash);
-					});
-				} else {
-					Database.rename_tags(tag1, tag2);
-				}
-				this.update_tags_values_approving();
-				this.reset_tags_checked();
-			}
-		},
-		approve_checked_tags: function(){
-			var key = this.get('a_key');
-			var values = this.get('a_values_checked');
-			values.forEach(function(value, i){
-				Database.approve_tags({key: key, value: value});
+			this.update_tags_keys_approving().then(function(){
+				update_all_views();
+				Tagger.update('files');
+				Tagger.reset_tags_checked();
 			});
+		}
+	};
+	Tagger.edit_tag_value = function(key, value, files){
+		var new_value = prompt('Новое значение для тега «'+key+'»', value);
+		if (new_value) {
+			var tag1 = {key: key, value: value};
+			var tag2 = {key: key, value: new_value};
+			if (files && files.length) {
+				files.forEach(function(hash){
+					Database.rename_tags(tag1, tag2, hash);
+				});
+			} else {
+				Database.rename_tags(tag1, tag2);
+			}
 			this.update_tags_values_approving();
 			this.reset_tags_checked();
-		},
-		remove_checked_tags: function(){
-			var key = this.get('a_key');
+		}
+	};
+	Tagger.approve_checked_tags = function(){
+		var key = this.get('a_key');
+		var values = this.get('a_values_checked');
+		values.forEach(function(value, i){
+			Database.approve_tags({key: key, value: value});
+		});
+		this.update_tags_values_approving();
+		this.reset_tags_checked();
+	};
+	Tagger.remove_checked_tags = function(){
+		var key = this.get('a_key');
+		var values = this.get('a_values_checked');
+		values.forEach(function(value, i){
+			Database.remove_tags({key: key, value: value});
+		});
+		this.set('all_tags_checked', false);
+		this.update_tags_keys_approving().then(function(){
+			Tagger.update_tags_values_approving();
+			Tagger.reset_tags_checked();
+		});
+	};
+	Tagger.rename_checked_tags_values = function(){
+		var key = this.get('a_key');
+		var new_key = prompt('Новое название ключа для отмеченных тегов', key);
+		if (new_key) {
 			var values = this.get('a_values_checked');
 			values.forEach(function(value, i){
-				Database.remove_tags({key: key, value: value});
+				Database.rename_tags({key: key, value: value}, {key: new_key, value: value});
 			});
 			this.set('all_tags_checked', false);
 			this.update_tags_keys_approving().then(function(){
 				Tagger.update_tags_values_approving();
-				Tagger.reset_tags_checked();
 			});
-		},
-		rename_checked_tags_values: function(){
-			var key = this.get('a_key');
-			var new_key = prompt('Новое название ключа для отмеченных тегов', key);
-			if (new_key) {
-				var values = this.get('a_values_checked');
-				values.forEach(function(value, i){
-					Database.rename_tags({key: key, value: value}, {key: new_key, value: value});
-				});
-				this.set('all_tags_checked', false);
-				this.update_tags_keys_approving().then(function(){
-					Tagger.update_tags_values_approving();
-				});
-			}
-		},
-		clear_auto_tags: function(){
-			Database.remove_auto_tags();
-			update_all_views();
-			Tagger.update('files');
-		},
-		regexp_tags: function(e, pattern){
-			e.original.preventDefault();
-			this.set('name_tpl', pattern);
-		},
-		parse_tags: function(e, pattern){
-			var reg;
-			try {
-				reg = new RegExp(pattern, 'i');
-			} catch(e) {
-				reg = new RegExp('', 'i');
-			}
-			var files = this.get('files');
-			var checked_files_hashes = this.get('checked_files_hashes');
-			files.forEach(function(file, i){
-				if (checked_files_hashes.indexOf(file.hash) == -1) return;
-				var clearname = file.name.match(/(.+?)(\.[^.]*$|$)/)[1];
-				var match = clearname.match(reg);
-				if (match && match.length > 1){
-					match.forEach(function(m, i){
-						if (i==0) return;
-						Database.add_tag({hash: file.hash}, {key: '#AUTO#'+i, value: m, auto: true}, function(){
-							update_all_views();
-							Tagger.update('files');
-						});
+		}
+	};
+	Tagger.clear_auto_tags = function(){
+		Database.remove_auto_tags();
+		update_all_views();
+		Tagger.update('files');
+	};
+	Tagger.regexp_tags = function(pattern){
+		this.set('name_tpl', pattern);
+		return false;
+	};
+	Tagger.parse_tags = function(pattern){
+		var reg;
+		try {
+			reg = new RegExp(pattern, 'i');
+		} catch(e) {
+			reg = new RegExp('', 'i');
+		}
+		var files = this.get('files');
+		var checked_files_hashes = this.get('checked_files_hashes');
+		files.forEach(function(file, i){
+			if (checked_files_hashes.indexOf(file.hash) == -1) return;
+			var clearname = file.name.match(/(.+?)(\.[^.]*$|$)/)[1];
+			var match = clearname.match(reg);
+			if (match && match.length > 1){
+				match.forEach(function(m, i){
+					if (i==0) return;
+					Database.add_tag({hash: file.hash}, {key: '#AUTO#'+i, value: m, auto: true}, function(){
+						update_all_views();
+						Tagger.update('files');
 					});
-				}
-			});
-		},
-		exec_file: function(e, path){
-			e.original.preventDefault();
-			GUI.Shell.openItem(path);
-		},
-		
+				});
+			}
+		});
+	};
+	Tagger.exec_file = function(path){
+		GUI.Shell.openItem(path);
+		return false;
+	};
+	Tagger.on({
 		'scroll-db-table': function(e){
 			var scroll_body = $(e.node);
 			var db_table = scroll_body.closest('.db-table');
@@ -1190,14 +1191,14 @@ $(function(){
 				db_table.data('scrollTop', pos_y);
 				db_table.find('.db-table__scroll-body').scrollTop( pos_y );
 			}
-		},
-		set_table_keys: function(e, keys, title){
-			e.original.preventDefault();
-			var table_keys = !keys ? this.get('keys') : keys.split(';').map(function(key){ return key.trim(); });
-			this.set('table_keys', table_keys);
-			this.set('tagset_title', title);
 		}
 	});
+	Tagger.set_table_keys = function(keys, title){
+		var table_keys = !keys ? this.get('keys') : keys.split(';').map(function(key){ return key.trim(); });
+		this.set('table_keys', table_keys);
+		this.set('tagset_title', title);
+		return false;
+	};
 	var save_file_tag_fn = function(e, file, key, old_value){
 		Tagger.update_tags_keys().then(function(){
 			Tagger.update_tags_values();
@@ -1348,54 +1349,54 @@ $(function(){
 					self.set('root_folder', path);
 				});
 			});
-		},
-		regexp_filter: function(e, pattern){
-			e.original.preventDefault();
-			this.set('filefilter', pattern);
-		},
-		'edit-tagset': function(e, tagset){
-			this.set({
-				current_tagset: tagset.title,
-				tagset_title:   tagset.title,
-				tagset_keys:    tagset.keys
-			});
-		},
-		'save-tagset': function(e, title, remove){
-			if (!S.settings.tagsets) S.settings.tagsets = [];
-			if (title) {
-				S.settings.tagsets = S.settings.tagsets.filter(function(ts,i){ return ts.title !== title });
-			}
-			if (!remove) {
-				S.settings.tagsets.push({
-					title: this.get('tagset_title'),
-					keys:  this.get('tagset_keys')
-				});
-				S.settings.tagsets.sort(function(a,b){return (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0);});
-			}
-			Database.save_settings(S.settings);
-			this.set({
-				tagsets: S.settings.tagsets,
-				current_tagset: '',
-				tagset_title:   '',
-				tagset_keys:    ''
-			});
-			Tagger.update_tagsets();
-			Processing.update_tagsets();
-		},
-		'save-pretag': function(){
-			var tag = {
-				key:   this.get('pretag_key'),
-				value: this.get('pretag_value'),
-				auto:  false
-			};
-			Database.add_tag({hash: Database.NoFile}, tag);
-			this.push('pretags', tag);
-		},
-		'remove-pretag': function(e, tag, i){
-			Database.remove_tag(Database.NoFile, tag);
-			this.splice('pretags', i, 1);
 		}
 	});
+	Settings.regexp_filter = function(pattern){
+		this.set('filefilter', pattern);
+		return false;
+	};
+	Settings.edit_tagset = function(tagset){
+		this.set({
+			current_tagset: tagset.title,
+			tagset_title:   tagset.title,
+			tagset_keys:    tagset.keys
+		});
+	};
+	Settings.save_tagset = function(title, remove){
+		if (!S.settings.tagsets) S.settings.tagsets = [];
+		if (title) {
+			S.settings.tagsets = S.settings.tagsets.filter(function(ts,i){ return ts.title !== title });
+		}
+		if (!remove) {
+			S.settings.tagsets.push({
+				title: this.get('tagset_title'),
+				keys:  this.get('tagset_keys')
+			});
+			S.settings.tagsets.sort(function(a,b){return (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0);});
+		}
+		Database.save_settings(S.settings);
+		this.set({
+			tagsets: S.settings.tagsets,
+			current_tagset: '',
+			tagset_title:   '',
+			tagset_keys:    ''
+		});
+		Tagger.update_tagsets();
+		Processing.update_tagsets();
+	};
+	Settings.save_pretag = function(){
+		var tag = {
+			key:   this.get('pretag_key'),
+			value: this.get('pretag_value'),
+			auto:  false
+		};
+		Database.add_tag({hash: Database.NoFile}, tag);
+		this.push('pretags', tag);
+	},
+	Settings.remove_pretag = function(tag, i){
+		Database.remove_tag(Database.NoFile, tag);
+		this.splice('pretags', i, 1);
+	};
 	Settings.load_from_DB = function(){
 		S.settings = Database.get_settings();
 		this.set(S.settings).then(function(){
