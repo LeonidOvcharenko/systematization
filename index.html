@@ -288,22 +288,31 @@
 									</div>
 								</div>
 							</div>
+						</div>
+						<div class="col-xs-4">
+							<button on-click="@this.clear_auto_tags()" class="btn btn-default btn-sm" {{no_auto_tags ? 'disabled' : '' }}>Удалить все автотеги</button>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-xs-12">
 							<table class="table table-condensed table-fixedheader">
 								<thead><tr>
 									<th width="50%"><label><input type="checkbox" checked="{{all_tags_checked}}" {{!a_values.length ? 'disabled' : ''}} /> {{#if a_values.length}}{{a_key}}{{/if}}</label></th>
-									<th width="50%">
+									<th width="30%">
 										<div class="btn-group">
 											<button {{a_values_checked.length ? '' : 'disabled'}} class="btn btn-success btn-xs" on-click="@this.approve_checked_tags()" title="Утвердить все"><i class="fa fa-check"></i></button>
 											<button {{a_values_checked.length ? '' : 'disabled'}} class="btn btn-danger btn-xs"  on-click="@this.remove_checked_tags()"  title="Удалить все"><i class="fa fa-times"></i></button>
 											<button {{a_values_checked.length ? '' : 'disabled'}} class="btn btn-default btn-xs" on-click="@this.rename_checked_tags_values()" title="Редактировать ключ для отмеченных"><i class="fa fa-at"></i></button>
 										</div>
 									</th>
+									<th width="10%"></th>
+									<th width="10%"></th>
 								</tr></thead>
 								<tbody style="height:320px;">
 								{{#a_values}}
 									<tr class="on-hover {{a_values_checked.indexOf(this)!=-1 ? 'active' : ''}}">
 										<td width="50%"><label><input type="checkbox" name="{{a_values_checked}}" value="{{.}}" /> {{.}}</label></td>
-										<td width="50%">
+										<td width="30%">
 											<div class="btn-group on-hover-show">
 												<button class="btn btn-default btn-xs" on-click="@this.approve_tag_value(a_key,this)" title="Утвердить тег" {{tags_filter=='manual' ? 'disabled' : ''}}><i class="fa fa-check text-success"></i></button>
 												<button class="btn btn-default btn-xs" on-click="@this.remove_tag_value(a_key,this)" title="Удалить тег"><i class="fa fa-times text-danger"></i></button>
@@ -312,11 +321,18 @@
 												<button class="btn btn-default btn-xs" on-click="@this.put_to_clipboard_tagged(a_key,this)" title="Добавить файлы в буфер"><i class="fa fa-list"></i></button>
 											</div>
 										</td>
+										<td width="10%">
+											<div class="progress progress-sm" title="{{a_tag_count(a_key,this)}} ({{a_tag_percent(a_key,this)}}%)">
+												<div class="progress-bar" role="progressbar" aria-valuenow="{{a_tag_percent(a_key,this)}}" aria-valuemin="0" aria-valuemax="100" style="width: {{a_tag_percent(a_key,this)}}%;"><span class="sr-only">{{a_tag_percent(a_key,this)}}%</span></div>
+											</div>
+										</td>
+										<td width="10%">
+											<small><b>{{a_tag_count(a_key,this)}}</b> ({{a_tag_percent(a_key,this)}}%)</small>
+										</td>
 									</tr>
 								{{/a_values}}
 								</tbody>
 							</table>
-							<button on-click="@this.clear_auto_tags()" class="btn btn-default btn-sm" {{no_auto_tags ? 'disabled' : '' }}>Удалить все автотеги</button>
 						</div>
 					</div>
 				</div>

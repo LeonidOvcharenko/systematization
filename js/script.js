@@ -358,6 +358,12 @@ $(function(){
 			return files;
 		}
 		,
+		get_tag_count: function(key, value){
+			var query = { '$and': [{ 'key': key }, { 'hash': { '$ne': Database.NoFile } } ] };
+			if (value) query['$and'].push({ 'value': value });
+			return this.tags.count(query);
+		}
+		,
 		get_untagged_files: function(key){
 			var self = this;
 			if (!self.files) return;
@@ -856,7 +862,22 @@ $(function(){
 			name_tpl: '',
 			tagsets: [],
 			tagset_title: '',
-			table_keys: []
+			table_keys: [],
+			a_tag_count: function(key, value){
+				// for auto update on change
+				var a_values = this.get('a_values');
+				return Database.get_tag_count(key, value);
+			},
+			a_tags_total: function(key){
+				return Database.get_tag_count(key);
+			},
+			a_tag_percent: function(key, value){
+				// for auto update on change
+				var a_values = this.get('a_values');
+				var count = this.get('a_tag_count')(key, value);
+				var total = this.get('a_tags_total')(key);
+				return total>0 ? Math.floor(count/total*100) : 0;
+			}
 		},
 		computed: {
 			name_tpl_ok: function(){ 

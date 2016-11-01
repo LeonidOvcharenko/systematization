@@ -57,6 +57,11 @@ body{
 input[type="radio"], input[type="checkbox"] {
 	margin-top: 2px;
 }
+.progress-sm {
+	margin: 7px 0 0;
+	height: 6px;
+}
+
 
 table.table-fixedheader {
 	width: 100%;
