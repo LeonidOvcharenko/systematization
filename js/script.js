@@ -868,6 +868,11 @@ $(function(){
 					reg = null;
 				}
 				return !!reg;
+			},
+			no_auto_tags: function(){
+				// for auto update on change
+				var a_values = this.get('a_values');
+				return Database.get_keys(false).length==0;
 			}
 		},
 		components: {
@@ -1050,17 +1055,17 @@ $(function(){
 		}
 		update_all_views();
 		Tagger.update('files');
-		return false;
+		this.event.original.preventDefault();
 	};
 	Tagger.filter_tags = function(filter){
 		this.set('tags_filter', filter);
-		return false;
+		this.event.original.preventDefault();
 	};
 	Tagger.remove_key = function(key){
 		Database.remove_tags({key: key});
 		update_all_views();
 		Tagger.update('files');
-		return false;
+		this.event.original.preventDefault();
 	};
 	Tagger.approve_tag_value = function(key, value, files){
 		var tag = {key: key, value: value};

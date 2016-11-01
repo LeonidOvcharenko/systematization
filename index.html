@@ -316,7 +316,7 @@
 								{{/a_values}}
 								</tbody>
 							</table>
-							<button on-click="@this.clear_auto_tags()" class="btn btn-default btn-sm">Удалить все автотеги</button>
+							<button on-click="@this.clear_auto_tags()" class="btn btn-default btn-sm" {{no_auto_tags ? 'disabled' : '' }}>Удалить все автотеги</button>
 						</div>
 					</div>
 				</div>
