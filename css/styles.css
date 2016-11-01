@@ -54,6 +54,9 @@ body{
 .dropdown-menu > li > a:after {
 	content: ' ';
 }
+input[type="radio"], input[type="checkbox"] {
+	margin-top: 2px;
+}
 
 table.table-fixedheader {
 	width: 100%;

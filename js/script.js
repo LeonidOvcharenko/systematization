@@ -432,6 +432,7 @@ $(function(){
 		template: '#processing-tpl',
 		data: {
 			tags: 'manual',
+			clear_old: true,
 			keys: [],
 			files: [],
 			files_to_rename: []
@@ -445,6 +446,21 @@ $(function(){
 		}
 	});
 	
+	var remove_folder_recursive = function(path) {
+		try {
+			if( FS.statSync(path).isDirectory() ) {
+				FS.readdirSync(path).forEach(function(file,index){
+					var curPath = path + "/" + file;
+					if(FS.lstatSync(curPath).isDirectory()) { // recurse
+						remove_folder_recursive(curPath);
+					} else { // delete file
+						FS.unlinkSync(curPath);
+					}
+				});
+				FS.rmdirSync(path);
+			}
+		} catch(e) {}
+	};
 	var create_folder = function(dir){
 		try { FS.mkdirSync(dir); }
 		catch(e) { /* dir exists */ }
@@ -479,6 +495,10 @@ $(function(){
 	Processing.on({
 		index: function(){
 			var base_dir = './_index_';
+			// clear old indexes
+			if (this.get('clear_old')){
+				remove_folder_recursive(base_dir);
+			}
 			create_folder(base_dir);
 			// pick keys
 			var f_verified = this.get('tags')=='manual' || undefined;
