@@ -23,6 +23,10 @@ $(function(){
 					this.from_pdf(hash, data);
 					format = 'PDF';
 					break;
+				case 'fb2':
+					this.from_fb2(hash, data);
+					format = 'FB2';
+					break;
 				case 'jpeg':
 				case 'jpe':
 				case 'jpg':
@@ -101,6 +105,26 @@ $(function(){
 		},
 		from_ogg: function(hash, data){
 			var metadata = AudioMetaData.ogg(data);
+			Database.add_tags({hash: hash}, metadata || {}, true);
+		},
+		from_fb2: function(hash, data){
+			var $meta = $( $.parseXML( data.toString('utf8') ) ).find( "description" );
+			if (!$meta[0]) return;
+			var metadata = {};
+			var tags = [
+				'book-title', 'annotation', 'keywords', 'genre', 'lang', 'src-lang', 'title-info date',
+				'author first-name', 'author middle-name', 'author last-name',
+				'translator first-name', 'translator middle-name', 'translator last-name',
+				'book-name', 'publisher', 'city', 'year', 'isbn',
+				'author nickname', 'author homepage', 'author email', 'program-used',
+				'document-info date', 'src-url', 'src-ocr', 'version', 'history', 'custom-info'
+			];
+			tags.forEach(function(tag, i){
+				var $tag = $meta.find(tag);
+				if ($tag.length > 0){
+					metadata[tag] = $tag.map(function(i, t){ return t.innerHTML; }).get().join(', ');
+				}
+			});
 			Database.add_tags({hash: hash}, metadata || {}, true);
 		}
 	};
