@@ -115,7 +115,7 @@ $(function(){
 			var self = this;
 			var dfrd = $.Deferred();
 			var db_loader = function(){
-				self.files     = self.db.getCollection('files')    || self.db.addCollection('files', {exact: ['hash', 'path'], unique: ['hash']});
+				self.files     = self.db.getCollection('files')    || self.db.addCollection('files', {exact: ['hash', 'path'], unique: ['hash', 'path']});
 				self.tags      = self.db.getCollection('tags')     || self.db.addCollection('tags',  {indices: ['key'], unique: ['key/value']});
 				self.settings  = self.db.getCollection('settings') || self.db.addCollection('settings');
 				dfrd.resolve();
@@ -157,6 +157,10 @@ $(function(){
 		,
 		get_file: function(hash){
 			return this.files.findOne({'hash': hash});
+		}
+		,
+		get_file_by_path: function(path){
+			return this.files.findOne({'path': path});
 		}
 		,
 		rename_file: function(file, new_name, ext, version){
@@ -273,18 +277,21 @@ $(function(){
 		,
 		remove_dead_files: function(){
 			var self = this;
-			var files = self.get_all_files();
-			files.forEach(function(file, i){
-				var query = { '$and': [{'path': file.path}, {'hash': file.hash}] };
+			var query = [];
+			self.get_all_files().forEach(function(file, i){
+				var subquery = { '$and': [{'path': file.path}, {'hash': file.hash}] };
 				try {
 					if (!FS.statSync(file.path).isFile()) {
-						self.files.removeWhere(query);
+						query.push(subquery);
 					}
 				} catch(e) {
 					/* file not exists */
-					self.files.removeWhere(query);
+					query.push(subquery);
 				}
 			});
+			if (query.length) {
+				self.files.removeWhere({'$or': query});
+			}
 		}
 		,
 		get_verified_files: function(f){
@@ -424,7 +431,10 @@ $(function(){
 		append: true,
 		template: '#processing-tpl',
 		data: {
-			tags: 'manual'
+			tags: 'manual',
+			keys: [],
+			files: [],
+			files_to_rename: []
 		}
 	});
 	var Indexing = new Ractive({
@@ -503,8 +513,10 @@ $(function(){
 			var reg = new RegExp("\<(.*?)\>", "g");
 			var mask_keys = mask.match(reg) || [];
 			mask_keys = mask_keys.map(function(s){ return s.substr(1, s.length-2); });
-			var files = Database.get_all_files();
+			var files = this.get('files_to_rename');
 			files.forEach(function(file, i){
+				// var file = Database.get_file_by_path(filepath);
+				// if (!file) return;
 				var filetags = Database.get_file_tags(file.hash);
 				var replacer = function (match, key, offset, string) {
 					var filetag = filetags.find(function(tag){ return tag.key == key; });
@@ -929,6 +941,7 @@ $(function(){
 		Tagger.update_tagged_files();
 		
 		Processing.set('keys', Database.get_keys(true));
+		Processing.set('files', Database.get_all_files().sort(function(a,b){return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0);}));
 	};
 	
 	Tagger.put_to_clipboard = function(files){
