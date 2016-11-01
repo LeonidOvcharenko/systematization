@@ -893,7 +893,9 @@ $(function(){
 	};
 	Tagger.add_file_to_clipboard_by_hash = function(hash){
 		var file = Database.get_file(hash);
-		Tagger.add_file_to_clipboard(file);
+		if (file) {
+			Tagger.add_file_to_clipboard(file);
+		}
 	};
 	Tagger.update_tagsets = function(){
 		if (S.settings.tagsets) {
