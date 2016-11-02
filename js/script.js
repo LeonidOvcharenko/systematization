@@ -26,7 +26,8 @@ $(function(){
 					format = 'PDF';
 					break;
 				case 'fb2':
-					this.from_fb2(hash, data);
+					var encoding = this.charset(hash, data);
+					this.from_fb2(hash, data, encoding);
 					format = 'FB2';
 					break;
 				case 'htm':
@@ -124,9 +125,10 @@ $(function(){
 			Database.add_tags({hash: hash}, charset, true);
 			return charset.encoding;
 		},
-		from_fb2: function(hash, data){
+		from_fb2: function(hash, data, enc){
 			try {
-				var $meta = $( $.parseXML( data.toString('utf-8') ) ).find('description');
+				var doc = Iconv.decode(data, enc || 'utf-8');
+				var $meta = $( $.parseXML( doc ) ).find('description');
 				if (!$meta[0]) return;
 				var metadata = {};
 				var tags = [
@@ -267,8 +269,9 @@ $(function(){
 			var self = this;
 			var hash = file.hash || self.add_file(file, callback);
 			for (var key in tags){
+				var value = tags[key];
 				if (!value && value!==0) continue;
-				var value = (tags[key]+'').trim();  // convert numbers, objects and arrays to strings
+				value = (value+'').trim();  // convert numbers, objects and arrays to strings
 				if (value.toString() == "[object Object]") continue;
 				try {
 					var inserted = self.tags.insert({
