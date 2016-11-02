@@ -11,7 +11,8 @@ $(function(){
 	var EXIF = require('exif-reader');
 	var SizeOf = require('image-size');
 	var AudioMetaData = require('audio-metadata');
-	var encoding_detector = require("jschardet");
+	var EncodingDetector = require("jschardet");
+	var Iconv = require('iconv-lite');
 	
 	var Preprocessor = {
 		auto_tags: function(filepath, hash, data){
@@ -27,6 +28,12 @@ $(function(){
 				case 'fb2':
 					this.from_fb2(hash, data);
 					format = 'FB2';
+					break;
+				case 'htm':
+				case 'html':
+					var encoding = this.charset(hash, data);
+					this.from_html(hash, data, encoding);
+					format = 'HTML';
 					break;
 				case 'txt':
 					this.charset(hash, data);
@@ -113,11 +120,12 @@ $(function(){
 			Database.add_tags({hash: hash}, metadata || {}, true);
 		},
 		charset: function(hash, data){
-			var charset = encoding_detector.detect(data);
+			var charset = EncodingDetector.detect(data);
 			Database.add_tags({hash: hash}, charset, true);
+			return charset.encoding;
 		},
 		from_fb2: function(hash, data){
-			var $meta = $( $.parseXML( data.toString('utf8') ) ).find( "description" );
+			var $meta = $( $.parseXML( data.toString('utf-8') ) ).find('description');
 			if (!$meta[0]) return;
 			var metadata = {};
 			var tags = [
@@ -134,6 +142,18 @@ $(function(){
 					metadata[tag] = $tag.map(function(i, t){ return t.innerHTML; }).get().join(', ');
 				}
 			});
+			Database.add_tags({hash: hash}, metadata || {}, true);
+		},
+		from_html: function(hash, data, enc){
+			var doc = Iconv.decode(data, enc || 'utf-8');
+			var $doc = $( $.parseHTML( doc ) );
+			if (!$doc[0]) return;
+			if ($doc.length>1) $doc = $('<html>').append($doc); // for malformed HTML
+			var metadata = {
+				title:       $doc.find('title').text() || $doc.find('body h1').text(),
+				description: $doc.find('meta[name="description"]').attr('content'),
+				keywords:    $doc.find('meta[name="keywords"]').attr('content')
+			};
 			Database.add_tags({hash: hash}, metadata || {}, true);
 		}
 	};
@@ -243,8 +263,9 @@ $(function(){
 			var self = this;
 			var hash = file.hash || self.add_file(file, callback);
 			for (var key in tags){
+				if (!value && value!==0) continue;
 				var value = (tags[key]+'').trim();  // convert numbers, objects and arrays to strings
-				if (!value || value.toString() == "[object Object]") continue;
+				if (value.toString() == "[object Object]") continue;
 				try {
 					var inserted = self.tags.insert({
 						hash:  hash,

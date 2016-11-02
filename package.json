@@ -17,6 +17,7 @@
   "dependencies": {
     "audio-metadata": "^0.3.0",
     "exif-reader": "^1.0.1",
+    "iconv-lite": "^0.4.13",
     "image-size": "^0.5.0",
     "jschardet": "^1.4.1",
     "lokijs": "^1.4.1",
