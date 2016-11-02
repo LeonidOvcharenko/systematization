@@ -11,6 +11,7 @@ $(function(){
 	var EXIF = require('exif-reader');
 	var SizeOf = require('image-size');
 	var AudioMetaData = require('audio-metadata');
+	var encoding_detector = require("jschardet");
 	
 	var Preprocessor = {
 		auto_tags: function(filepath, hash, data){
@@ -26,6 +27,10 @@ $(function(){
 				case 'fb2':
 					this.from_fb2(hash, data);
 					format = 'FB2';
+					break;
+				case 'txt':
+					this.charset(hash, data);
+					format = 'TXT';
 					break;
 				case 'jpeg':
 				case 'jpe':
@@ -106,6 +111,10 @@ $(function(){
 		from_ogg: function(hash, data){
 			var metadata = AudioMetaData.ogg(data);
 			Database.add_tags({hash: hash}, metadata || {}, true);
+		},
+		charset: function(hash, data){
+			var charset = encoding_detector.detect(data);
+			Database.add_tags({hash: hash}, charset, true);
 		},
 		from_fb2: function(hash, data){
 			var $meta = $( $.parseXML( data.toString('utf8') ) ).find( "description" );
