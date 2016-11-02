@@ -125,36 +125,40 @@ $(function(){
 			return charset.encoding;
 		},
 		from_fb2: function(hash, data){
-			var $meta = $( $.parseXML( data.toString('utf-8') ) ).find('description');
-			if (!$meta[0]) return;
-			var metadata = {};
-			var tags = [
-				'book-title', 'annotation', 'keywords', 'genre', 'lang', 'src-lang', 'title-info date',
-				'author first-name', 'author middle-name', 'author last-name',
-				'translator first-name', 'translator middle-name', 'translator last-name',
-				'book-name', 'publisher', 'city', 'year', 'isbn',
-				'author nickname', 'author homepage', 'author email', 'program-used',
-				'document-info date', 'src-url', 'src-ocr', 'version', 'history', 'custom-info'
-			];
-			tags.forEach(function(tag, i){
-				var $tag = $meta.find(tag);
-				if ($tag.length > 0){
-					metadata[tag] = $tag.map(function(i, t){ return t.innerHTML; }).get().join(', ');
-				}
-			});
-			Database.add_tags({hash: hash}, metadata || {}, true);
+			try {
+				var $meta = $( $.parseXML( data.toString('utf-8') ) ).find('description');
+				if (!$meta[0]) return;
+				var metadata = {};
+				var tags = [
+					'book-title', 'annotation', 'keywords', 'genre', 'lang', 'src-lang', 'title-info date',
+					'author first-name', 'author middle-name', 'author last-name',
+					'translator first-name', 'translator middle-name', 'translator last-name',
+					'book-name', 'publisher', 'city', 'year', 'isbn',
+					'author nickname', 'author homepage', 'author email', 'program-used',
+					'document-info date', 'src-url', 'src-ocr', 'version', 'history', 'custom-info'
+				];
+				tags.forEach(function(tag, i){
+					var $tag = $meta.find(tag);
+					if ($tag.length > 0){
+						metadata[tag] = $tag.map(function(i, t){ return t.innerHTML; }).get().join(', ');
+					}
+				});
+				Database.add_tags({hash: hash}, metadata || {}, true);
+			} catch(e) {}
 		},
 		from_html: function(hash, data, enc){
-			var doc = Iconv.decode(data, enc || 'utf-8');
-			var $doc = $( $.parseHTML( doc ) );
-			if (!$doc[0]) return;
-			if ($doc.length>1) $doc = $('<html>').append($doc); // for malformed HTML
-			var metadata = {
-				title:       $doc.find('title').text() || $doc.find('body h1').text(),
-				description: $doc.find('meta[name="description"]').attr('content'),
-				keywords:    $doc.find('meta[name="keywords"]').attr('content')
-			};
-			Database.add_tags({hash: hash}, metadata || {}, true);
+			try {
+				var doc = Iconv.decode(data, enc || 'utf-8');
+				var $doc = $( $.parseHTML( doc ) );
+				if (!$doc[0]) return;
+				if ($doc.length>1) $doc = $('<html>').append($doc); // for malformed HTML
+				var metadata = {
+					title:       $doc.find('title').text() || $doc.find('body h1').text(),
+					description: $doc.find('meta[name="description"]').attr('content'),
+					keywords:    $doc.find('meta[name="keywords"]').attr('content')
+				};
+				Database.add_tags({hash: hash}, metadata || {}, true);
+			} catch(e) {}
 		}
 	};
 
