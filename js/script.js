@@ -13,6 +13,7 @@ $(function(){
 	var AudioMetaData = require('audio-metadata');
 	var EncodingDetector = require("jschardet");
 	var Iconv = require('iconv-lite');
+	var Cheerio = require('cheerio');
 	
 	var Preprocessor = {
 		auto_tags: function(filepath, hash, data){
@@ -128,8 +129,8 @@ $(function(){
 		from_fb2: function(hash, data, enc){
 			try {
 				var doc = Iconv.decode(data, enc || 'utf-8');
-				var $meta = $( $.parseXML( doc ) ).find('description');
-				if (!$meta[0]) return;
+				var $$ = Cheerio.load(doc, {xmlMode: true});
+				var $meta = $$('description');
 				var metadata = {};
 				var tags = [
 					'book-title', 'annotation', 'keywords', 'genre', 'lang', 'src-lang', 'title-info date',
@@ -142,7 +143,7 @@ $(function(){
 				tags.forEach(function(tag, i){
 					var $tag = $meta.find(tag);
 					if ($tag.length > 0){
-						metadata[tag] = $tag.map(function(i, t){ return t.innerHTML; }).get().join(', ');
+						metadata[tag] = $tag.map(function(i, t){ return $$(t).text(); }).get().join(', ');
 					}
 				});
 				Database.add_tags({hash: hash}, metadata || {}, true);
@@ -151,13 +152,11 @@ $(function(){
 		from_html: function(hash, data, enc){
 			try {
 				var doc = Iconv.decode(data, enc || 'utf-8');
-				var $doc = $( $.parseHTML( doc ) );
-				if (!$doc[0]) return;
-				if ($doc.length>1) $doc = $('<html>').append($doc); // for malformed HTML
+				var $doc = Cheerio.load(doc);
 				var metadata = {
-					title:       $doc.find('title').text() || $doc.find('body h1').text(),
-					description: $doc.find('meta[name="description"]').attr('content'),
-					keywords:    $doc.find('meta[name="keywords"]').attr('content')
+					title:       $doc('title').text() || $doc('body h1').text(),
+					description: $doc('meta[name="description"]').attr('content'),
+					keywords:    $doc('meta[name="keywords"]').attr('content')
 				};
 				Database.add_tags({hash: hash}, metadata || {}, true);
 			} catch(e) {}
