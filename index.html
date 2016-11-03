@@ -96,6 +96,9 @@
 												<label class="btn btn-sm btn-default {{tags_view=='list' ? 'active' : ''}}" title="Теги списком">
 													<input type="radio" name="{{tags_view}}" value="list"><i class="fa fa-th"></i>
 												</label>
+												<label class="btn btn-sm btn-default {{tags_view=='files' ? 'active' : ''}}" title="Только файлы">
+													<input type="radio" name="{{tags_view}}" value="files"><i class="fa fa-list"></i>
+												</label>
 											</div>
 										</div>
 									</div>
@@ -124,10 +127,10 @@
 														{{#if tags_view == 'table'}}
 															{{#table_keys:i}}
 															<th class="db-table__cell-tag {{i==active_td.column? 'db-table__cell-tag_wide text-primary' : ''}}" on-click="@this.set_active_td(i,-1)"><small title="{{.}}">{{.}}</small></th>
-															{{else}}
+															{{elseif tags_view == 'list'}}
 															<th><span class="text-muted">…</span></th>
 															{{/table_keys}}
-														{{else}}
+														{{elseif tags_view == 'list'}}
 															<th class="db-table__cell-alltags">
 																<div class="btn-group pull-left" data-toggle="group">
 																	<label class="btn btn-xs btn-default {{tags_type=='' ? 'active' : ''}}" title="Все теги">
@@ -153,7 +156,7 @@
 													{{#if tags_view == 'table'}}
 														{{#table_keys:i}}
 														<th class="db-table__cell-tag {{i==active_td.column ? 'db-table__cell-tag_wide' : ''}}"><small>{{.}}</small></th>
-														{{else}}
+														{{elseif tags_view == 'list'}}
 														<th><span class="text-muted">…</span></th>
 														{{/table_keys}}
 													{{else}}
@@ -175,7 +178,7 @@
 															{{else}}
 															<td></td>
 															{{/table_keys}}
-														{{else}}
+														{{elseif tags_view == 'list'}}
 															<td class="db-table__cell-alltags">
 																{{#each tags(files[i])}}<span on-click="@this.set_tag(this.key,this.value)" class="label label-{{(this.key==~/key) && (this.value==~/value) ? 'primary' : (this.auto ? 'default' : 'success')}} label-link tag-block {{(~/tags_type == 'manual' && this.auto) || (~/tags_type == 'auto' && !this.auto) ? 'hidden' : '' }}" title="{{this.key}}: {{this.value}}"><em>{{this.key}}</em>{{this.value}}</span>{{/each}}
 															</td>
