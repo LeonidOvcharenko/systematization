@@ -759,6 +759,7 @@ $(function(){
 				var input = self.find('input');
 				if (input){
 					input.select();
+					input.focus();
 				}
 			};
 			var selected_to_input = function(val){
@@ -770,7 +771,15 @@ $(function(){
 				});
 				// when input is focused, setting data doesn't affect input
 				if (self.el && self.find('input')){
-					self.find('input').value = val;
+					var input_tag = self.find('input');
+					if ($(input_tag).is(':focus')){
+						var start = input_tag.selectionStart;
+						var end   = input_tag.selectionEnd;
+						input_tag.value = val;
+						input_tag.setSelectionRange(start, end);
+					} else {
+						input_tag.value = val;
+					}
 					self.updateModel('value');
 				}
 			};
@@ -848,7 +857,7 @@ $(function(){
 						var new_tag = {key: self.get('key'), value: '?', auto: true};
 						Database.add_tag(self.get('file'), new_tag);
 						update_tags('?');
-						select_input_text();
+						setTimeout(select_input_text, 200);
 					}
 					// Up or Down
 					else if (e.original.keyCode == 38 || e.original.keyCode == 40) {
