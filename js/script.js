@@ -906,6 +906,7 @@ $(function(){
 			files: [],
 			tags_type: '',
 			tags_view: 'table',
+			active_td: { column: -1, row: -1 },
 			files_checked: [],
 			dir: function(file){
 				return file ? file.path.substring(0, file.path.lastIndexOf(file.name)) : '';
@@ -1061,6 +1062,9 @@ $(function(){
 		Processing.set('files', Database.get_all_files().sort(function(a,b){return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0);}));
 	};
 	
+	Tagger.set_active_td = function(i, j){
+		this.set('active_td', {column: i, row: j});
+	};
 	Tagger.put_to_clipboard = function(files){
 		var self = this;
 		files.forEach(function(file, i){

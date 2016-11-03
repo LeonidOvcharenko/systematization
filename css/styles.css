@@ -194,6 +194,10 @@ a.section {
 }
 .db-table td {
 	height: 70px;
+	transition: height 0.3s;
+}
+.db-table .db-table__row_tall td {
+	height: 100px;
 }
 .db-table__scroll {
 	clear: both;
@@ -272,6 +276,10 @@ a.section {
 }
 .db-table__cell-tag {
 	width: 120px;
+	transition: width 0.3s;
+}
+.db-table__cell-tag_wide {
+	width: 240px;
 }
 .db-table__cell-alltags {
 	width: 1200px;
@@ -368,7 +376,11 @@ select.input-xs option {
 	background-color: rgba(255,255,255,0.7);
 }
 .te select[multiple] {
-	max-height: 40px;
+	height: 40px;
+	transition: height 0.3s;
+}
+.db-table__row_tall .te select[multiple] {
+	height: 70px;
 }
 
 

@@ -122,8 +122,8 @@
 													<thead><tr>
 														<th class="db-table__cell-object"></th>
 														{{#if tags_view == 'table'}}
-															{{#table_keys}}
-															<th class="db-table__cell-tag"><small title="{{.}}">{{.}}</small></th>
+															{{#table_keys:i}}
+															<th class="db-table__cell-tag {{i==active_td.column? 'db-table__cell-tag_wide text-primary' : ''}}" on-click="@this.set_active_td(i,-1)"><small title="{{.}}">{{.}}</small></th>
 															{{else}}
 															<th><span class="text-muted">…</span></th>
 															{{/table_keys}}
@@ -151,8 +151,8 @@
 												<thead><tr class="db-table__row_hidden">
 													<th class="db-table__cell-object"></th>
 													{{#if tags_view == 'table'}}
-														{{#table_keys}}
-														<th class="db-table__cell-tag"><small>{{.}}</small></th>
+														{{#table_keys:i}}
+														<th class="db-table__cell-tag {{i==active_td.column ? 'db-table__cell-tag_wide' : ''}}"><small>{{.}}</small></th>
 														{{else}}
 														<th><span class="text-muted">…</span></th>
 														{{/table_keys}}
@@ -162,14 +162,14 @@
 												</tr></thead>
 												<tbody>
 												{{#each files:i}}
-													<tr class="on-hover {{files_checked.indexOf(files[i].hash)!=-1 ? 'active' : ''}}">
+													<tr class="on-hover {{files_checked.indexOf(files[i].hash)!=-1 ? 'active' : ''}} {{i==active_td.row && tags_view=='table' ? 'db-table__row_tall' : ''}}">
 														<td class="db-table__cell-object">
 															<a class="db-table__view-object on-hover-show" href="{{path}}"><i class="fa fa-eye text-info"></i></a>
 															<label><input type="checkbox" /> {{name}}<br><small>{{dir(.)}}</small></label>
 														</td>
 														{{#if tags_view == 'table'}}
 															{{#table_keys:j}}
-															<td class="db-table__cell-tag">
+															<td class="db-table__cell-tag {{j==active_td.column ? 'db-table__cell-tag_wide' : ''}}" on-click="@this.set_active_td(j,i)">
 																<tagsedit file="{{files[i]}}" key="{{table_keys[j]}}" />
 															</td>
 															{{else}}
@@ -219,10 +219,10 @@
 													</tr></thead>
 													<tbody>
 													{{#each files:i}}
-														<tr class="on-hover {{files_checked.indexOf(files[i].hash)!=-1 ? 'active' : ''}}">
+														<tr class="on-hover {{files_checked.indexOf(files[i].hash)!=-1 ? 'active' : ''}} {{i==active_td.row && tags_view=='table' ? 'db-table__row_tall' : ''}}">
 															<td class="db-table__cell-object">
 																<a class="db-table__view-object on-hover-show" on-click="@this.exec_file(path)" href="{{path}}" target="_blank" title="Открыть файл"><i class="fa fa-eye text-info"></i></a>
-																<label><input type="checkbox" name="{{files_checked}}" value="{{files[i].hash}}" /> {{name}}<br><small class="text-muted">{{dir(.)}}</small></label>
+																<label class="{{i==active_td.row && tags_view=='table' ? 'text-primary' : ''}}"><input type="checkbox" name="{{files_checked}}" value="{{files[i].hash}}" /> {{name}}<br><small class="text-muted">{{dir(.)}}</small></label>
 															</td>
 														</tr>
 													{{/each}}
