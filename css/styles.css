@@ -136,7 +136,7 @@ table label input[type=radio] {
 }
 
 .tag-block {
-	max-width: 160px;
+	max-width: 120px;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
@@ -362,6 +362,10 @@ select.input-xs option {
 .te input[type="text"] {
 	display: block;
 	margin-bottom: 3px;
+}
+.te input:focus + .te-list,
+.te-list:focus, .te-list:active {
+	background-color: rgba(255,255,255,0.7);
 }
 .te select[multiple] {
 	max-height: 40px;
