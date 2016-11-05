@@ -2,6 +2,7 @@ $(function(){
 	var Database;
 	var S = {
 		interval: {
+			read_file: 50,
 			update_view: 10000,
 			db_save: 5000
 		},
@@ -78,7 +79,7 @@ $(function(){
 					format = 'OGG';
 					break;
 				default:
-					console.log('No processor for ',ext);
+					console.warn('No processor for ',ext);
 					break;
 			}
 			if (ext) {
@@ -1356,13 +1357,15 @@ $(function(){
 			filter = null;
 		}
 		
-		var files_dropped = [];
 		var push_file = function(file){
-			// TODO: make low priority queue, esp. if total size > 10M
 			var m = file.name.match(filter);
 			if (filter && (!m || !m[0])){ return; }
-			callback(file);
-			// files_dropped.push(file);
+			$.queue(window, 'import', function(){
+				setTimeout(function(){
+					callback(file);
+					$.dequeue(window, 'import');
+				}, S.interval.read_file);
+			});
 		};
 		var readFileTree = function(item) {
 			if (item.isFile) {
@@ -1397,13 +1400,7 @@ $(function(){
 				}
 			}
 		}
-		// TODO: make low priority queue, esp. if total size > 10M
-		/* for (var i=0; i<files_dropped.length; i++){
-			// total_size += files_dropped[i].size;
-			callback(files_dropped[i]);
-			console.log(files_dropped[i].name);
-		}
-		*/
+		$.dequeue(window, 'import');
 	};
 	$('#dropzone-tags').on('drop', function(e){
 		all_dropped_files(e.originalEvent.dataTransfer.items, function(file){
