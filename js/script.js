@@ -628,7 +628,7 @@ $(function(){
 		isolated: true,
 		template:
 			'<div class="es">'+
-				'<input type="text" class="es-input form-control" value="{{value}}" autocomplete="off" lazy="300" on-input-keydown="on_key" on-input-keyup="filter" on-blur="hide_list" on-focus="show_list" />'+
+				'<input type="text" class="es-input form-control" value="{{value}}" autocomplete="off" on-input-keydown="on_key" on-input-keyup="filter" on-blur="hide_list" on-focus="show_list" />'+
 				'<span class="es-clear {{value ? \'show\' : \'hide\'}} text-danger fa fa-times" on-click="clear" title="Очистить"></span>'+
 				'<ul class="es-list dropdown-menu {{(list_visible && !no_matches) ? \'show\' : \'hide\'}}">'+
 					'{{#list:i}}<li class="{{visible[i] ? \'show\' : \'hide\' }} {{active==i ? \'active\' : \'\' }}">'+
@@ -670,22 +670,20 @@ $(function(){
 					var self = this;
 					switch (e.original.keyCode) {
 						case 38: // Up
-							e.original.preventDefault();
-							var l = self.get('list.length');
-							if (l==0) break;
-							if (!self.get('list_visible')) { self.fire('show_list',e); };
-							var a = self.get('active') || 0;
-							while (a>0 && !self.get('visible.'+a)) { a--; }
-							self.set('active', (a+l-1)%l);
-							break;
 						case 40: // Down
 							e.original.preventDefault();
 							var l = self.get('list.length');
 							if (l==0) break;
-							if (!self.get('list_visible')) { self.fire('show_list',e); break; };
-							var a = self.get('active') >= 0 ? self.get('active') : -1;
-							while (a<l && !self.get('visible.'+a)) { a++; }
-							self.set('active', (a+1)%l);
+							if (!self.get('list_visible')) { self.fire('show_list',e); };
+							var visible = [];
+							self.get('visible').forEach(function(v, i){ if (v) visible.push(i); });
+							var a = self.get('active') || visible[0] || 0;
+							if (e.original.keyCode==38) {
+								visible.reverse();
+							}
+							var index = visible.findIndex(function(v){ return v==a; });
+							if (visible.length && ((index+1)%visible.length != 0)) a = visible[index+1];
+							self.set('active', Math.min(Math.max(0, a), l-1));
 							break;
 						case 13: // Enter
 							if (e.original.keyCode == 13) e.original.preventDefault();
@@ -707,14 +705,13 @@ $(function(){
 					var self = this;
 					var list = self.get('list');
 					var search = (self.get('value') || '').toLowerCase().trim();
-					var first = self.get('active') >=0 ? self.get('active') : -1;
 					var no_matches = true;
 					for (var i=0; i<list.length; i++){
 						var found = (list[i] || '').toLowerCase().indexOf(search) >= 0;
 						self.set('visible.'+i, found);
 						no_matches = no_matches && !found;
-						if (found && first==-1) { self.set('active', i); first = i; }
 					}
+					if (no_matches) self.set('active', 0);
 					self.set('no_matches', no_matches);
 				}
 			});
