@@ -1532,6 +1532,11 @@ $(function(){
 		this.set('pretags', Database.get_file_tags(Database.NoFile));
 	};
 	
+	var win = GUI.Window.get();
+	win.on('close',function() {
+		Database.db.saveDatabase();
+		win.close(true);
+	});
 	Database.init().then(function(){
 		Settings.load_from_DB();
 		update_all_views();
