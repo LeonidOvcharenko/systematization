@@ -345,10 +345,7 @@ $(function(){
 				}
 			);
 			// TODO: зачистить непереименованные теги
-			/*
-			if (tag1.value && tag1.value != tag2.value) {
-				this.tags.removeWhere({ '$and': [{ 'key':  }, {}] });
-			}*/
+			this.remove_tags_duplicates();
 		}
 		,
 		get_all_files: function(){
@@ -459,6 +456,15 @@ $(function(){
 			return untagged;
 		}
 		,
+		remove_tags_duplicates: function(){
+			var self = this;
+			var tags = self.tags.data;
+			var dups = tags.filter(function(tag){ return self.tags.count({ 'key/value': tag['key/value'] }) > 1; });
+			dups.forEach(function(tag){
+				if (self.tags.count({ 'key/value': tag['key/value'] }) > 1) self.tags.remove(tag);
+			});
+		}
+		,
 		remove_empty_tags: function(){
 			var self = this;
 			var query = { '$or': [{ 'key': '' }, { 'key': null }, { 'key': void 0 }, { 'value': '' }, { 'value': null }, { 'value': void 0 }] };
@@ -508,6 +514,7 @@ $(function(){
 		},
 		'optimize': function(){
 			Database.remove_dead_files();
+			Database.remove_tags_duplicates();
 			Database.remove_empty_tags();
 			ViewDB.update_stats();
 		},
