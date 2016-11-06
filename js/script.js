@@ -1,4 +1,18 @@
 $(function(){
+	var get_timestamp = function(){
+		var now = new Date();
+		var dd = now.getDate();
+		if (dd < 10) { dd = '0'+dd }
+		var mm = now.getMonth()+1; //January is 0!
+		if (mm < 10) { mm = '0'+mm }
+		var yyyy = now.getFullYear();
+		var hh = now.getHours();
+		if (hh < 10) { hh = '0'+mm }
+		var nn = now.getMinutes();
+		if (nn < 10) { nn = '0'+nn }
+		return dd+'.'+mm+'.'+yyyy+' '+hh+':'+nn;
+	};
+
 	var Database;
 	var S = {
 		interval: {
@@ -85,6 +99,7 @@ $(function(){
 			if (ext) {
 				Database.add_tag({hash: hash}, {key: '#Format', value: format, auto: false});
 			}
+			Database.add_tag({hash: hash}, {key: '#Added', value: get_timestamp(), auto: true});
 		},
 		image_size: function(hash, filepath){
 			var dimensions = SizeOf(filepath);
@@ -531,19 +546,6 @@ $(function(){
 	var create_folder = function(dir){
 		try { FS.mkdirSync(dir); }
 		catch(e) { /* dir exists */ }
-	};
-	var get_timestamp = function(){
-		var now = new Date();
-		var dd = now.getDate();
-		if (dd < 10) { dd = '0'+dd }
-		var mm = now.getMonth()+1; //January is 0!
-		if (mm < 10) { mm = '0'+mm }
-		var yyyy = now.getFullYear();
-		var hh = now.getHours();
-		if (hh < 10) { hh = '0'+mm }
-		var nn = now.getMinutes();
-		if (nn < 10) { nn = '0'+nn }
-		return dd+'.'+mm+'.'+yyyy+' '+hh+':'+nn;
 	};
 	var create_tag_index_file = function(filename, key, value, files){
 		Indexing.set({
