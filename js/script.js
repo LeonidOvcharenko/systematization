@@ -1354,15 +1354,18 @@ $(function(){
 			filter = null;
 		}
 		
+		var import_started = false;
 		var push_file = function(file){
 			var m = file.name.match(filter);
 			if (filter && (!m || !m[0])){ return; }
-			$.queue(window, 'import', function(){
-				setTimeout(function(){
-					callback(file);
-					$.dequeue(window, 'import');
-				}, S.interval.read_file);
-			});
+			$(window).queue('import', function(next){
+				callback(file);
+				next();
+			}).delay(S.interval.read_file, 'import');
+			if (!import_started) {
+				$(window).dequeue('import');
+				import_started = true;
+			}
 		};
 		var readFileTree = function(item) {
 			if (item.isFile) {
@@ -1397,7 +1400,6 @@ $(function(){
 				}
 			}
 		}
-		$.dequeue(window, 'import');
 	};
 	$('#dropzone-tags').on('drop', function(e){
 		all_dropped_files(e.originalEvent.dataTransfer.items, function(file){
