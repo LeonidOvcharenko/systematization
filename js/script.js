@@ -344,6 +344,11 @@ $(function(){
 					return obj;
 				}
 			);
+			// TODO: зачистить непереименованные теги
+			/*
+			if (tag1.value && tag1.value != tag2.value) {
+				this.tags.removeWhere({ '$and': [{ 'key':  }, {}] });
+			}*/
 		}
 		,
 		get_all_files: function(){
