@@ -203,6 +203,25 @@ $(function(){
 		,
 		NoFile: '-'
 		,
+		rebuild_collection: function(collection){
+			var coll = this[collection];
+			var data = coll.data.map(function(obj, i){
+				obj.$loki = i;
+				var clone = Object.assign({}, obj);
+				delete clone.meta;
+				delete clone.$loki;
+				return clone;
+			});
+			coll.ensureId();
+			coll.chain().remove();
+			data.forEach(function(obj){
+				try { coll.insert(obj); }
+				catch (e) {}
+			});
+			coll.ensureAllIndexes();
+			this.db.saveDatabase();
+		}
+		,
 		hash_file: function(data){
 			return Crypto.createHash('sha1').update(data).digest('hex');
 		}
@@ -524,6 +543,10 @@ $(function(){
 			Database.remove_empty_tags();
 			ViewDB.update_stats();
 		},
+		'rebuild': function(){
+			Database.rebuild_collection('files');
+			Database.rebuild_collection('tags');
+		}
 	});
 	
 	var Processing = new Ractive({
