@@ -189,7 +189,7 @@ $(function(){
 			var self = this;
 			var dfrd = $.Deferred();
 			var db_loader = function(){
-				self.files     = self.db.getCollection('files')    || self.db.addCollection('files', {exact: ['hash', 'path'], unique: ['hash', 'path']});
+				self.files     = self.db.getCollection('files')    || self.db.addCollection('files', {exact: ['hash', 'path'], unique: ['path']});
 				self.tags      = self.db.getCollection('tags')     || self.db.addCollection('tags',  {indices: ['key'], unique: ['key/value']});
 				self.settings  = self.db.getCollection('settings') || self.db.addCollection('settings');
 				dfrd.resolve();
@@ -345,31 +345,45 @@ $(function(){
 				}
 			);
 			// TODO: зачистить непереименованные теги
-			this.remove_tags_duplicates();
+			this.remove_duplicates('tags','key/value');
 		}
 		,
 		get_all_files: function(){
 			var self = this;
-			return self.files.data;
+			// do not use direct access to DB objects
+			return self.files.data.map(function(f){ return {hash: f.hash, name: f.name, path: f.path}; });
 		}
 		,
 		remove_dead_files: function(){
 			var self = this;
 			var query = [];
 			self.get_all_files().forEach(function(file, i){
-				var subquery = { '$and': [{'path': file.path}, {'hash': file.hash}] };
+				var subquery = {'path': file.path};
 				try {
 					if (!FS.statSync(file.path).isFile()) {
 						query.push(subquery);
 					}
-				} catch(e) {
-					/* file not exists */
+				} catch(e) {  // file not exists
 					query.push(subquery);
 				}
 			});
 			if (query.length) {
 				self.files.removeWhere({'$or': query});
 			}
+		}
+		,
+		remove_duplicates: function(collection, property){
+			var self = this;
+			var items = self[collection].data;
+			var query = {};
+			var dups = items.filter(function(item){
+				query[property] = item[property];
+				return self[collection].count(query) > 1;
+			});
+			dups.forEach(function(item){
+				query[property] = item[property];
+				if (self[collection].count(query)>1) self[collection].remove(item);
+			});
 		}
 		,
 		get_verified_files: function(f){
@@ -456,15 +470,6 @@ $(function(){
 			return untagged;
 		}
 		,
-		remove_tags_duplicates: function(){
-			var self = this;
-			var tags = self.tags.data;
-			var dups = tags.filter(function(tag){ return self.tags.count({ 'key/value': tag['key/value'] }) > 1; });
-			dups.forEach(function(tag){
-				if (self.tags.count({ 'key/value': tag['key/value'] }) > 1) self.tags.remove(tag);
-			});
-		}
-		,
 		remove_empty_tags: function(){
 			var self = this;
 			var query = { '$or': [{ 'key': '' }, { 'key': null }, { 'key': void 0 }, { 'value': '' }, { 'value': null }, { 'value': void 0 }] };
@@ -513,8 +518,9 @@ $(function(){
 			Database.db.saveDatabase();
 		},
 		'optimize': function(){
+			Database.remove_duplicates('files','path');
 			Database.remove_dead_files();
-			Database.remove_tags_duplicates();
+			Database.remove_duplicates('tags','key/value');
 			Database.remove_empty_tags();
 			ViewDB.update_stats();
 		},
