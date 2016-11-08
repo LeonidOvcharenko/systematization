@@ -18,7 +18,7 @@ $(function(){
 		interval: {
 			read_file: 50,
 			update_view: 10000,
-			db_save: 5000
+			db_save: 15000
 		},
 		settings: {}
 	};
