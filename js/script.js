@@ -261,8 +261,13 @@ $(function(){
 			new_name = Sanitize_Filename(new_name+(version ? ' ('+version+')' : '')+ext, {replacement:'_'});
 			var new_path = file.path.substring(0, file.path.lastIndexOf(file.name))+new_name;
 			try {
-				version = version > 0 ? version+1 : 1;
-				if (FS.statSync(new_path).isFile()) return Database.rename_file(file, new_name_raw, ext, version);  // prevent file overwriting
+				if (FS.statSync(new_path).isFile()) {
+					var existing_file = FS.readFileSync(new_path);
+					var existing_hash = Database.hash_file(existing_file);
+					if (existing_hash == file.hash) return;  // same file
+					version = version > 0 ? version+1 : 1;  // prevent file overwriting
+					return Database.rename_file(file, new_name_raw, ext, version);
+				}
 			} catch(e) { /* file not exists */ }
 			try {
 				FS.renameSync(file.path, new_path);
@@ -276,6 +281,7 @@ $(function(){
 						return f;
 					}
 				);
+				Tagger.update('files');
 			}
 			catch (e){}
 		}
@@ -557,6 +563,7 @@ $(function(){
 			tags: 'manual',
 			clear_old: true,
 			keys: [],
+			file_filter: '',
 			files: [],
 			files_to_rename: []
 		}
@@ -602,6 +609,17 @@ $(function(){
 		this.set('mask', mask);
 		this.event.original.preventDefault();
 	};
+	Processing.observe({
+		'file_filter files': function(){
+			var s = this.get('file_filter');
+			var files = this.get('files');
+			files.forEach(function(f){
+				var name = f.name.toLowerCase();
+				f.filtered = s ? name.toLowerCase().indexOf(s)==-1 : false;
+			});
+			this.set('files', files);
+		}
+	});
 	Processing.on({
 		index: function(){
 			var base_dir = './_index_';
@@ -637,6 +655,10 @@ $(function(){
 					}
 				});
 			});
+		},
+		load_files: function(){
+			var files = Database.get_all_files().sort(function(a,b){return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0);});
+			Processing.set('files', files);
 		},
 		rename: function(){
 			var mask = this.get('mask');
@@ -1100,7 +1122,7 @@ $(function(){
 		Tagger.update_tagged_files();
 		
 		Processing.set('keys', Database.get_keys(true));
-		Processing.set('files', Database.get_all_files().sort(function(a,b){return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0);}));
+		// Processing.set('files', Database.get_all_files().sort(function(a,b){return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0);}));
 	};
 	
 	Tagger.set_active_td = function(i, j){

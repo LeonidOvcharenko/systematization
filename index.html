@@ -373,9 +373,13 @@
 						<div class="panel-heading">Переименование</div>
 						<div class="panel-body">
 							<div class="form-group">
-								<label>Файлы:</label>
+								<label>
+									<button class="btn btn-default btn-xs" on-click="load_files"><i class="fa fa-arrow-circle-down"></i></button>
+									Файлы:
+								</label>
+								<input type="text" class="form-control" value="{{file_filter}}" />
 								<select class="form-control" value="{{files_to_rename}}" multiple>
-									{{#files}}<option value="{{.}}">{{name}}</option>{{/files}}
+									{{#files}}<option value="{{.}}" class="{{.filtered ? 'hidden' : ''}}">{{name}}</option>{{/files}}
 								</select>
 							</div>
 							<div class="form-group">
