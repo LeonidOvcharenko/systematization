@@ -23,8 +23,7 @@ $(function(){
 		settings: {}
 	};
 	
-	var EXIF = require('exif-reader');
-	var SizeOf = require('image-size');
+	var Exiftool = require('exiftool');
 	var AudioMetaData = require('audio-metadata');
 	var EncodingDetector = require("jschardet");
 	var Iconv = require('iconv-lite');
@@ -36,74 +35,69 @@ $(function(){
 			var ext = filepath.match(/\.(\w+)$/);
 			ext = (ext && ext[1]) ? ext[1].toLowerCase() : '';
 			var format = ext;
-			switch (ext) {
-				case 'pdf':
-					this.from_pdf(hash, data);
-					format = 'PDF';
-					break;
-				case 'fb2':
-					var encoding = this.charset(hash, data);
-					this.from_fb2(hash, data, encoding);
-					format = 'FB2';
-					break;
-				case 'htm':
-				case 'html':
-					var encoding = this.charset(hash, data);
-					this.from_html(hash, data, encoding);
-					format = 'HTML';
-					break;
-				case 'txt':
-					this.charset(hash, data);
-					format = 'TXT';
-					break;
-				case 'jpeg':
-				case 'jpe':
-				case 'jpg':
-				case 'jfif':
-				case 'jif':
-					this.from_exif(hash, data);
-					this.image_size(hash, filepath);
-					format = 'JPEG';
-					break;
-				case 'tiff':
-				case 'tif':
-					this.from_exif(hash, data);
-					this.image_size(hash, filepath);
-					format = 'TIFF';
-					break;
-				case 'png':
-				case 'bmp':
-				case 'gif':
-				case 'psd':
-				case 'svg':
-					this.image_size(hash, filepath);
-					format = ext.toUpperCase();
-					break;
-				case 'webp':
-					this.image_size(hash, filepath);
-					format = 'WebP';
-					break;
-				case 'mp3':
-					this.from_mp3(hash, data);
-					format = 'MP3';
-					break;
-				case 'ogg':
-				case 'oga':
-					this.from_ogg(hash, data);
-					format = 'OGG';
-					break;
-				default:
-					console.warn('No processor for ',ext);
-					break;
+			var processed = false;
+			var check_format = function(group, extensions, use_exiftool, func){
+				if (!processed && extensions.split('/').indexOf(ext) != -1) {
+					format = group;
+					if (use_exiftool) self.exiftool(hash, data);
+					if (func) func();
+					processed = true;
+				}
 			}
-			if (ext) {
+			/* Documents */
+			check_format('Plain text', 'txt/log', false, function(){
+				self.charset(hash, data);
+			});
+			check_format('HTML', 'htm/html/xhtml', false, function(){
+				var encoding = self.charset(hash, data);
+				self.from_html(hash, data, encoding);
+			});
+			check_format('E-book', 'fb2', false, function(){
+				var encoding = self.charset(hash, data);
+				self.from_fb2(hash, data, encoding);
+			});
+/*			pdf:
+				this.from_pdf(hash, data);
+*/
+			check_format('Document',        'rtf/pdf/pages/doc/dot/docx/docm/dotx/dotm', true);
+			check_format('Spreadsheet',     'xls/xlt/xlsx/xlsm/xlsb/xltx/xltm/numbers', true);
+			check_format('Presentation',    'ppt/pps/potx/potm/ppsx/ppsm/pptx/pptm', true);
+			check_format('E-book',          'djv/djvu/mobi/azw/azw3/chm/epub', true);
+			/* Images */
+			check_format('JPEG',            'jpeg/jpe/jpg/jfif/jif', true);
+			check_format('TIFF',            'tif/tiff/dng', true);
+			check_format('GIF',             'gif', true);
+			check_format('PNG',             'png/jng/mng', true);
+			check_format('RAW Image',       '3fr/arw/cr2/crw/ciff/dcr/dv/erf/k25/kdc/mrw/nef/nrw/orf/pef/raf/raw/rw2/rwl/sr2/srf/srw/x3f', true);
+			check_format('Bitmap',          'bmp/dib', true);
+			check_format('Vector graphics', 'svg/ai/ps/eps/epsf', true);
+			check_format('Raster graphics', 'psd/psb/webp', true);
+			/* Audio */
+			check_format('Lossy Audio',     'aif/aiff/aifc/asf/mp3/m4a/oga/ogg/ra/wma', true);
+			check_format('Lossless Audio',  'ape/flac/mka/wav/wv', true);
+			/* Video */
+			check_format('Video',           '3g2/3gp2/3gp/3gpp/avi/mpeg/mp4/mpg/m2v/m4b/m4p/m4v/mkv/mov/rm/rv/qt/ogv/vob/webm/wmv', true);
+			/* Misc */
+			check_format('Archive',         'zip/rar/gz/gzip/tar/iso', true);
+			check_format('Adobe Flash',     'fla/swf', true);
+			check_format('Font',            'dfont/otf/pfa/pfb/pfm/ttf/ttc', true);
+			check_format('Contacts',        'vcf/vcard', true);
+			check_format('Subtitles',       'mks', true);
+			check_format('Executable',      'exe/dll/a/o/dylib/so', true);
+			check_format('Exif',            'exif', true);
+
+			if (!processed) console.warn('No processor for ',ext);
+			if (format) {
 				Database.add_tag({hash: hash}, {key: '#Format', value: format, auto: false});
 			}
 			Database.add_tag({hash: hash}, {key: '#Added', value: get_timestamp(), auto: true});
 		},
-		image_size: function(hash, filepath){
-			var dimensions = SizeOf(filepath);
-			Database.add_tags({hash: hash}, dimensions || {}, true);
+		exiftool: function(hash, data){
+			Exiftool.metadata(data, function (err, metadata) {
+				if (err) return;
+				delete metadata.exiftoolVersionNumber;
+				Database.add_tags({hash: hash}, metadata, true);
+			});
 		},
 		from_pdf: function(hash, data){
 			var pdf_file = new Uint8Array(data);
@@ -114,18 +108,6 @@ $(function(){
 					}
 				}).catch(function(err) { /* Error getting metadata */ });
 			}).catch(function(err) { /* Error getting PDF */ });
-		},
-		from_exif: function(hash, data){
-			var exif_container = data.indexOf('Exif');
-			if (exif_container != -1) {
-				try {
-					var metadata = EXIF(data.slice(exif_container));
-					Database.add_tags({hash: hash}, metadata.image || {}, true);
-					Database.add_tags({hash: hash}, metadata.exif  || {}, true);
-					Database.add_tags({hash: hash}, metadata.gps   || {}, true);
-				}
-				catch(e){}
-			}
 		},
 		from_mp3: function(hash, data){
 			var metadata = AudioMetaData.id3v2(data);

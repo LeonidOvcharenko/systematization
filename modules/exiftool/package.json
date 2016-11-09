@@ -1,0 +1,51 @@
+{
+  "name": "exiftool",
+  "version": "0.0.4",
+  "description": "Metadata extraction from numerous filetypes including JPEG, PNG, PDF, MOV, WMV, MP3, MP4, and others.",
+  "main": "./lib/exiftool",
+  "author": {
+    "name": "Nathan Peck",
+    "email": "nathan@storydesk.com"
+  },
+  "devDependencies": {
+    "mocha": "1.17.1",
+    "chai": "1.8.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/nathanpeck/exiftool.git"
+  },
+  "keywords": [
+    "exif",
+    "file",
+    "metadata",
+    "binary",
+    "image",
+    "video",
+    "PNG",
+    "PDF"
+  ],
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://raw.githubusercontent.com/nathanpeck/exiftool/master/LICENSE"
+    }
+  ],
+  "dependencies": {
+    "dist-exiftool": "^10.25.0"
+  },
+  "readmeFilename": "README.md",
+  "scripts": {
+    "test": "mocha -R spec -s 100 ./tests/test.js"
+  },
+  "gitHead": "ae2ae694c8afecde84c4693559f1c2e767dce1a7",
+  "readme": "# exiftool [![Build Status](https://travis-ci.org/nathanpeck/exiftool.svg?branch=master)](https://travis-ci.org/nathanpeck/exiftool)\r\n\r\nA node.js wrapper around [exiftool](http://owl.phy.queensu.ca/~phil/exiftool/), a commandline utility that can extract metadata from many different filetypes, including JPEG, PNG, PDF, WMV, MOV. For a full list see the [exiftool list of supported filetypes](http://www.sno.phy.queensu.ca/~phil/exiftool/#supported).\r\n\r\n## Installation\r\n\r\nTo make use of exiftool you will need to download and install the appropriate exiftool package for your system.\r\n\r\n__Mac OS X:__\r\n\r\n```\r\nsudo brew update\r\nsudo brew install exiftool\r\n```\r\n\r\n__Ubuntu:__\r\n\r\n```\r\nsudo apt-get update\r\nsudo apt-get install libimage-exiftool-perl\r\n```\r\n\r\nFor other systems or for information on how to compile exiftool from source refer to the [official documentation for exiftool](http://www.sno.phy.queensu.ca/~phil/exiftool/install.html).\r\n\r\n## Usage\r\n\r\n```js\r\nvar exif = require('exiftool');\r\nvar fs   = require('fs');\r\n\r\nfs.readFile('./tests/resources/chvrches.jpg', function (err, data) {\r\n  if (err)\r\n    throw err;\r\n  else {\r\n    exif.metadata(data, function (err, metadata) {\r\n      if (err)\r\n        throw err;\r\n      else\r\n        console.log(metadata);\r\n    });\r\n  }\r\n});\r\n```\r\n\r\n```js\r\nvar exif = require('exiftool');\r\n\r\nexif.metadata('./tests/resources/chvrches.jpg', function (err, metadata) {\r\n  if (err)\r\n    throw err;\r\n  else\r\n    console.log(metadata);\r\n});\r\n```\r\n\r\nThe properties and contents of the metadata dictionary returned by exiftool will vary widely depending on the filetype but you can expect dictionaries that look similar to this:\r\n\r\n__From a JPG:__\r\n\r\n```js\r\n{ exiftoolVersionNumber: 9.58,\r\n  fileType: 'JPEG',\r\n  mimeType: 'image/jpeg',\r\n  jfifVersion: 1.01,\r\n  resolutionUnit: 'None',\r\n  xResolution: 1,\r\n  yResolution: 1,\r\n  imageWidth: 620,\r\n  imageHeight: 413,\r\n  encodingProcess: 'Baseline DCT, Huffman coding',\r\n  bitsPerSample: 8,\r\n  colorComponents: 3,\r\n  yCbCrSubSampling: 'YCbCr4:2:0 (2 2)',\r\n  imageSize: '620x413' }\r\n```\r\n\r\n__From a MOV:__\r\n\r\n```js\r\n{ exiftoolVersionNumber: 9.58,\r\n  fileType: 'MOV',\r\n  mimeType: 'video/quicktime',\r\n  majorBrand: 'Apple QuickTime (.MOV/QT)',\r\n  minorVersion: '2005.3.0',\r\n  compatibleBrands: 'qt',\r\n  movieHeaderVersion: 0,\r\n  createDate: '2012:09:18 17:18:25',\r\n  modifyDate: '2012:09:18 17:18:25',\r\n  timeScale: 2997,\r\n  duration: '0:02:31',\r\n  preferredRate: 1,\r\n  preferredVolume: '100.00%',\r\n  previewTime: '0 s',\r\n  previewDuration: '0 s',\r\n  posterTime: '0 s',\r\n  selectionTime: '0 s',\r\n  selectionDuration: '0 s',\r\n  currentTime: '0 s',\r\n  nextTrackID: 4,\r\n  trackHeaderVersion: 0,\r\n  trackCreateDate: '2012:09:18 16:24:43',\r\n  trackModifyDate: '2012:09:18 17:18:25',\r\n  trackID: 1,\r\n  trackDuration: '0:02:31',\r\n  trackLayer: 0,\r\n  trackVolume: '0.00%',\r\n  imageWidth: 320,\r\n  imageHeight: 136,\r\n  cleanApertureDimensions: '320x136',\r\n  productionApertureDimensions: '320x136',\r\n  encodedPixelsDimensions: '320x136',\r\n  graphicsMode: 'ditherCopy',\r\n  opColor: '32768 32768 32768',\r\n  compressorID: 'avc1',\r\n  vendorID: 'Apple',\r\n  sourceImageWidth: 320,\r\n  sourceImageHeight: 136,\r\n  xResolution: 72,\r\n  yResolution: 72,\r\n  compressorName: 'H.264',\r\n  bitDepth: 24,\r\n  videoFrameRate: 23.976,\r\n  audioFormat: 'mp4a',\r\n  audioChannels: 2,\r\n  audioBitsPerSample: 16,\r\n  audioSampleRate: 44100,\r\n  purchaseFileFormat: 'mp4a',\r\n  matrixStructure: '1 0 0 0 1 0 0 0 1',\r\n  mediaHeaderVersion: 0,\r\n  mediaCreateDate: '2012:09:18 17:18:25',\r\n  mediaModifyDate: '2012:09:18 17:18:25',\r\n  mediaTimeScale: 2997,\r\n  mediaDuration: '0:02:31',\r\n  genMediaVersion: 0,\r\n  genFlags: '0 0 0',\r\n  genGraphicsMode: 'ditherCopy',\r\n  genOpColor: '32768 32768 32768',\r\n  genBalance: 0,\r\n  textFont: 'Unknown (1024)',\r\n  textFace: 'Plain',\r\n  textSize: 12,\r\n  textColor: '0 0 0',\r\n  backgroundColor: '65535 65535 65535',\r\n  fontName: 'Lucida Grande',\r\n  handlerClass: 'Data Handler',\r\n  handlerVendorID: 'Apple',\r\n  handlerDescription: 'Apple Alias Data Handler',\r\n  otherFormat: 'tmcd',\r\n  handlerType: 'Metadata Tags',\r\n  audioGain: 1,\r\n  trebel: 0,\r\n  bass: 0,\r\n  balance: 0,\r\n  pitchShift: 0,\r\n  mute: 'Off',\r\n  brightness: 0,\r\n  color: 1,\r\n  tint: 0,\r\n  contrast: 1,\r\n  playerVersion: '7.6 (7.6)',\r\n  version: '7.6.0 (1290) 0x7608000 (Mac OS X, 10.5.6, 9G71)',\r\n  'comment(err)': 'Encoded and delivered by apple.com/trailers/',\r\n  'copyright(err)': '� 2012 Warner Bros. Pictures. All Rights Reserved',\r\n  'userDataDes(err)': 'In theaters 2012',\r\n  windowLocation: '45 21',\r\n  playSelection: 0,\r\n  playAllFrames: 0,\r\n  movieDataSize: 8636129,\r\n  movieDataOffset: 98160,\r\n  comment: 'Encoded and delivered by apple.com/trailers/',\r\n  copyright: '� 2012 Warner Bros. Pictures. All Rights Reserved',\r\n  userDataDes: 'In theaters 2012',\r\n  avgBitrate: '457 kbps',\r\n  imageSize: '320x136',\r\n  rotation: 0 }\r\n```\r\n\r\n## Filtering metadata\r\n\r\nYou can also provide an optional list of extra parameters to pass into exiftool, if you want it to return only specific metadata keys:\r\n\r\n```js\r\nvar exif = require('exiftool');\r\nvar fs   = require('fs');\r\n\r\nfs.readFile('./tests/resources/chvrches.jpg', function (err, data) {\r\n  if (err)\r\n    throw err;\r\n  else {\r\n    exif.metadata(data, ['-imageWidth', '-imageHeight'], function (err, metadata) {\r\n      if (err)\r\n        throw err;\r\n      else\r\n        console.log(metadata);\r\n    });\r\n  }\r\n});\r\n```\r\n",
+  "bugs": {
+    "url": "https://github.com/nathanpeck/exiftool/issues"
+  },
+  "homepage": "https://github.com/nathanpeck/exiftool#readme",
+  "_id": "exiftool@0.0.4",
+  "_shasum": "cdd3a3241af5cc017d6dbfdfe401678a5eaeff0d",
+  "_from": "leonidovcharenko/exiftool",
+  "_resolved": "git://github.com/leonidovcharenko/exiftool.git#ae2ae694c8afecde84c4693559f1c2e767dce1a7"
+}
