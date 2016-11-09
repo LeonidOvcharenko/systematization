@@ -1378,14 +1378,14 @@ $(function(){
 	$(window).on('dragover drop', function(e){ e.preventDefault(); return false; });
 	$('.dropzone')
 	.on('dragover', function(e){
-		$(this).removeClass('alert-warning').addClass('alert-success');
+		$(this).removeClass('alert-warning').addClass('alert-info');
 		return false;
 	}).on('dragleave', function(e){
-		$(this).removeClass('alert-success').addClass('alert-warning');
+		$(this).removeClass('alert-info').addClass('alert-warning');
 		return false;
 	}).on('drop', function(e){
 		e.preventDefault();
-		$(this).removeClass('alert-success').addClass('alert-warning');
+		$(this).removeClass('alert-info').addClass('alert-warning');
 		return true;
 	});
 	var all_dropped_files = function(items, callback){
