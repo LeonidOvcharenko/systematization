@@ -776,7 +776,7 @@ $(function(){
 				'{{#if list.length}}<select class="te-list form-control input-xs" value="{{ready_value}}" on-focus="@this.on_focus(2)" on-blur="@this.on_blur(2)">'+
 					'{{#if value}}<option value="{{value}}">{{value}}</option>{{/if}}'+
 					'<option value=""></option>'+
-					'{{#list}}{{#if this!=value}}<option value="{{.}}">{{.}}</option>{{/if}}{{/list}}'+
+					'{{#list}}{{#if this!=value && (value && this.toLowerCase().indexOf(value.toLowerCase())!=-1 || !value)}}<option value="{{.}}">{{.}}</option>{{/if}}{{/list}}'+
 				'</select>{{/if}}'+
 				'<select class="form-control input-xs input-ghost {{(tags.length > 1) ? \'show\' : \'hide\'}}" multiple value="{{selected}}" on-focus="@this.on_focus(3)" on-blur="@this.on_blur(3)">'+
 					'{{#tags}}<option value="{{.value}}">{{.value}}</option>{{/tags}}'+
