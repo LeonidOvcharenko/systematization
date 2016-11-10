@@ -1063,6 +1063,22 @@ $(function(){
 			this.set('tagsets', S.settings.tagsets);
 		}
 	};
+	
+	var update_tags_view = function(){
+		Tagger.update_tags_keys().then(function(){
+			Tagger.update_tags_values();
+		});
+		Tagger.update_untagged_files();
+		Tagger.update_tagged_files();
+		Tagger.update('files');
+		Tagger.update('tags');
+	};
+	var update_approving_view = function(){
+		Tagger.update_tags_keys_approving().then(function(){
+			Tagger.update_tags_values_approving();
+		});
+	};
+	
 	Tagger.observe({
 		key: function(){
 			this.set('value', '');
@@ -1073,9 +1089,7 @@ $(function(){
 			this.update_tagged_files();
 		},
 		tags_filter: function(){
-			this.update_tags_keys_approving().then(function(){
-				Tagger.update_tags_values_approving();
-			});
+			update_approving_view()
 		},
 		all_tags_checked: function(v){
 			var vals = this.get('a_values');
@@ -1091,22 +1105,6 @@ $(function(){
 			this.update('path_esc');
 		}
 	});
-	
-	var update_all_views = function(){
-		ViewDB.update_stats();
-		Tagger.update_tags_keys().then(function(){
-			Tagger.update_tags_values();
-		});
-		Tagger.update_tags_keys_approving().then(function(){
-			Tagger.update_tags_values_approving();
-		});
-		Tagger.update_untagged_files();
-		Tagger.update_tagged_files();
-		
-		Processing.set('keys', Database.get_keys(true));
-		// Processing.set('files', Database.get_all_files().sort(function(a,b){return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0);}));
-	};
-	
 	Tagger.set_active_td = function(i, j){
 		this.set('active_td', {column: i, row: j});
 	};
@@ -1132,16 +1130,14 @@ $(function(){
 	Tagger.apply_to_files = function(key, value, hashes){
 		hashes.forEach(function(hash){
 			Database.add_tag({hash: hash}, {key: key, value: value, auto: false}, function(){
-				update_all_views();
-				Tagger.update('files');
+				update_tags_view();
 			});
 		});
 	};
 	Tagger.remove_from_files = function(key, value, hashes){
 		hashes.forEach(function(hash){
 			Database.remove_tag(hash, {key: key, value: value});
-			update_all_views();
-			Tagger.update('files');
+			update_tags_view();
 		});
 	};
 	Tagger.check_files = function(key, value){
@@ -1192,8 +1188,6 @@ $(function(){
 			Database.rename_tags({key: key}, {key: new_key});
 			this.update_tags_values_approving();
 		}
-		update_all_views();
-		Tagger.update('files');
 		this.event.original.preventDefault();
 	};
 	Tagger.filter_tags = function(filter){
@@ -1202,8 +1196,7 @@ $(function(){
 	};
 	Tagger.remove_key = function(key){
 		Database.remove_tags({key: key});
-		update_all_views();
-		Tagger.update('files');
+		update_approving_view();
 		this.event.original.preventDefault();
 	};
 	Tagger.approve_tag_value = function(key, value, files){
@@ -1215,14 +1208,12 @@ $(function(){
 		} else {
 			Database.approve_tags(tag);
 		}
-		update_all_views();
-		Tagger.update('files');
+		update_tags_view();
 		this.reset_tags_checked();
 	};
 	Tagger.remove_tag_value = function(key, value){
 		Database.remove_tags({key: key, value: value});
-		update_all_views();
-		Tagger.update('files');
+		update_approving_view();
 		this.reset_tags_checked();
 	};
 	Tagger.edit_tag_key = function(key, value, files){
@@ -1237,11 +1228,9 @@ $(function(){
 			} else {
 				Database.rename_tags(tag1, tag2);
 			}
-			this.update_tags_keys_approving().then(function(){
-				update_all_views();
-				Tagger.update('files');
-				Tagger.reset_tags_checked();
-			});
+			update_tags_view();
+			update_approving_view();
+			Tagger.reset_tags_checked();
 		}
 	};
 	Tagger.edit_tag_value = function(key, value, files){
@@ -1298,8 +1287,7 @@ $(function(){
 	};
 	Tagger.clear_auto_tags = function(){
 		Database.remove_auto_tags();
-		update_all_views();
-		Tagger.update('files');
+		update_approving_view();
 	};
 	Tagger.regexp_tags = function(pattern){
 		this.set('name_tpl', pattern);
@@ -1321,10 +1309,7 @@ $(function(){
 			if (match && match.length > 1){
 				match.forEach(function(m, i){
 					if (i==0) return;
-					Database.add_tag({hash: file.hash}, {key: '#AUTO#'+i, value: m, auto: true}, function(){
-						update_all_views();
-						Tagger.update('files');
-					});
+					Database.add_tag({hash: file.hash}, {key: '#AUTO#'+i, value: m, auto: true}, update_tags_view);
 				});
 			}
 		});
@@ -1369,9 +1354,7 @@ $(function(){
 		Tagger.update_tags_keys().then(function(){
 			Tagger.update_tags_values();
 		});
-		Tagger.update_tags_keys_approving().then(function(){
-			Tagger.update_tags_values_approving();
-		});
+		update_approving_view();
 	};
 	
 	
@@ -1453,14 +1436,13 @@ $(function(){
 			var key = Tagger.get('key');
 			var value = Tagger.get('value');
 			if (key && value) {
-				var tag = Database.add_tag(file, {key: key, value: value, auto: false}, update_all_views);
+				var tag = Database.add_tag(file, {key: key, value: value, auto: false}, update_tags_view);
 				Tagger.add_file_to_clipboard_by_hash(tag.hash);
 			} else {
-				var hash = Database.add_file(file, update_all_views);
+				var hash = Database.add_file(file, update_tags_view);
 				Tagger.add_file_to_clipboard_by_hash(hash);
 			}
 		});
-		/* var files = e.originalEvent.dataTransfer.files; */
 		return false;
 	});
 	
@@ -1575,6 +1557,22 @@ $(function(){
 		this.set('pretags', Database.get_file_tags(Database.NoFile));
 	};
 	
+	
+	/* update view on click */
+	$('a[data-toggle="tab"][href="#tags"]').on('shown.bs.tab', update_tags_view);
+	$('a[data-toggle="tab"][href="#approving"]').on('shown.bs.tab', update_approving_view);
+	$('a[data-toggle="tab"][href="#processing"]').on('shown.bs.tab', function (e) {
+		Processing.set('keys', Database.get_keys(true));
+		Processing.set('files', Database.get_all_files().sort(function(a,b){return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0);}));
+	});
+	$('a[data-toggle="tab"][href="#database"]').on('shown.bs.tab', function (e) {
+		ViewDB.update_stats();
+	});
+	$('a[data-toggle="tab"][href="#settings"]').on('shown.bs.tab', function (e) {
+		// nothing for now
+	});
+	
+	
 	var win = GUI.Window.get();
 	win.on('close',function() {
 		Database.db.saveDatabase();
@@ -1582,7 +1580,6 @@ $(function(){
 	});
 	Database.init().then(function(){
 		Settings.load_from_DB();
-		update_all_views();
-		setInterval(update_all_views, S.interval.update_view);
+		update_tags_view();
 	});
 });
