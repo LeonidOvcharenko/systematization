@@ -1374,6 +1374,9 @@ $(function(){
 		var table_keys = !keys ? this.get('keys') : keys.split(';').map(function(key){ return key.trim(); });
 		this.set('table_keys', table_keys);
 		this.set('tagset_title', title);
+		S.settings.table_keys = table_keys;
+		S.settings.table_tagset = title;
+		Database.save_settings(S.settings);
 		this.event.original.preventDefault();
 	};
 	var save_file_tag_fn = function(e, file, key, old_value){
@@ -1575,8 +1578,12 @@ $(function(){
 		S.settings.read_metadata   = S.settings.read_metadata || false;
 		S.settings.filefilter      = S.settings.filefilter || '';
 		S.settings.tagsets         = (S.settings.tagsets || []).map(function(t){ return {title: t.title, keys: t.keys}; });   // ractive hangs on reading array from pure DB data
+		S.settings.table_keys      = S.settings.table_keys || '';
+		S.settings.table_tagset    = S.settings.table_tagset || '';
 		this.set(S.settings).then(function(){
 			Settings.start_observe();
+			Tagger.set('table_keys', S.settings.table_keys);
+			Tagger.set('tagset_title', S.settings.table_tagset);
 			Tagger.update_tagsets();
 			Processing.update_tagsets();
 		});
