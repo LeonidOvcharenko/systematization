@@ -449,8 +449,9 @@ $(function(){
 		get_files_by_tag: function(key, value){
 			var self = this;
 			if (!self.tags) return [];
+			var query = value ? { '$and': [{ 'key': key }, { 'value': value }]} : { 'key': key };
 			var hashes = self.tags.chain()
-				.find({ '$and': [{ 'key': key }, { 'value': value }]})
+				.find(query)
 				.mapReduce(function(obj){ return obj.hash; }, function(arr){ return arr; });
 			var files = self.files.chain().where(function(obj) {
 				return hashes.indexOf(obj.hash) != -1;
@@ -545,7 +546,11 @@ $(function(){
 		data: {
 			tags: 'manual',
 			clear_old: true,
+			mask_keys: [],
 			keys: [],
+			values: [],
+			key_filter: '',
+			value_filter: '',
 			file_filter: '',
 			files: [],
 			files_to_rename: []
@@ -601,6 +606,12 @@ $(function(){
 				f.filtered = s ? name.toLowerCase().indexOf(s)==-1 : false;
 			});
 			this.set('files', files);
+		},
+		'key_filter': function(key){
+			this.set('value_filter', '');
+			if (key) {
+				this.set('values', Database.get_values(key));
+			}
 		}
 	});
 	Processing.on({
@@ -639,10 +650,6 @@ $(function(){
 				});
 			});
 		},
-		load_files: function(){
-			var files = Database.get_all_files().sort(function(a,b){return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0);});
-			Processing.set('files', files);
-		},
 		rename: function(){
 			var mask = this.get('mask');
 			var reg = new RegExp("\<(.*?)\>", "g");
@@ -665,10 +672,22 @@ $(function(){
 			});
 		}
 	});
+	Processing.load_files = function(key, value){
+		var files = key ? Database.get_files_by_tag(key, value) : Database.get_all_files();
+		files = files.sort(function(a,b){return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0);});
+		Processing.set('files', files);
+	};
 	Processing.update_tagsets = function(){
 		if (S.settings.tagsets) {
 			this.set('tagsets', S.settings.tagsets);
 		}
+	};
+	Processing.update_keys = function(){
+		this.set('mask_keys', Database.get_keys(true));
+		this.set('keys', Database.get_keys()).then(function(){
+			var key = Processing.get('key_filter');
+			return Processing.set('values', key ? Database.get_values(key) : []);
+		});
 	};
 
 	
@@ -1569,7 +1588,8 @@ $(function(){
 	$('a[data-toggle="tab"][href="#tags"]').on('shown.bs.tab', update_tags_view);
 	$('a[data-toggle="tab"][href="#approving"]').on('shown.bs.tab', update_approving_view);
 	$('a[data-toggle="tab"][href="#processing"]').on('shown.bs.tab', function (e) {
-		Processing.set('keys', Database.get_keys(true));
+		Processing.update_keys();
+		Processing.update_tagsets();
 		Processing.set('files', Database.get_all_files().sort(function(a,b){return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0);}));
 	});
 	$('a[data-toggle="tab"][href="#database"]').on('shown.bs.tab', function (e) {

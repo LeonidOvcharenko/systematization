@@ -377,11 +377,14 @@
 						<div class="panel-heading">Переименование</div>
 						<div class="panel-body">
 							<div class="form-group">
-								<label>
-									<button class="btn btn-default btn-xs" on-click="load_files"><i class="fa fa-arrow-circle-down"></i></button>
-									Файлы:
-								</label>
-								<input type="text" class="form-control" value="{{file_filter}}" />
+								<label>Выбрать по тегу:</label>
+								<select class="form-control" value="{{key_filter}}"><option value="">&lt;Все файлы&gt;</option>{{#keys}}<option value="{{.}}">{{.}}</option>{{/keys}}</select>
+								<select class="form-control" value="{{value_filter}}" {{ key_filter ? '' : 'disabled' }}><option value="">&lt;Любое значение&gt;</option>{{#values}}<option value="{{.}}">{{.}}</option>{{/values}}</select>
+								<button class="btn btn-default btn-sm" on-click="@this.load_files(key_filter,value_filter)" title="Выбрать файлы для переименования"><i class="fa fa-arrow-circle-down"></i></button>
+							</div>
+							<div class="form-group">
+								<label>Файлы:</label>
+								<input type="text" class="form-control" value="{{file_filter}}" placeholder="Фильтр по названию" />
 								<select class="form-control" value="{{files_to_rename}}" multiple>
 									{{#files}}<option value="{{.}}" class="{{.filtered ? 'hidden' : ''}}">{{name}}</option>{{/files}}
 								</select>
@@ -390,11 +393,11 @@
 								<label>Маска:</label>
 								<div class="input-group">
 									<div class="input-group-btn">
-										<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!keys.length ? 'disabled' : ''}} title="Вставить ключ"><i class="fa fa-at"></i></button>
+										<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!mask_keys.length ? 'disabled' : ''}} title="Вставить ключ"><i class="fa fa-at"></i></button>
 										<ul class="dropdown-menu">
-											{{#keys}}
+											{{#mask_keys}}
 											<li><a href="#" on-click="@this.append_to_mask(this)">{{.}}</a></li>
-											{{/keys}}
+											{{/key_filter}}
 										</ul>
 									</div>
 									<input type="text" class="form-control" value="{{mask}}" />
