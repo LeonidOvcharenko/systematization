@@ -178,6 +178,7 @@ a.section {
 	position: relative;
 	clear: both;
 	height: 329px;
+	margin-bottom: 15px;
 }
 .db-table table {
 	margin: 0;

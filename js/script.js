@@ -975,6 +975,7 @@ $(function(){
 				var tags = Database.get_file_tags(file.hash, key);
 				return tags.length ? tags : empty;
 			},
+			name_keys: '',
 			name_tpl: '',
 			tagsets: [],
 			tagset_title: '',
@@ -1291,11 +1292,12 @@ $(function(){
 		Database.remove_auto_tags();
 		update_approving_view();
 	};
-	Tagger.regexp_tags = function(pattern){
+	Tagger.regexp_tags = function(pattern, keys){
 		this.set('name_tpl', pattern);
+		this.set('name_keys', keys);
 		this.event.original.preventDefault();
 	};
-	Tagger.parse_tags = function(pattern){
+	Tagger.parse_tags = function(pattern, keys){
 		var reg;
 		try {
 			reg = new RegExp(pattern, 'i');
@@ -1303,6 +1305,7 @@ $(function(){
 			reg = new RegExp('', 'i');
 		}
 		var files = this.get('files');
+		keys = keys ? keys.split(';') : [];
 		var checked_files_hashes = this.get('files_checked');
 		files.forEach(function(file, i){
 			if (checked_files_hashes.indexOf(file.hash) == -1) return;
@@ -1311,10 +1314,12 @@ $(function(){
 			if (match && match.length > 1){
 				match.forEach(function(m, i){
 					if (i==0) return;
-					Database.add_tag({hash: file.hash}, {key: '#AUTO#'+i, value: m, auto: true}, update_tags_view);
+					var key = keys[i-1] || '#AUTO#'+i;
+					Database.add_tag({hash: file.hash}, {key: key, value: m, auto: true});
 				});
 			}
 		});
+		update_tags_view();
 	};
 	Tagger.exec_file = function(path){
 		GUI.Shell.openItem(path);
