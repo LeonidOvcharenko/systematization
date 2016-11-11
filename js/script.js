@@ -323,14 +323,15 @@ $(function(){
 			this.tags.removeWhere({ 'auto': true });
 		}
 		,
-		approve_tags: function(tag, hash){
+		approve_tags: function(tag, hash, un_approve){
+			var auto = !!un_approve;
 			this.tags.findAndUpdate(
 				function(obj){
 					var value_cond = tag.value ? (tag.value == obj.value) : true;
 					var file_cond = hash ? (hash == obj.hash) : true;
 					return (obj.key == tag.key) && value_cond && file_cond;
 				},
-				function(obj){ obj.auto = false; return obj; }
+				function(obj){ obj.auto = auto; return obj; }
 			);
 		}
 		,
@@ -1186,7 +1187,7 @@ $(function(){
 		var new_key = prompt('Новое название ключа «'+key+'»', key);
 		if (new_key) {
 			Database.rename_tags({key: key}, {key: new_key});
-			this.update_tags_values_approving();
+			update_approving_view();
 		}
 		this.event.original.preventDefault();
 	};
@@ -1199,16 +1200,17 @@ $(function(){
 		update_approving_view();
 		this.event.original.preventDefault();
 	};
-	Tagger.approve_tag_value = function(key, value, files){
+	Tagger.approve_tag_value = function(key, value, files, unapprove){
 		var tag = {key: key, value: value};
 		if (files && files.length) {
 			files.forEach(function(hash){
-				Database.approve_tags(tag, hash);
+				Database.approve_tags(tag, hash, unapprove);
 			});
 		} else {
-			Database.approve_tags(tag);
+			Database.approve_tags(tag, null, unapprove);
 		}
-		update_tags_view();
+		if (files) { update_tags_view(); }
+		else { update_approving_view(); }
 		this.reset_tags_checked();
 	};
 	Tagger.remove_tag_value = function(key, value){
@@ -1245,7 +1247,7 @@ $(function(){
 			} else {
 				Database.rename_tags(tag1, tag2);
 			}
-			this.update_tags_values_approving();
+			update_approving_view();
 			this.reset_tags_checked();
 		}
 	};
@@ -1255,7 +1257,7 @@ $(function(){
 		values.forEach(function(value, i){
 			Database.approve_tags({key: key, value: value});
 		});
-		this.update_tags_values_approving();
+		update_approving_view();
 		this.reset_tags_checked();
 	};
 	Tagger.remove_checked_tags = function(){

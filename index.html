@@ -76,6 +76,7 @@
 									</div>
 									<div class="btn-group">
 										<button {{files_checked.length && key && value ? '' : 'disabled'}} class="btn btn-success btn-sm" on-click="@this.approve_tag_value(key,value,files_checked)" title="Утвердить тег «{{key}}{{value ? ': '+value : ''}}»"><i class="fa fa-check"></i></button>
+										<button {{files_checked.length && key && value ? '' : 'disabled'}} class="btn btn-danger  btn-sm" on-click="@this.approve_tag_value(key,value,files_checked,true)" title="Обозначить тег «{{key}}{{value ? ': '+value : ''}}» как временный"><i class="fa fa-question"></i></button>
 										<button {{files_checked.length && key && value ? '' : 'disabled'}} class="btn btn-default btn-sm" on-click="@this.edit_tag_value(key,value,files_checked)" title="Редактировать тег «{{key}}: {{value}}»"><i class="fa fa-pencil"></i></button>
 										<button {{files_checked.length && key && value ? '' : 'disabled'}} class="btn btn-default btn-sm" on-click="@this.edit_tag_key(key,value,files_checked)" title="Редактировать ключ «{{key}}: {{value}}»"><i class="fa fa-at"></i></button>
 									</div>
