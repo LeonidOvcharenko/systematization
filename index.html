@@ -92,13 +92,13 @@
 										<div class="btn-toolbar">
 											<div class="btn-group" data-toggle="group">
 												<label class="btn btn-sm btn-default {{tags_view=='table' ? 'active' : ''}}" title="Теги таблицей">
-													<input type="radio" name="{{tags_view}}" value="table"><i class="fa fa-table"></i>
+													<input type="radio" name="{{tags_view}}" value="table"><i class="fa fa-pencil"></i>
 												</label>
 												<label class="btn btn-sm btn-default {{tags_view=='list' ? 'active' : ''}}" title="Теги списком">
-													<input type="radio" name="{{tags_view}}" value="list"><i class="fa fa-th"></i>
+													<input type="radio" name="{{tags_view}}" value="list"><i class="fa fa-list"></i>
 												</label>
 												<label class="btn btn-sm btn-default {{tags_view=='files' ? 'active' : ''}}" title="Только файлы">
-													<input type="radio" name="{{tags_view}}" value="files"><i class="fa fa-list"></i>
+													<input type="radio" name="{{tags_view}}" value="files"><i class="fa fa-file-o"></i>
 												</label>
 											</div>
 										</div>
@@ -181,7 +181,9 @@
 															{{/table_keys}}
 														{{elseif tags_view == 'list'}}
 															<td class="db-table__cell-alltags">
-																{{#each tags(files[i])}}<span on-click="@this.set_tag(this.key,this.value)" class="label label-{{(this.key==~/key) && (this.value==~/value) ? 'primary' : (this.auto ? 'default' : 'success')}} label-link tag-block {{(~/tags_type == 'manual' && this.auto) || (~/tags_type == 'auto' && !this.auto) ? 'hidden' : '' }}" title="{{this.key}}: {{this.value}}"><em>{{this.key}}</em>{{this.value}}</span>{{/each}}
+																{{#table_keys:j}}
+																	{{#each tags(files[i], table_keys[j])}}<span on-click="@this.set_tag(this.key,this.value)" class="label label-{{(this.key==~/key) && (this.value==~/value) ? 'primary' : (this.auto ? 'default' : 'success')}} label-link tag-block {{(~/tags_type == 'manual' && this.auto) || (~/tags_type == 'auto' && !this.auto) ? 'hidden' : '' }}" title="{{this.key}}: {{this.value}}"><em>{{this.key}}</em>{{this.value}}</span>{{/each}}
+																{{/table_keys}}
 															</td>
 														{{/if}}
 													</tr>
@@ -200,7 +202,7 @@
 															<button {{files.length ? '' : 'disabled'}} class="btn btn-default btn-xs" on-click="inverse_checked_files" title="Инвертировать выделение"><i class="fa fa-check-square"></i></button>
 															<button {{files_checked.length ? '' : 'disabled'}} class="btn btn-default btn-xs" on-click="remove_checked_files" title="Убрать отмеченные из буфера"><i class="fa fa-times"></i></button>
 														</div>
-														{{#if tags_view == 'table'}}
+														{{#if tags_view == 'table' || tags_view == 'list'}}
 															<div class="db-table__dropdown">
 																<button class="db-table__btn-tagset btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" title="Набор ключей">{{{tagset_title ? '&#123;'+tagset_title+'&#125;' : '<i class="fa fa-caret-down"></i>' }}}</button>
 																<ul class="dropdown-menu">

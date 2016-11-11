@@ -951,7 +951,7 @@ $(function(){
 			a_values_checked: [],
 			files: [],
 			tags_type: '',
-			tags_view: 'table',
+			tags_view: 'files',
 			active_td: { column: -1, row: -1 },
 			files_checked: [],
 			dir: function(file){
