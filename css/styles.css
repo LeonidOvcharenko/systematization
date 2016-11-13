@@ -371,6 +371,7 @@ select.input-xs option {
 .te input[type="text"] {
 	display: block;
 	margin-bottom: 3px;
+	padding-right: 18px;
 }
 .te input:focus + .te-list,
 .te-list:focus, .te-list:active {
