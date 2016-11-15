@@ -160,7 +160,7 @@ $(function(){
 			} catch(e) {}
 		}
 	};
-
+	
 	var GUI    = require('nw.gui');
 	var FS     = require('fs');
 	var Sanitize_Filename = require("sanitize-filename");
@@ -263,7 +263,6 @@ $(function(){
 						return f;
 					}
 				);
-				Tagger.update('files');
 			}
 			catch (e){}
 		}
@@ -548,233 +547,9 @@ $(function(){
 		}
 	});
 	
-	var NoTag = { key: '?', value: '?' };
-	var Processing = new Ractive({
-		el: 'content',
-		append: true,
-		template: '#processing-tpl',
-		data: {
-			tags: 'manual',
-			clear_old: true,
-			mask_keys: [],
-			keys: [],
-			search_values: [],
-			filter_values: [],
-			search_tags_selected: NoTag,
-			search_tags: [ NoTag ],
-			files_found: [],
-			key_filter: '',
-			value_filter: '',
-			file_filter: '',
-			files: [],
-			files_to_rename: []
-		}
-	});
-	var Indexing = new Ractive({
-		template: '#tag-index-tpl',
-		data: {
-			mask: '',
-			keys: []
-		}
-	});
-	
-	var remove_folder_recursive = function(path) {
-		try {
-			if( FS.statSync(path).isDirectory() ) {
-				FS.readdirSync(path).forEach(function(file,index){
-					var curPath = path + "/" + file;
-					if(FS.lstatSync(curPath).isDirectory()) { // recurse
-						remove_folder_recursive(curPath);
-					} else { // delete file
-						FS.unlinkSync(curPath);
-					}
-				});
-				FS.rmdirSync(path);
-			}
-		} catch(e) {}
-	};
-	var create_folder = function(dir){
-		try { FS.mkdirSync(dir); }
-		catch(e) { /* dir exists */ }
-	};
-	var create_tag_index_file = function(filename, key, value, files){
-		Indexing.set({
-			tag: key+': '+value,
-			files: files,
-			date: get_timestamp()
-		});
-		FS.writeFileSync(filename, Indexing.toHTML());
-	};
-	Processing.append_to_mask = function(key){
-		var mask = this.get('mask');
-		mask += '<'+key+'>';
-		this.set('mask', mask);
-		this.event.original.preventDefault();
-	};
-	Processing.observe({
-		'file_filter files': function(){
-			var s = this.get('file_filter');
-			var files = this.get('files');
-			files.forEach(function(f){
-				var name = f.name.toLowerCase();
-				f.filtered = s ? name.toLowerCase().indexOf(s)==-1 : false;
-			});
-			this.set('files', files);
-		},
-		'key_filter': function(key){
-			this.set('value_filter', '');
-			if (key) {
-				this.set('values', Database.get_values(key));
-			}
-		},
-		'search_tags_selected.key': function(key){
-			Processing.set('search_values', key ? Database.get_values(key) : []);
-		},
-		'search_tags_selected.inv': function(){
-			Processing.update('search_tags');
-		}
-	});
-	Processing.on({
-		index: function(){
-			var base_dir = './_index_';
-			// clear old indexes
-			if (this.get('clear_old')){
-				remove_folder_recursive(base_dir);
-			}
-			create_folder(base_dir);
-			// pick keys
-			var f_verified = this.get('tags')=='manual' || undefined;
-			var keys = Database.get_keys(f_verified);
-			var tagset = this.get('tagset');
-			if (tagset) {
-				tagset = tagset.split(';').map(function(key){ return key.trim(); });
-				keys = keys.filter(function(key){ return tagset.indexOf(key) != -1; });
-			}
-			// filter special
-			if (!this.get('special_tags')){
-				keys = keys.filter(function(key){ return !key.match(/^(#|@)/g); });
-			}
-			// generate indexes
-			keys.forEach(function(key, i){
-				var dirname = Sanitize_Filename(key,{replacement:'_'}) || '_k_'+i;
-				create_folder(base_dir+'/'+dirname);
-				
-				var values = Database.get_values(key, f_verified);
-				values.forEach(function(value, j){
-					var files = Database.get_files_by_tag(key, value);
-					if (files.length > 0) {
-						var filename = Sanitize_Filename(value,{replacement:'_'}) || '_v_'+j;
-						var path = base_dir+'/'+dirname+'/'+filename+'.html';
-						create_tag_index_file(path, key, value, files);
-					}
-				});
-			});
-		},
-		rename: function(){
-			var mask = this.get('mask');
-			var reg = new RegExp("\<(.*?)\>", "g");
-			var mask_keys = mask.match(reg) || [];
-			mask_keys = mask_keys.map(function(s){ return s.substr(1, s.length-2); });
-			var files = this.get('files_to_rename');
-			files.forEach(function(file, i){
-				// var file = Database.get_file_by_path(filepath);
-				// if (!file) return;
-				var filetags = Database.get_file_tags(file.hash);
-				var replacer = function (match, key, offset, string) {
-					var filetag = filetags.find(function(tag){ return tag.key == key; });
-					return filetag ? filetag.value : '';
-				};
-				var ext = file.name.match(/(.+?)(\.[^.]*$|$)/)[2];
-				var new_name = mask.replace(reg, replacer);
-				if (new_name && new_name != file.name) {
-					Database.rename_file(file, new_name, ext);
-				}
-			});
-		},
-		add_tag_to_search_form: function(){
-			var search_tags = Processing.get('search_tags');
-			var last_tag = search_tags[search_tags.length-1];
-			var new_tag = { key: last_tag.key, value: last_tag.value, condition: 'and' };
-			search_tags.push(new_tag);
-			Processing.set('search_tags', search_tags);
-			Processing.set('search_tags_selected', new_tag);
-			return false;
-		},
-		remove_tag_from_search_form: function(){
-			var search_tags = Processing.get('search_tags');
-			search_tags.splice(-1,1);
-			Processing.set('search_tags', search_tags);
-			Processing.set('search_tags_selected', search_tags[search_tags.length-1]);
-			return false;
-		},
-		search_files: function(){
-			var search_tags = Processing.get('search_tags');
-			var files_lists = search_tags.map(function(tag){
-				var query = { '$and': [ { key: tag.key }, { value: tag.value} ] };
-				return tag.inv ? Database.get_untagged_files(tag.key, tag.value) : Database.get_files_by_tagquery(query);
-			});
-			var files = [];
-			search_tags.forEach(function(tag, i){
-				var list = files_lists[i];
-				if (!tag.condition) {
-					files = list;
-				} else {
-					switch (tag.condition) {
-						case 'or':
-							condition = '$or';
-							list = list.filter(function(f){ return files.indexOf(f) == -1; });
-							files = files.concat(list);
-							break;
-						case 'and':
-						default:
-							files = files.filter(function(f){ return list.indexOf(f) != -1; });
-							break;
-					}
-				}
-			});
-			files = files.sort(function(a,b){return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0);});
-			Processing.set('files_found', files);
-			return false;
-		}
-	});
-	Processing.set_search_tag_selected = function(tag){
-		Processing.set('search_tags_selected', tag);
-		return false;
-	};
-	Processing.set_search_key = function(key){
-		var selected = Processing.get('search_tags_selected');
-		selected.key = key;
-		Processing.set('search_tags_selected', selected);
-		Processing.update('search_tags');
-		return false;
-	};
-	Processing.set_search_value = function(value){
-		var selected = Processing.get('search_tags_selected');
-		selected.value = value;
-		Processing.set('search_tags_selected', selected);
-		Processing.update('search_tags');
-		return false;
-	};
-	Processing.load_files = function(key, value){
-		var files = key ? Database.get_files_by_tag(key, value) : Database.get_all_files();
-		files = files.sort(function(a,b){return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0);});
-		Processing.set('files', files);
-	};
-	Processing.update_tagsets = function(){
-		if (S.settings.tagsets) {
-			this.set('tagsets', S.settings.tagsets);
-		}
-	};
-	Processing.update_keys = function(){
-		this.set('mask_keys', Database.get_keys(true));
-		this.set('keys', Database.get_keys()).then(function(){
-			var key_filter = Processing.get('key_filter');
-			Processing.set('filter_values', key_filter ? Database.get_values(key_filter) : []);
-			var key_search = Processing.get('search_tags_selected.key');
-			Processing.set('search_values', key_search ? Database.get_values(key_search) : []);
-		});
-	};
-
+	/* ------ */
+	/* Tagger */
+	/* ------ */
 	
 	var EditableSelect = Ractive.extend({
 		isolated: true,
@@ -1469,6 +1244,260 @@ $(function(){
 			Tagger.update_tags_values();
 		});
 		update_approving_view();
+	};
+	
+	
+	/* ---------- */
+	/* Processing */
+	/* ---------- */
+	var NoTag = { key: '?', value: '?' };
+	var Processing = new Ractive({
+		el: 'content',
+		append: true,
+		template: '#processing-tpl',
+		data: {
+			tags: 'manual',
+			clear_old: true,
+			mask_keys: [],
+			keys: [],
+			search_values: [],
+			filter_values: [],
+			search_tags_selected: NoTag,
+			search_tags: [ NoTag ],
+			files_found: [],
+			key_filter: '',
+			value_filter: '',
+			file_filter: '',
+			files: [],
+			files_to_rename: [],
+			dir: function(file){
+				return file ? file.path.substring(0, file.path.lastIndexOf(file.name)) : '';
+			}
+		}
+	});
+	var Indexing = new Ractive({
+		template: '#tag-index-tpl',
+		data: {
+			mask: '',
+			keys: []
+		}
+	});
+	
+	var remove_folder_recursive = function(path) {
+		try {
+			if( FS.statSync(path).isDirectory() ) {
+				FS.readdirSync(path).forEach(function(file,index){
+					var curPath = path + "/" + file;
+					if(FS.lstatSync(curPath).isDirectory()) { // recurse
+						remove_folder_recursive(curPath);
+					} else { // delete file
+						FS.unlinkSync(curPath);
+					}
+				});
+				FS.rmdirSync(path);
+			}
+		} catch(e) {}
+	};
+	var create_folder = function(dir){
+		try { FS.mkdirSync(dir); }
+		catch(e) { /* dir exists */ }
+	};
+	var create_tag_index_file = function(filename, key, value, files){
+		Indexing.set({
+			tag: key+': '+value,
+			files: files,
+			date: get_timestamp()
+		});
+		FS.writeFileSync(filename, Indexing.toHTML());
+	};
+	Processing.exec_file = Tagger.exec_file;
+	Processing.put_file_to_clipboard = function(file){
+		Tagger.add_file_to_clipboard(file);
+	};
+	Processing.add_files_to_clipboard = function(files){
+		Tagger.put_to_clipboard(files || []);
+	};
+	Processing.append_to_mask = function(key){
+		var mask = this.get('mask');
+		mask += '<'+key+'>';
+		this.set('mask', mask);
+		this.event.original.preventDefault();
+	};
+	Processing.observe({
+		'file_filter files': function(){
+			var s = this.get('file_filter');
+			var files = this.get('files');
+			files.forEach(function(f){
+				var name = f.name.toLowerCase();
+				f.filtered = s ? name.toLowerCase().indexOf(s)==-1 : false;
+			});
+			this.set('files', files);
+		},
+		'key_filter': function(key){
+			this.set('value_filter', '');
+			if (key) {
+				this.set('filter_values', Database.get_values(key));
+			}
+		},
+		'search_tags_selected.key': function(key){
+			Processing.set('search_values', key ? Database.get_values(key) : []);
+		},
+		'search_tags_selected.inv': function(){
+			Processing.update('search_tags');
+		}
+	});
+	Processing.on({
+		index: function(){
+			var base_dir = './_index_';
+			// clear old indexes
+			if (this.get('clear_old')){
+				remove_folder_recursive(base_dir);
+			}
+			create_folder(base_dir);
+			// pick keys
+			var f_verified = this.get('tags')=='manual' || undefined;
+			var keys = Database.get_keys(f_verified);
+			var tagset = this.get('tagset');
+			if (tagset) {
+				tagset = tagset.split(';').map(function(key){ return key.trim(); });
+				keys = keys.filter(function(key){ return tagset.indexOf(key) != -1; });
+			}
+			// filter special
+			if (!this.get('special_tags')){
+				keys = keys.filter(function(key){ return !key.match(/^(#|@)/g); });
+			}
+			// generate indexes
+			keys.forEach(function(key, i){
+				var dirname = Sanitize_Filename(key,{replacement:'_'}) || '_k_'+i;
+				create_folder(base_dir+'/'+dirname);
+				
+				var values = Database.get_values(key, f_verified);
+				values.forEach(function(value, j){
+					var files = Database.get_files_by_tag(key, value);
+					if (files.length > 0) {
+						var filename = Sanitize_Filename(value,{replacement:'_'}) || '_v_'+j;
+						var path = base_dir+'/'+dirname+'/'+filename+'.html';
+						create_tag_index_file(path, key, value, files);
+					}
+				});
+			});
+		},
+		rename: function(){
+			var mask = this.get('mask');
+			var reg = new RegExp("\<(.*?)\>", "g");
+			var mask_keys = mask.match(reg) || [];
+			mask_keys = mask_keys.map(function(s){ return s.substr(1, s.length-2); });
+			var files = this.get('files_to_rename');
+			files.forEach(function(file, i){
+				// var file = Database.get_file_by_path(filepath);
+				// if (!file) return;
+				var filetags = Database.get_file_tags(file.hash);
+				var replacer = function (match, key, offset, string) {
+					var filetag = filetags.find(function(tag){ return tag.key == key; });
+					return filetag ? filetag.value : '';
+				};
+				var ext = file.name.match(/(.+?)(\.[^.]*$|$)/)[2];
+				var new_name = mask.replace(reg, replacer);
+				if (new_name && new_name != file.name) {
+					Database.rename_file(file, new_name, ext);
+				}
+			});
+			Processing.update('files');
+			Processing.update('files_found');
+		},
+		add_tag_to_search_form: function(){
+			var search_tags = Processing.get('search_tags');
+			var last_tag = search_tags[search_tags.length-1];
+			var new_tag = { key: last_tag.key, value: last_tag.value, condition: 'and' };
+			search_tags.push(new_tag);
+			Processing.set('search_tags', search_tags);
+			Processing.set('search_tags_selected', new_tag);
+			return false;
+		},
+		remove_tag_from_search_form: function(){
+			var search_tags = Processing.get('search_tags');
+			search_tags.splice(-1,1);
+			Processing.set('search_tags', search_tags);
+			Processing.set('search_tags_selected', search_tags[search_tags.length-1]);
+			return false;
+		},
+		search_files: function(){
+			var search_tags = Processing.get('search_tags');
+			var files_lists = search_tags.map(function(tag){
+				var query = { '$and': [ { key: tag.key }, { value: tag.value} ] };
+				return tag.inv ? Database.get_untagged_files(tag.key, tag.value) : Database.get_files_by_tagquery(query);
+			});
+			var files = [];
+			search_tags.forEach(function(tag, i){
+				var list = files_lists[i];
+				if (!tag.condition) {
+					files = list;
+				} else {
+					switch (tag.condition) {
+						case 'or':
+							condition = '$or';
+							list = list.filter(function(f){ return files.indexOf(f) == -1; });
+							files = files.concat(list);
+							break;
+						case 'and':
+						default:
+							files = files.filter(function(f){ return list.indexOf(f) != -1; });
+							break;
+					}
+				}
+			});
+			files = files.sort(function(a,b){return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0);});
+			Processing.set('files_found', files);
+			return false;
+		}
+	});
+	Processing.file_rename = function(file){
+		var ext = file.name.match(/(.+?)(\.[^.]*$|$)/)[2];
+		var old_name = file.name.substring(0, file.name.lastIndexOf(ext));
+		var new_name = prompt('Новое имя файла «'+file.name+'»', old_name);
+		if (new_name) {
+			Database.rename_file(file, new_name, ext);
+			Processing.update('files');
+			Processing.update('files_found');
+		}
+		this.event.original.preventDefault();
+	};
+	Processing.set_search_tag_selected = function(tag){
+		Processing.set('search_tags_selected', tag);
+		return false;
+	};
+	Processing.set_search_key = function(key){
+		var selected = Processing.get('search_tags_selected');
+		selected.key = key;
+		Processing.set('search_tags_selected', selected);
+		Processing.update('search_tags');
+		return false;
+	};
+	Processing.set_search_value = function(value){
+		var selected = Processing.get('search_tags_selected');
+		selected.value = value;
+		Processing.set('search_tags_selected', selected);
+		Processing.update('search_tags');
+		return false;
+	};
+	Processing.load_files = function(key, value){
+		var files = key ? Database.get_files_by_tag(key, value) : Database.get_all_files();
+		files = files.sort(function(a,b){return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0);});
+		Processing.set('files', files);
+	};
+	Processing.update_tagsets = function(){
+		if (S.settings.tagsets) {
+			this.set('tagsets', S.settings.tagsets);
+		}
+	};
+	Processing.update_keys = function(){
+		this.set('mask_keys', Database.get_keys(true));
+		this.set('keys', Database.get_keys()).then(function(){
+			var key_filter = Processing.get('key_filter');
+			Processing.set('filter_values', key_filter ? Database.get_values(key_filter) : []);
+			var key_search = Processing.get('search_tags_selected.key');
+			Processing.set('search_values', key_search ? Database.get_values(key_search) : []);
+		});
 	};
 	
 	
