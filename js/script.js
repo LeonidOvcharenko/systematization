@@ -1254,6 +1254,7 @@ $(function(){
 	var Processing = new Ractive({
 		el: 'content',
 		append: true,
+		modifyArrays: true,
 		template: '#processing-tpl',
 		data: {
 			tags: 'manual',
@@ -1269,10 +1270,7 @@ $(function(){
 			value_filter: '',
 			file_filter: '',
 			files: [],
-			files_to_rename: [],
-			dir: function(file){
-				return file ? file.path.substring(0, file.path.lastIndexOf(file.name)) : '';
-			}
+			files_to_rename: []
 		}
 	});
 	var Indexing = new Ractive({

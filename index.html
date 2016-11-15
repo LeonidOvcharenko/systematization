@@ -409,7 +409,7 @@
 												</div>
 												<h4 class="list-group-item-heading">{{.name}}</h4>
 												<div class="list-group-item-text text-muted">
-													{{.path}}
+													{{ this.path.substring(0, this.path.lastIndexOf(this.name)) }}
 												</div>
 											</div>
 											{{/files_found}}
