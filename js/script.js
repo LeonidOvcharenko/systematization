@@ -428,6 +428,7 @@ $(function(){
 		get_values: function(key, verified_only){
 			var distinct = [];
 			var query = typeof(verified_only)=='undefined' ? {'key': key} : {'$and': [{ 'key': key }, { 'auto': !verified_only }]};
+			if (!this.tags) return [];
 			var values = this.tags.find(query);
 			values.forEach(function(obj, i){
 				if (distinct.indexOf(obj.value) == -1) { distinct.push(obj.value); }
@@ -447,9 +448,13 @@ $(function(){
 		}
 		,
 		get_files_by_tag: function(key, value){
+			var query = value ? { '$and': [{ 'key': key }, { 'value': value }]} : { 'key': key };
+			return this.get_files_by_tagquery(query);
+		}
+		,
+		get_files_by_tagquery: function(query){
 			var self = this;
 			if (!self.tags) return [];
-			var query = value ? { '$and': [{ 'key': key }, { 'value': value }]} : { 'key': key };
 			var hashes = self.tags.chain()
 				.find(query)
 				.mapReduce(function(obj){ return obj.hash; }, function(arr){ return arr; });
@@ -465,13 +470,17 @@ $(function(){
 			return this.tags.count(query);
 		}
 		,
-		get_untagged_files: function(key){
+		get_untagged_files: function(key, value){
 			var self = this;
 			if (!self.files) return;
 			var untagged = [];
 			var files = self.files.data;
 			files.forEach(function(obj, i){
-				var query = key ? { '$and': [{ 'key': key }, { 'hash': obj.hash }] } : {'hash': obj.hash };
+				var query = {'hash': obj.hash };
+				if (key) {
+					query = { '$and': [query, { 'key': key }] };
+					if (value) query['$and'].push({ 'value': value });
+				}
 				if (!self.tags.findOne(query)) {
 					untagged.push(obj);
 				}
@@ -539,6 +548,7 @@ $(function(){
 		}
 	});
 	
+	var NoTag = { key: '?', value: '?' };
 	var Processing = new Ractive({
 		el: 'content',
 		append: true,
@@ -548,7 +558,11 @@ $(function(){
 			clear_old: true,
 			mask_keys: [],
 			keys: [],
-			values: [],
+			search_values: [],
+			filter_values: [],
+			search_tags_selected: NoTag,
+			search_tags: [ NoTag ],
+			files_found: [],
 			key_filter: '',
 			value_filter: '',
 			file_filter: '',
@@ -612,6 +626,12 @@ $(function(){
 			if (key) {
 				this.set('values', Database.get_values(key));
 			}
+		},
+		'search_tags_selected.key': function(key){
+			Processing.set('search_values', key ? Database.get_values(key) : []);
+		},
+		'search_tags_selected.inv': function(){
+			Processing.update('search_tags');
 		}
 	});
 	Processing.on({
@@ -670,8 +690,71 @@ $(function(){
 					Database.rename_file(file, new_name, ext);
 				}
 			});
+		},
+		add_tag_to_search_form: function(){
+			var search_tags = Processing.get('search_tags');
+			var last_tag = search_tags[search_tags.length-1];
+			var new_tag = { key: last_tag.key, value: last_tag.value, condition: 'and' };
+			search_tags.push(new_tag);
+			Processing.set('search_tags', search_tags);
+			Processing.set('search_tags_selected', new_tag);
+			return false;
+		},
+		remove_tag_from_search_form: function(){
+			var search_tags = Processing.get('search_tags');
+			search_tags.splice(-1,1);
+			Processing.set('search_tags', search_tags);
+			Processing.set('search_tags_selected', search_tags[search_tags.length-1]);
+			return false;
+		},
+		search_files: function(){
+			var search_tags = Processing.get('search_tags');
+			var files_lists = search_tags.map(function(tag){
+				var query = { '$and': [ { key: tag.key }, { value: tag.value} ] };
+				return tag.inv ? Database.get_untagged_files(tag.key, tag.value) : Database.get_files_by_tagquery(query);
+			});
+			var files = [];
+			search_tags.forEach(function(tag, i){
+				var list = files_lists[i];
+				if (!tag.condition) {
+					files = list;
+				} else {
+					switch (tag.condition) {
+						case 'or':
+							condition = '$or';
+							list = list.filter(function(f){ return files.indexOf(f) == -1; });
+							files = files.concat(list);
+							break;
+						case 'and':
+						default:
+							files = files.filter(function(f){ return list.indexOf(f) != -1; });
+							break;
+					}
+				}
+			});
+			files = files.sort(function(a,b){return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0);});
+			Processing.set('files_found', files);
+			return false;
 		}
 	});
+	Processing.set_search_tag_selected = function(tag){
+		Processing.set('search_tags_selected', tag);
+		return false;
+	};
+	Processing.set_search_key = function(key){
+		var selected = Processing.get('search_tags_selected');
+		selected.key = key;
+		Processing.set('search_tags_selected', selected);
+		Processing.update('search_tags');
+		return false;
+	};
+	Processing.set_search_value = function(value){
+		var selected = Processing.get('search_tags_selected');
+		selected.value = value;
+		Processing.set('search_tags_selected', selected);
+		Processing.update('search_tags');
+		return false;
+	};
 	Processing.load_files = function(key, value){
 		var files = key ? Database.get_files_by_tag(key, value) : Database.get_all_files();
 		files = files.sort(function(a,b){return (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0);});
@@ -685,8 +768,10 @@ $(function(){
 	Processing.update_keys = function(){
 		this.set('mask_keys', Database.get_keys(true));
 		this.set('keys', Database.get_keys()).then(function(){
-			var key = Processing.get('key_filter');
-			return Processing.set('values', key ? Database.get_values(key) : []);
+			var key_filter = Processing.get('key_filter');
+			Processing.set('filter_values', key_filter ? Database.get_values(key_filter) : []);
+			var key_search = Processing.get('search_tags_selected.key');
+			Processing.set('search_values', key_search ? Database.get_values(key_search) : []);
 		});
 	};
 

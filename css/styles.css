@@ -121,6 +121,12 @@ table label input[type=radio] {
 	top: 2px;
 }
 
+.list-group-compact .list-group-item {
+	padding: 3px 20px;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
 
 .on-hover .on-hover-show {
 	opacity: 0.5;
@@ -159,6 +165,29 @@ table label input[type=radio] {
 	padding-bottom: 1px;
 	border-bottom: 1px solid white;
 	margin-bottom: 0.3em;
+}
+.label-del {
+	text-decoration: line-through;
+}
+
+.form-inline .label-link {
+	margin: 0;
+}
+.form-inline .tag-block {
+	max-width: 135px;
+}
+
+.limited-height {
+	height: 300px;
+	overflow-y: auto;
+}
+.limited-height .list-group {
+	margin-bottom: 0;
+}
+
+.nopadding {
+	padding: 0 !important;
+	margin: 0 !important;
 }
 
 [data-toggle="group"] > .btn > input[type="radio"],
