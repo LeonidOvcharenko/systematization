@@ -1200,6 +1200,18 @@ $(function(){
 		});
 		update_tags_view();
 	};
+	Tagger.sync_tags = function(files){
+		var tags = [];
+		files.forEach(function(hash){
+			tags = tags.concat(Database.get_file_tags(hash));
+		});
+		files.forEach(function(hash){
+			tags.forEach(function(tag){
+				Database.add_tag({hash: hash}, tag);
+			});
+		});
+		update_tags_view();
+	};
 	Tagger.exec_file = function(path){
 		GUI.Shell.openItem(path);
 		return false;

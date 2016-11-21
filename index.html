@@ -53,7 +53,7 @@
 						</div>
 					</div>
 					<div class="row">
-						<div class="col-xs-4">
+						<div class="col-xs-3">
 							<div class="form-group">
 								<label>Ключ:</label>
 								<combotext list='{{keys}}' value='{{key}}' />
@@ -65,7 +65,7 @@
 								<combotext list='{{values}}' value='{{value}}' />
 							</div>
 						</div>
-						<div class="col-xs-4">
+						<div class="col-xs-5">
 							<div class="form-group">
 								<label class="text-info">{{#if key && value}}<i class="fa fa-tag fa-flip-horizontal text-muted"></i> {{key}}: {{value}}{{else}}&nbsp;{{/if}}</label><br>
 								<div class="btn-toolbar">
@@ -79,6 +79,9 @@
 										<button {{files_checked.length && key && value ? '' : 'disabled'}} class="btn btn-danger  btn-sm" on-click="@this.approve_tag_value(key,value,files_checked,true)" title="Обозначить тег «{{key}}{{value ? ': '+value : ''}}» как временный"><i class="fa fa-question"></i></button>
 										<button {{files_checked.length && key && value ? '' : 'disabled'}} class="btn btn-default btn-sm" on-click="@this.edit_tag_value(key,value,files_checked)" title="Редактировать тег «{{key}}: {{value}}»"><i class="fa fa-pencil"></i></button>
 										<button {{files_checked.length && key && value ? '' : 'disabled'}} class="btn btn-default btn-sm" on-click="@this.edit_tag_key(key,value,files_checked)" title="Редактировать ключ «{{key}}: {{value}}»"><i class="fa fa-at"></i></button>
+									</div>
+									<div class="btn-group">
+										<button {{files_checked.length > 1 ? '' : 'disabled'}} class="btn btn-default btn-sm" on-click="@this.sync_tags(files_checked)" title="Синхронизировать теги"><i class="fa fa-exchange"></i></button>
 									</div>
 								</div>
 							</div>
@@ -402,7 +405,7 @@
 										<div class="list-group">
 											{{#files_found}}
 											<div class="list-group-item">
-												<div class="btn-group pull-right">
+													<div class="btn-group pull-right">
 													<button class="btn btn-info btn-xs" title="Открыть файл" on-click="@this.exec_file(this.path)"><i class="fa fa-eye"></i></button>
 													<button class="btn btn-default btn-xs" title="Редактировать имя файла" on-click="@this.file_rename(this)"><i class="fa fa-pencil"></i></button>
 													<button class="btn btn-default btn-xs" title="Добавить файл в буфер" on-click="@this.put_file_to_clipboard(this)"><i class="fa fa-list"></i></button>
