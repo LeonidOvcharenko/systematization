@@ -1394,17 +1394,15 @@ $(function(){
 		},
 		rename: function(){
 			var mask = this.get('mask');
-			var reg = new RegExp("\<(.*?)\>", "g");
-			var mask_keys = mask.match(reg) || [];
-			mask_keys = mask_keys.map(function(s){ return s.substr(1, s.length-2); });
+			var reg = new RegExp("(?:\{([^\<\}]*?))?\<(.*?)\>(?:([^\>\{]*?)?\})?","g");
 			var files = this.get('files_to_rename');
 			files.forEach(function(file, i){
 				// var file = Database.get_file_by_path(filepath);
 				// if (!file) return;
 				var filetags = Database.get_file_tags(file.hash);
-				var replacer = function (match, key, offset, string) {
+				var replacer = function (match, prefix, key, suffix, offset, string) {
 					var filetag = filetags.find(function(tag){ return tag.key == key; });
-					return filetag ? filetag.value : '';
+					return (filetag && filetag.value) ? (prefix || '')+filetag.value+(suffix || '') : '';
 				};
 				var ext = file.name.match(/(.+?)(\.[^.]*$|$)/)[2];
 				var new_name = mask.replace(reg, replacer);
