@@ -1401,8 +1401,8 @@ $(function(){
 				// if (!file) return;
 				var filetags = Database.get_file_tags(file.hash);
 				var replacer = function (match, prefix, key, suffix, offset, string) {
-					var filetag = filetags.find(function(tag){ return tag.key == key; });
-					return (filetag && filetag.value) ? (prefix || '')+filetag.value+(suffix || '') : '';
+					var tag_value = filetags.filter(function(tag){ return tag.key == key; }).map(function(tag){ return tag.value; }).join(', ');
+					return tag_value ? (prefix || '')+tag_value+(suffix || '') : '';
 				};
 				var ext = file.name.match(/(.+?)(\.[^.]*$|$)/)[2];
 				var new_name = mask.replace(reg, replacer);
