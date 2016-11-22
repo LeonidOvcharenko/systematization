@@ -204,6 +204,20 @@ $(function(){
 			this.db.saveDatabase();
 		}
 		,
+		hash_file_async: function(filepath, callback){
+			var sum = Crypto.createHash('sha1')
+			var fileStream = FS.createReadStream(filepath);
+			fileStream.on('error', function (err) { });
+			fileStream.on('data', function (chunk) {
+				try {
+					sum.update(chunk);
+				} catch (ex) { }
+			});
+			fileStream.on('end', function () {
+				return callback(sum.digest('hex'));
+			});
+		}
+		,
 		hash_file: function(data){
 			return Crypto.createHash('sha1').update(data).digest('hex');
 		}
