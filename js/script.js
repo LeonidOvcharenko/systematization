@@ -508,6 +508,7 @@ $(function(){
 		}
 		,
 		save_settings: function(settings){
+			if (!settings.$loki) return;
 			this.settings.update(settings);
 		}
 		,
@@ -959,6 +960,11 @@ $(function(){
 			Tagger.add_file_to_clipboard(file);
 		}
 	};
+	Tagger.add_files_to_clipboard_by_hashes = function(hashes){
+		hashes.forEach(function(hash){
+			Tagger.add_file_to_clipboard_by_hash(hash);
+		});
+	};
 	Tagger.update_tagsets = function(){
 		if (S.settings.tagsets) {
 			this.set('tagsets', S.settings.tagsets);
@@ -1001,7 +1007,13 @@ $(function(){
 			this.reset_tags_checked();
 			this.update_tags_values_approving();
 		},
-		files: function(){
+		tags_view: function(view){
+			S.settings.table_view = view;
+			Database.save_settings(S.settings);
+		},
+		files: function(files){
+			S.settings.table_files = files.map(function(file){ return file.hash; });
+			Database.save_settings(S.settings);
 			this.update('dir');
 			this.update('path_esc');
 		}
@@ -1719,13 +1731,19 @@ $(function(){
 		S.settings.folder_selected = S.settings.folder_selected || '';
 		S.settings.read_metadata   = S.settings.read_metadata || false;
 		S.settings.filefilter      = S.settings.filefilter || '';
-		S.settings.tagsets         = (S.settings.tagsets || []).map(function(t){ return {title: t.title, keys: t.keys}; });   // ractive hangs on reading array from pure DB data
-		S.settings.table_keys      = S.settings.table_keys || '';
+		S.settings.tagsets         =(S.settings.tagsets || []).map(function(t){ return {title: t.title, keys: t.keys}; });   // ractive hangs on reading array from pure DB data
+		S.settings.table_files     = S.settings.table_files || [];
+		S.settings.table_view      = S.settings.table_view || 'files';
+		S.settings.table_keys      = S.settings.table_keys || [];
 		S.settings.table_tagset    = S.settings.table_tagset || '';
 		this.set(S.settings).then(function(){
 			Settings.start_observe();
-			Tagger.set('table_keys', S.settings.table_keys);
-			Tagger.set('tagset_title', S.settings.table_tagset);
+			Tagger.set({
+				tags_view: S.settings.table_view,
+				table_keys: S.settings.table_keys,
+				tagset_title: S.settings.table_tagset
+			});
+			Tagger.add_files_to_clipboard_by_hashes(S.settings.table_files);
 			Tagger.update_tagsets();
 			Processing.update_tagsets();
 		});
@@ -1751,11 +1769,12 @@ $(function(){
 	
 	var win = GUI.Window.get();
 	win.on('close',function() {
+		Database.save_settings(S.settings);
 		Database.db.saveDatabase();
 		win.close(true);
 	});
 	Database.init().then(function(){
-		Settings.load_from_DB();
 		update_tags_view();
+		Settings.load_from_DB();
 	});
 });
