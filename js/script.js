@@ -927,7 +927,13 @@ $(function(){
 	Tagger.update_tags_keys_approving = function(){
 		var filter = this.get('tags_filter');
 		filter = (filter == 'all') ? undefined : (filter == 'manual');
-		return this.set('a_keys', Database.get_keys(filter));
+		var prev_keys = this.get('a_keys');
+		var data = { a_keys: Database.get_keys(filter) };
+		var key = this.get('a_key');
+		if (data.a_keys.indexOf(key) == -1){
+			data.a_key = prev_keys[ prev_keys.indexOf(key)+1 ] || '';
+		}
+		return this.set(data);
 	};
 	Tagger.update_tags_values_approving = function(){
 		var key = this.get('a_key');
