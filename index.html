@@ -289,7 +289,7 @@
 										{{#a_keys}}<option value="{{.}}">{{.}}</option>{{/a_keys}}
 									</select>
 									<div class="input-group-btn">
-										<button class="btn btn-default dropdown-toggle" data-toggle="dropdown" {{!a_key ? 'disabled' : ''}}><span class="fa fa-filter {{tags_filter == 'auto' ? 'text-danger' : tags_filter == 'manual' ? 'text-success' : ''}}"></span></button>
+										<button class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="fa fa-filter {{tags_filter == 'auto' ? 'text-danger' : tags_filter == 'manual' ? 'text-success' : ''}}"></span></button>
 										<ul class="dropdown-menu pull-right">
 											<li><a href="#" on-click="@this.filter_tags('all')">Все теги</a></li>
 											<li><a href="#" on-click="@this.filter_tags('auto')">Авто теги</a></li>
